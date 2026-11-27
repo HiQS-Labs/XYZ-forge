@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -345,5 +345,79 @@ Handing off to Producer (claude-a) to repair fence recognition and retain the be
   checkbox verbatim copy (`['Alpha', 'Second']` both sides, `match`). gh400 41/0, gh557 16/0; red vs base
   34 pass / 7 fail. Both CLI smokes rerun on the candidate (`match`). Provenance bound to `ab890c545`.
   #1666 stays open for the broader line model.
+
+### Reviewer · Round 4
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: The Unicode fence regression is fixed at the fidelity seam. The new marker path fails the repository's scoped mypy check, which the Python-layer gate asserts. This is the last scheduled round.
+
+- [Blocker] Narrow `ml` explicitly at the slice in the fence closer condition. For example, require `ml is not None` alongside `f` before checking the suffix. Preserve the existing closer and continuation behavior.
+  - Observed input: `utils/py/swarm_preflight.py:650–655` reads `ml` from `list[str | None]`, conditionally derives `f`, then slices `ml`. Mypy 1.14.1 exits 1 with `utils/py/swarm_preflight.py:655: error: Value of type "str | None" is not indexable  [index]` and `Found 1 error in 1 file (checked 1 source file)`. `mypy.ini:2–7` selects this file with strict optional checking. `test/test_python_layer.py:44–51` asserts exit 0 for this configuration.
+  - Affected scope: The existing Python-layer gate for this module. At runtime the slice is reached only for a matched closer on a whole issue-side Markdown line.
+  - Falsifier: The scoped mypy command below exits 0 with `Success: no issues found in 1 source file`, and the fence and checkbox probes below retain their exact results.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+uv_archive="$HOME/.cache/uv/archive-v0"
+PYTHONPATH="$uv_archive/ksADMtL6uq4HuIiW:$uv_archive/CPv7BvLmm93sx9xd:$uv_archive/26pMku7FeA2ET9JR" python3.11 -m mypy --cache-dir "$TMPDIR/mypy" --config-file mypy.ini
+```
+
+- [Pass] The Unicode finding is closed. Whole CR/LF marker lines and ASCII-only closer padding are checked at `utils/py/swarm_preflight.py:629–656`. The probe below exited 0. U+2028, U+0085 and U+2029 changed from `('diverged', ['example output'], [])` in the fragment-based red control to `('match', [], [])` in the seed. NBSP and ` text` stayed `match`. Space, tab and CRLF stayed `diverged` with `example output` dropped. The checkbox copy stayed `match` with `['Alpha', 'Second']` on both sides. The fragment opener case yields `('diverged', ['Second'], [])` with the intentionally incomplete capture, correcting the Producer's summary. The fragment closer case yields `('match', [], [])`. The same-line backtick span yields `('diverged', ['Second'], [])` with the incomplete capture.
+- [Pass] The existing parser remains the sole fidelity path. The issue opts in at `utils/py/swarm_preflight.py:1022–1023`, the packet still uses the checkbox parser at `:827–879,1791–1797`, and the existing deviations-heading skip, heading/rule boundaries, checkbox priority and raw continuation remain at `:613–627,642–672`. No additional writer was introduced. The earlier full-file sweep and this follow-up found no further pre-existing acceptance-fidelity defects beyond the GH-1665 splitter and the documented shared line model and in-fence boundary limitations.
+- [Pass] C20 calls the real fidelity function and asserts status plus both directions at `test/gh400-acceptance-fidelity.sh:514–529,553–562,575–585`. Its red receipt shows the full copy incorrectly adding three criteria and the partial mixed copy incorrectly returning `match|[]|[]` (`TESTS-RESULTS/2026-11-27+GH-1646/red-gh400-unfixed.txt:30–33`, exit 1 in `provenance.jsonl:1`). The candidate receipts report gh400 41/0 and gh557 16/0 at `ab890c545` (`provenance.jsonl:2–3`, `green-gh400.txt:44`, `green-gh557.txt:19`). `SMOKE.md:12–18,35–54` records both CLI acceptance verdict changes, the separate exit causes and the corrected eight regression guards.
+- [Pass] The persisted 65/55/50/85 matches the plan and its rationale for a readiness refusal with a workaround, one observed incident and a localized parser change (`PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:124–129`, `releases.sql:1072`). `sqlite3 -readonly releases.db 'SELECT gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr,doc_path FROM roadmap_items WHERE gh_number=1646;'` exited 0 and returned `1646|65|55|50|85||PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md`.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+PYTHONPATH=utils/py python3 - <<'PY'
+import inspect
+import os
+from pathlib import Path
+import swarm_preflight as sp
+
+current = sp.extract_acceptance_criteria
+src = inspect.getsource(current).replace("ml = marker_lines[idx]", "ml = line")
+assert "ml = line" in src
+previous = vars(sp).copy()
+exec(src, previous)
+p = Path(os.environ["TMPDIR"]) / "gh1646-r4-capture.md"
+first = "## Acceptance\n- [ ] First\n"
+def run(parser, issue, capture=first):
+    sp.extract_acceptance_criteria = parser
+    p.write_text(capture, encoding="utf-8")
+    r = sp.check_acceptance_fidelity(str(p), "1646", ".", issue_details={"body": issue})
+    return r["status"], r["dropped"], r["added"]
+for suffix in ("\u2028", "\x85", "\u2029", "\xa0", " ", "\t", "\r", " text"):
+    issue = first + "\n~~~text\n~~~" + suffix + "\n- example output\n~~~\n"
+    before = run(previous["extract_acceptance_criteria"], issue)
+    after = run(current, issue)
+    expected = ("diverged", ["example output"], []) if suffix in (" ", "\t", "\r") else ("match", [], [])
+    assert after == expected and current(issue) == ["First"]
+    if suffix in ("\u2028", "\x85", "\u2029"):
+        assert before == ("diverged", ["example output"], [])
+    print(ascii(suffix), before, "=>", after)
+for label, body, expected in (
+    ("fragment opener", "prefix\u2028~~~text\n- Second\n", ("diverged", ["Second"], [])),
+    ("fragment closer", "~~~text\nprefix\u2028~~~\n- Second\n~~~\n", ("match", [], [])),
+    ("inline backticks", chr(96)*3 + "code\u2028" + chr(96)*3 + "\n- Second\n", ("diverged", ["Second"], [])),
+):
+    result = run(current, first + "\n" + body)
+    assert result == expected
+    print(label, result)
+body = "## Acceptance\n- [ ] Alpha\u2028beta\n- [ ] Second\n"
+assert current(body, plain_bullets=True) == current(body) == ["Alpha", "Second"]
+assert run(current, body, body) == ("match", [], [])
+print("checkbox:", current(body), run(current, body, body))
+PY
+```
+
+The nearest graph generation (2026-11-26T04:31:47Z) predates the candidate and trace approval was unavailable, so the call sites and new behavior were checked in the seeded source. [Unverified — needs clone run] The shell suites and CLI smokes are retained Producer evidence. The standalone mypy and fidelity probes ran directly. This reviewer turn specifies no separate phase gate.
+
+Handing off to Producer (claude-a) to resolve the scoped mypy failure and obtain fresh QA after the round cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
