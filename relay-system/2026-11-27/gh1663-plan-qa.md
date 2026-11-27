@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -107,5 +107,32 @@ Flag anything wrong, missing, incorrectly scoped or over-engineered, citing file
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+Make six bounded text edits to ci-optimize: reconcile fourteen principles with its twelve-row scorecard, include P9 in the roadmap diagram, label issue provenance, and add the missing flat-install fallback. Preserve principle requirements and scoring bands.
+
+**How the existing system works, per this document**
+The skill supplies instructions and a twelve-row rubric, with P13/P14 added outside that rubric. Two existing suites pin headings and phrases; relative links work in the Forge directory tree, while flat collections need name resolution. A retained manual before/after check is planned to distinguish the fixed candidate from the unchanged base.
+
+**What it's not**
+The non_goals exclude redesign, score rescaling, new waves/rows, merge-cleanup work, umbrella closure and new test machinery. I accept these boundaries provisionally; preserving the existing rubric is the stated purpose.
+
+**source-backed**
+
+swept file: yes
+
+- [Pass] Swept all 172 lines of `skills/4-occasional/ci-optimize/SKILL.md`. Defects 1, 2, 3, 4a and 4b are real: description at :8, fourteen headings at :42-107, twelve rows at :149-160, unlabeled provenance at :15, links at :24/:171, diagram omission at :133 versus P9 at :139, and overbroad roadmap sentence at :127. The existing sanity-check fallback at :34 is sufficient within the same named section; adding the matching ci-suite-audit sentence is surgical. No additional small count, anchor or wave-membership defect found. There are no internal anchor links to repair. Anti-pattern references (:119), no-new-tests callout (:38-40), score rows and bands (:149-165) agree.
+- [Pass] Preserve the twelve-row rubric and apply P13/P14 when their conditions arise: P13 already calls its stress loop a “diagnostic option” (:103), while P14 specifies performance-critical workloads (:108). The proposed intro explicitly says “applied when the situation arises” (artifact :71); adding rows/waves would change the rubric's meaning. Accept the listed non-goals; no new subsystem or registered test is justified.
+- [Pass] Static suite compatibility: `test/gh578-ci-optimize-skill.sh:15` only greps `description:`; :17's “12 Foundational Principles” is a comment, not an assertion; :18-33 pin numbered headings/titles. :43-47 grep the roadmap heading, `Wave 1`, `Wave 4`, scorecard heading and `20–24 Points`, all retained. No grep pins the roadmap sentence, node wording or Related Skills bullet. `test/gh609-sdlc-agent-gaps.sh:139-149` pins P13/P14 headings and body fragments, all unchanged by the plan. This predicts compatibility; suites were NOT executed here and need the prescribed disposable clone run.
+- [Should] Resolve issue provenance by subject, not merely issue existence, before applying edit 2. **Observed input:** artifact :46 infers “not upstream-archive numbers” from existence. However `docs/ROADMAP-UPSTREAM-ARCHIVE.md:72` identifies upstream #528 as test-suite recalibration and :94 identifies upstream #544 as local-gate-before-push. Read-only GitHub connector calls `fetch_issue(repository_full_name="HiQS-Labs/XYZ-forge", issue_number=528)` and the same call for 544 succeeded: Forge #528 is “fix(skill): /unstuck — queue simultaneous blockers, tripwire recurring blocker classes”; Forge #544 is “research: archive Luna/Needle model benchmarks and Git/PR analyst findings”. These do not support the skill's pipeline provenance. All nine Forge issue lookups succeeded, but existence does not establish identity. **Affected scope:** the nine provenance numbers on skill :15 and artifact :46/:70. **Falsifier:** source history or primary issue content showing these Forge records actually document the cited CI mechanisms; expected result is a subject-matching citation for each number. **Concrete fix:** map each number to its actual source repository and link/group accordingly; #35 can remain Forge, while demonstrably upstream numbers must name upstream. Correct the recon assertion and add subject-aware acceptance rather than declaring every number Forge.
+- [Should] Specify a discriminating acceptance result, including all six edits, rather than only printed observations. **Observed input:** artifact :75 specifies a checker that “prints” counts/literals/node/link results; :85 calls “reports the inconsistencies” an observed rejection. Neither specifies a failing result, and :75 has no check for the repository-label edit (:70), narrowed roadmap sentence (:72), situational intro (:71), or rubric-only explanation (:73). The two existing suites do not check those changes (citations above), so a partial fix can satisfy the described observations. **Affected scope:** this one retained manual checker and delivery evidence, not any new CI gate. **Falsifier:** an explicit checker contract that rejects an unchanged candidate and individually rejects omission of the provenance correction, roadmap scope, extension explanation and scorecard scope, while accepting the intended candidate. **Concrete fix:** enumerate those assertions, nonempty extraction checks, expected base/candidate exit statuses and decisive output; record the observed red base run and green candidate run during implementation. Keep the checker in the existing evidence directory; no new registered suite.
+- [Pass] Narrow non-mutating Python inspection exited 0, using `re.findall(r'^### \d+\.', s, re.M)` and `re.findall(r'^\| \d+ \|', s, re.M)` after `assert s`: decisive output was `headings= 14 rows= 12`, `old_heading= True`, `P9_in_node= False`, `sanity-check tree_exists= True flat_relative_exists= False fallback= True`, `ci-suite-audit tree_exists= True flat_relative_exists= False fallback= False`. The flat path probe checked `/tmp/flat/ci-optimize` lexical placement only; it is not a populated flat-install fixture. This establishes current defects, not a passing final checker or an observed checker rejection. No gate is configured in this relay and no later gate is assumed.
+
+VERDICT: FAIL
+Basis: The six-edit scope is proportionate and the rubric decision is sound, but the proposed universal Forge provenance label is contradicted by source records. Tighten the manual rejection contract before implementation; actual clone runs remain implementation evidence owed.
+
+Handing off to Producer (claude) — correct provenance and acceptance specifications, then take the next turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
