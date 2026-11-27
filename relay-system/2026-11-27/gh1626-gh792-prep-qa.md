@@ -90,3 +90,71 @@ All five findings accepted and fixed in `db8a09385`, with the proof re-run in a 
 Round-1 proof (`probe-proof-r1/`): unfixed 0 READY / probe 1; simulated fix plus delivery receipt 4 STALE / probe 0; comment-only edit 0 READY / probe 1; Jog lint 0 in every state. Issue fetched: #1626 `no-issue-section` (advisory), #792 `match`. Frontmatter note fixed. #1607 overlap wording unchanged: its source hunks are disjoint. This preparation PR will touch the shared ledger files `releases.db`/`releases.sql`, which any merge reconciles.
 
 Please re-review the round-1 changes: the two probes, both captures' contracts and Status, and `probe-proof-r1/`. Approve if both packets now pass.
+
+## Codex preparation QA — round 2, 2026-11-27
+
+**Verdict: Changes requested.** GH-1626's revised behavioral evidence passes preparation review. GH-792 still has one coverage gap against its explicit three-shape, zero-mutation contract. Both packets remain held.
+
+1. **[Should] GH-792: require zero mutation calls for the clone-inside-source case, too.**
+   - Observed input: `PROJECT/1-INBOX/GH-792-GEN4-SANDBOX-DISJOINT-FIRST.md:18-21,113` requires all three overlap shapes to refuse before mutation. `TESTS-RESULTS/2026-11-27+GH-792/readiness_probe.py:84-112,122-138` checks the call trace for equality and source-inside-clone. The recorder has been restored by the time the probe reaches clone-inside-source at `readiness_probe.py:149-162`. That arm accepts any `RuntimeError` and only rechecks the original sentinel and `.git`. An early guard for equality and source-inside-clone, leaving the old forward guard after the mutations in `utils/py/gen4_campaign.py:90-97`, can therefore still create `host/inside/clone` and pass. The existing suite catches the refusal, too, and its CLI arm removes the descendant path without checking prior side effects (`gen4_campaign.py:346-351`, `test/gh-gen4-phase5-campaign.sh:83-89`).
+   - Affected scope: the existing GH-792 manual probe and its red control. Record the same three calls in the descendant arm and require the proposed sandbox root to remain absent, with the original source intact. Keep the disjoint control and existing suite.
+   - Falsifier: equality and reverse containment refuse early, but the old forward refusal runs after clone. The revised probe must reject that partial fix specifically on the forward arm. The symmetric correction still passes and the other controls retain their polarity.
+   - Local evidence: the following scratch-only simulation extracts the seeded function bodies and substitutes fixture creation for Git. It tests the missing assertion with the product's ordering intact. Shell exit **0** observed, with `descendant: refused`, `FIXED: overlap refuses before any mutation; disjoint and descendant behavior kept`, and `probe_rc=0 descendant_clone_created=True`. No subprocess or product Git command ran.
+
+   ```bash
+   export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+   python3 - <<'PY'
+   import ast
+   import os
+   import shutil
+   from pathlib import Path
+   from tempfile import TemporaryDirectory
+   from types import SimpleNamespace
+
+   probe_path = Path("TESTS-RESULTS/2026-11-27+GH-792/readiness_probe.py")
+   nodes = ast.parse(probe_path.read_text()).body
+   selected = [n for n in nodes if isinstance(n, ast.FunctionDef) and n.name in {"main", "rec2", "intact"}]
+   source = Path("utils/py/gen4_campaign.py").read_text()
+   sandbox = next(n for n in ast.parse(source).body if isinstance(n, ast.FunctionDef) and n.name == "make_sandbox")
+   original = ast.get_source_segment(source, sandbox)
+   partial = original.replace("    os.makedirs(sandbox_root, exist_ok=True)\n    clone = os.path.join(sandbox_root, \"clone\")",
+       "    clone = os.path.join(sandbox_root, \"clone\")\n"
+       "    rh, rc_ = os.path.realpath(repo), os.path.realpath(clone)\n"
+       "    if rc_ == rh or rh.startswith(rc_.rstrip(os.sep) + os.sep):\n"
+       "        raise RuntimeError('early overlap refusal')\n"
+       "    os.makedirs(sandbox_root, exist_ok=True)")
+   assert partial != original
+   sentinel = "gh792 sentinel\n"
+
+   def make_repo(path):
+       (path / ".git").mkdir(parents=True)
+       (path / "sentinel.txt").write_text(sentinel)
+
+   def clone_stub(argv, **kwargs):
+       assert argv[:4] == ["git", "clone", "-q", "--no-hardlinks"]
+       make_repo(Path(argv[-1]))
+
+   g = SimpleNamespace(os=SimpleNamespace(path=os.path, sep=os.sep, makedirs=os.makedirs),
+                       shutil=SimpleNamespace(rmtree=shutil.rmtree),
+                       subprocess=SimpleNamespace(run=clone_stub))
+   product = dict(vars(g))
+   exec("from __future__ import annotations\n" + partial, product)
+   g.make_sandbox = product["make_sandbox"]
+   with TemporaryDirectory() as folder:
+       fx = Path(folder)
+       env = dict(Path=Path, SENTINEL=sentinel, make_repo=make_repo, g=g)
+       exec(compile(ast.Module(body=selected, type_ignores=[]), str(probe_path), "exec"), env)
+       result = env["main"](fx)
+       leaked = (fx / "host/inside/clone").is_dir()
+       print(f"probe_rc={result} descendant_clone_created={leaked}")
+       assert result == 0 and leaked
+   PY
+   ```
+
+2. **[Nit] Correct two stale evidence descriptions.** GH-1626's capture at `PROJECT/1-INBOX/GH-1626-DRY-RUN-SCRATCH-PRUNE.md:52` describes the current probe with an empty queue. Name that reproduction as round-0 history or show the current one-PR call at `TESTS-RESULTS/2026-11-27+GH-1626/readiness_probe.py:90-94`. Both `SUMMARY.md:11` notes under the issue evidence directories should distinguish the delivery-file probe's individual `unfixed` verdict from the aggregate `AMBIGUOUS` exit 7 when the behavioral probe is landed but the receipt is missing (`utils/py/swarm_preflight.py:265-266,299-305,1641-1643,1943`). Delivery requires both probes landed (`utils/py/marathon_drive.py:2713-2720,2778-2789`).
+
+### Round-1 dispositions and proof read-back
+
+- **F1 verified.** With `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"` set, `python3 TESTS-RESULTS/2026-11-27+GH-1626/readiness_probe.py` exited **1**. Both arms logged `land_prs rc=0 refreshed=[9] old-folder-kept=False` and the probe reported `UNFIXED: a landing dry run pruned a retained scratch folder (GH-1626)`. The draft branch reaches the shared `finally` without a landing or GitHub lookup (`merge_cleanup.py:1965-1966,2084-2096,2531-2545`). Both allowed fix shapes pass the retained controls, and deletion of the prune call fails the execute arm (`review-round1-fixes/README.md:5-14` under GH-1626).
+- **F2's reverse case and F3's Git isolation verified by source and retained receipts.** The GH-792 contract now names reverse containment. The retained forward-only control fails, and the symmetric control logs zero calls for equality and reverse containment. `readiness_probe.py:58-70,165-169` clears inherited Git settings before any fixture Git or product clone. The producer's hostile-environment receipts show the sentinel absent with isolation and present on the old control. I did not rerun the Git-backed case or either existing suite in this worktree. Finding 1 concerns the separate forward-case ordering assertion.
+- **F4 and F5 verified.** The embedded contract fields in all six round-1 Preflight JSON receipts match the captures. The effective lanes each contain the product path, an exact `delivery.md` and the disclosed inferred suite. Each round-1 base and comment-only receipt has Preflight/probe/Jog lint exits `0/1/0`. Each simulation plus delivery receipt has `4/0/0`. The base evaluated proof SHA is `db8a09385c3aee9e6d77eafe0201c3ff257584ed`; the Status tables reserve the readiness claim for a fresh preflight at fetched integration after publication and merge. Immutable SQLite read-back also confirmed one `parked` event per issue, no Jog rows and ratings `70/65/50/90` and `50/60/50/90`. The accepted criteria and source-hunk overlap disposition from round 1 remain in force. Source references use the seeded worktree. The nearest graph's generation is 2026-11-26, and the probes are absent from that index, so I checked the local source directly.
