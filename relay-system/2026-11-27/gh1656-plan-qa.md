@@ -1,6 +1,6 @@
 # GH-1656 plan QA — non-ledger GitHub conflict: local-merge rung or a precise stop
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: claude-a (Producer)
 
 ## Context
 
@@ -144,6 +144,53 @@ implement, otherwise hand back with findings.
    runs before `_protect_stacked_dependents`.
 
 Plan revised in `PROJECT/2-WORKING/GH-1656-NON-LEDGER-CONFLICT.md` steps 1–3.
+
+### Codex reviewer, round 2
+
+**What this proposes.** Build a base-first merge of the approved pin and verify its parents and tree against the gated result. Publish it through the existing hook with an exact-base lease, then require GitHub confirmation before continuing to reconciliation.
+
+**How the existing system works, per this document.** Phase 5 settles GitHub's mergeability signal, simulates the merge in a disposable clone, and hands dirty non-ledger conflicts back to the operator. Clean simulations proceed through ledger and eligibility checks to the GitHub merge command, and a confirmed merge enters the batch recording and reconciliation tail.  [Unverified — no citation]
+
+**What it's not.** The frontmatter limits local landing to the merge strategy and preserves the ledger repair budget and pre-push gate. Steps 2–3 treat a published commit awaiting GitHub confirmation as a separate outcome.
+
+**Verdict:** Changes requested. The tree and parent comparisons plus the exact-base lease close the round-1 base race once the candidate commit exists. The clean setup, attribution and publication failure paths still need a complete contract.
+
+1. **[Blocker] Handle a successful simulation with no merge to abort.**
+
+   **Observed input:** `merge_cleanup.py:1135–1141` checks out the pin and merges the base into it. `ledger_merge.py:413–426` explicitly accepts that simulation without `MERGE_HEAD` when the pin already contains the base. `test/gh534_phase_b_tests.py:227–236` cuts the proposed success fixture's PR branch directly from development. With no intervening base advance before A, the simulation is already up to date. Plan step 2 (`GH-1656-NON-LEDGER-CONFLICT.md:148–154`) calls `git merge --abort` unconditionally before building the base-first merge.
+
+   **Affected scope:** R1 and the primary success test. Check for an active merge and abort only when present. Require a successful abort when needed. Fail closed on failed tree/base capture, checkout or unexpected merge error. Keep the planned parent and tree comparisons, and give an already-contained pin or a clean tree mismatch a specific R2 stop reason. This keeps the same clone and ledger gate.
+
+   **Falsifier:** The main success fixture leaves the gated base as an ancestor of A's pin, reaches the actual push, and records two parents and the gated tree. The divergent-but-clean path still aborts its real in-progress merge. An unexpected abort failure leaves origin unchanged.
+
+   **Clone probe:** `python3 test/gh534_phase_b_tests.py TestGh1656NonLedgerConflict.test_clean_conflicting_lands_through_rung` with A first and cut from the current base. Assert that the original simulation has no `MERGE_HEAD` and verify both parents and the tree from bare origin. [Unverified — needs clone run]
+
+2. **[Blocker] Bind confirmation and recovery to the commit the rung actually published.**
+
+   **Observed input:** Plan steps 2–3 (`GH-1656-NON-LEDGER-CONFLICT.md:161–175`) accept MERGED at the pin and send every unconfirmed result, including MERGED at a different head, to `--reconcile-pr N`. The existing merge proof requires MERGED and a nonempty `mergeCommit.oid` (`merge_cleanup.py:559–584`). Recovery accepts any MERGED response with an OID, uses its current head and OID to reconcile, then rewrites the batch's merge OID (`2855–2884`). Independently, the Phase 5 finalizer overwrites any status other than `merged` on the current row at rc 2 (`1974–1996`). Putting a pending publication's OID in `merge_oid` also admits it to landed/QA accounting immediately (`batch_record.py:235–247,505–507,559–575`).
+
+   **Affected scope:** R1/R4, the phase tail and the operator's recovery command. Require confirmation to match the pinned head, target and pushed commit OID. Carry the confirmed OID to hosted reconcile as `merged_head` when that mode is configured (`merge_cleanup.py:1595–1606,2437–2442`). Retain the unconfirmed publication separately from the confirmed merge OID and preserve its diagnostic through the finalizer. Before telling the operator to use `--reconcile-pr N --execute`, require them to verify the same published OID, pin and target once GitHub confirms, or validate those fields in the existing recovery command. A mismatched MERGED response needs an explicit stop and investigation. Keep the optional `rung` in the existing record and include it when rendering pending publication and confirmed success. This uses the existing tail and batch writer.
+
+   **Falsifier:** Exact confirmation enters the tail once. Missing or different merge OID, a different head, or a different target leaves the published OID and rung visible, with no confirmed merge row, reconcile call or next push. Following the prescribed recovery with mismatched evidence cannot attribute or reconcile it as this rung's landing.
+
+   **Clone probe:** `python3 test/gh534_phase_b_tests.py TestGh1656NonLedgerConflict.test_confirmation_lag_then_tail_once TestGh1656NonLedgerConflict.test_confirmation_withheld_stops_without_reconcile`. In the withheld scenario, drive the external read seam with missing and mismatched commit OIDs and a moved head, then exercise the recovery instruction against the mismatch. Inspect the final issue body and reconciliation calls after the actual bare-origin push. The stub can establish the consumer behavior; the plan's prior manual landing establishes that a direct push can land the commit, while live GitHub attribution remains unmeasured here. [Unverified — needs clone run]
+
+3. **[Blocker] Distinguish a rejected push from an unknown publication result.**
+
+   **Observed input:** Plan lines 155–163 run a bounded network push and poll after success. Its Risks section at 210–212 assumes push failure means nothing landed. `merge_cleanup.py:226–234` converts a timeout to rc 124, so the same nonzero shape can represent a lost acknowledgement after a remote ref update. The existing GitHub path looks up actual remote state on error for this reason (`555–571`). The revised local path provides recovery evidence only after a reported successful push.
+
+   **Affected scope:** R1/R4 and safe retries. Capture the candidate OID before invoking the push. After a timeout or ambiguous transport failure, read the destination to distinguish candidate present, proven rejection and unknown. If the candidate is present, use the same confirmation path. If evidence is unavailable, report the candidate OID, target and rung and stop for verification. The exact-base lease continues to prevent overwriting a moved integration ref; it cannot tell the caller whether the previous command published.
+
+   **Falsifier:** A push that really updates bare origin and then returns rc 124 never reports an unpublished failure or attempts a second push. A lease rejection keeps the new origin tip. An unavailable remote read retains the candidate OID and stops without reconcile or a next landing.
+
+   **Clone probe:** `python3 test/gh534_phase_b_tests.py TestGh1656NonLedgerConflict.test_push_acknowledgement_lost TestGh1656NonLedgerConflict.test_moved_base_refused` after adding the first case to the existing fixture or recording an equivalent manual case. Wrap the one push call to run the real push first, then return the timeout shape, and check the published ref from bare origin. In the lease case advance origin to an intermediate commit on the pinned parent so a plain fast-forward push would otherwise succeed. [Unverified — needs clone run]
+
+**Remaining assessment.** The seeded clean/dirty/UNKNOWN paths and merge-only policy are grounded as recorded in round 1. The final live refresh is the right branch point (`merge_cleanup.py:2382–2418`), with stop-only decisions before stack retargeting. A branch update during the push cannot add unpinned content to the candidate. Exact post-push attribution is still required. Keying on CONFLICTING is adequate for the observed input paired with DIRTY. The fixture's forced-CONFLICTING refusal is an honest base red for R1 and the squash arm of R2. The dirty diagnostic is R2's red, the conflict preview is R3's red and stuck UNKNOWN is an existing green control. The rendered batch row is R4's assertion. Keep the ancestry-derived MERGED response scoped to direct-push cases so existing false-success controls retain their meaning. Make the rejecting hook reject only when the explicit skip override was removed so the advertised bypass check can fail. Qualify the clean conflict preview if required checks are pending (`2334–2335`), and reference acceptance cases by name because plan lines 201–203 still point to the old test numbers.
+
+**Evidence limits.** Static Verify-tier review against the seeded source. Coverage checked on the nearest indexed Forge clone, generation 2026-11-26T04:31:47Z. Its bounded symbol search returned no matches, and the revised plan was absent there, so the cited evidence comes from direct source and plan reads in this worktree. No runtime probes, suites or reviewer phase gate ran.
+
+VERDICT: FAIL
+Basis: The plan needs to handle the clean no-op simulation, preserve exact publication identity through confirmation and recovery, and retain evidence after an ambiguous push.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
