@@ -8,7 +8,7 @@
 | 2 Simulated fix + `delivery.md` (proof clone only) | `ed06a9254` | 0 | 4 STALE (landed) | 0 |
 | 3 Comment-only edit (proof clone only) | `af570e01b` | 0 | 0 READY | 1 unfixed |
 
-Issue fetched in every state: OPEN, acceptance fidelity `unknown / no-issue-section` (advisory). The probe change matrix is in `review-round1-fixes/` (README + `matrix`/variant outputs). The `delivery.md` `path_absent` probe means a fix without its delivery receipt is still read as unfixed.
+Issue fetched in every state: OPEN, acceptance fidelity `unknown / no-issue-section` (advisory). The probe change matrix is in `review-round1-fixes/` (README + `matrix`/variant outputs). The `delivery.md` `path_absent` probe reads `unfixed` on its own until the receipt exists. Delivery needs both probes landed. A real fix without the receipt is not STALE: the behavioral probe reads landed and the receipt probe unfixed, so the aggregate is AMBIGUOUS (exit 7). See `probe-proof-r2/2b-simulated-fix-no-receipt/`.
 
 ## Round 0 history (`probe-proof/`, before review)
 

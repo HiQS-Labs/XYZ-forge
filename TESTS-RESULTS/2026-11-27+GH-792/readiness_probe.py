@@ -10,7 +10,8 @@ Exit 0 only when the FIXED behavior is observed, all inside a fresh fixture dire
      <base2>/clone/nested, make_sandbox(<base2>/clone/nested, <base2>) raises RuntimeError with
      zero recorded calls and both checkouts intact.
   2. Positive control: a disjoint call still returns a working clone holding the sentinel.
-  3. Existing self-test shape: make_sandbox(host, <host>/inside) still raises RuntimeError.
+  3. Existing self-test shape: make_sandbox(host, <host>/inside) still raises RuntimeError,
+     also with zero recorded calls and <host>/inside never created.
 Any other outcome, including a crash, exits nonzero, so the preflight contract
 (`expect_nonzero: true`) reads it as unfixed. Today step 1 deletes the fixture source repo
 first and then fails in `git clone`, which is the bug.
@@ -147,17 +148,34 @@ def main(fx: Path) -> int:
     print(f"disjoint: clone ok at {clone}")
 
     # 3. existing self-test shape: sandbox root inside the repo still refuses
+    # Review round 2: this arm must ALSO refuse before any makedirs/rmtree/subprocess call and
+    # leave the proposed sandbox root absent (today it clones into host/inside/clone first).
     host = fx / "host"
     make_repo(host)
+    calls3 = []
+    g.os.makedirs, g.shutil.rmtree, g.subprocess.run = (
+        rec2("makedirs", real[0], calls3), rec2("rmtree", real[1], calls3), rec2("subprocess", real[2], calls3))
     try:
         g.make_sandbox(str(host), str(host / "inside"))
+        outcome3 = "returned"
+    except RuntimeError as exc:
+        outcome3 = f"RuntimeError: {exc}"
+    except Exception as exc:  # noqa: BLE001
+        outcome3 = f"{exc.__class__.__name__}: {exc}"
+    finally:
+        g.os.makedirs, g.shutil.rmtree, g.subprocess.run = real
+    inside_absent = not (host / "inside").exists()
+    print(f"descendant: {outcome3}; mutation calls={calls3}; sandbox root absent={inside_absent}; "
+          f"host intact={intact(host)}")
+    if outcome3 == "returned":
         print("INVALID: descendant sandbox root was accepted")
         return 2
-    except RuntimeError:
-        print("descendant: refused")
     if not intact(host):
         print("INVALID: descendant refusal damaged the host repository")
         return 2
+    if not outcome3.startswith("RuntimeError") or calls3 or not inside_absent:
+        print("UNFIXED: descendant sandbox root was refused only after mutating")
+        return 1
     print("FIXED: overlap refuses before any mutation; disjoint and descendant behavior kept")
     return 0
 

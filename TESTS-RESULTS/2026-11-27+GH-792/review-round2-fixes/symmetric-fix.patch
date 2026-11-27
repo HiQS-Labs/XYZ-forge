@@ -1,0 +1,23 @@
+diff --git a/utils/py/gen4_campaign.py b/utils/py/gen4_campaign.py
+index 2670a87ad..604cc8c03 100755
+--- a/utils/py/gen4_campaign.py
++++ b/utils/py/gen4_campaign.py
+@@ -87,14 +87,14 @@ def make_sandbox(repo: str, sandbox_root: Optional[str]) -> Tuple[str, bool]:
+     if not sandbox_root:
+         sandbox_root = tempfile.mkdtemp(prefix="gen4-campaign.", dir=os.environ.get("TMPDIR") or None)
+         created = True
+-    os.makedirs(sandbox_root, exist_ok=True)
+     clone = os.path.join(sandbox_root, "clone")
++    rh, rc_ = os.path.realpath(repo), os.path.realpath(clone)
++    if rc_ == rh or rc_.startswith(rh.rstrip(os.sep) + os.sep) or rh.startswith(rc_.rstrip(os.sep) + os.sep):
++        raise RuntimeError(f"sandbox {rc_} is not disjoint from the repo {rh}")
++    os.makedirs(sandbox_root, exist_ok=True)
+     if os.path.isdir(os.path.join(clone, ".git")):
+         shutil.rmtree(clone)
+     subprocess.run(["git", "clone", "-q", "--no-hardlinks", repo, clone], check=True, timeout=600)
+-    rh, rc_ = os.path.realpath(repo), os.path.realpath(clone)
+-    if rc_ == rh or rc_.startswith(rh.rstrip(os.sep) + os.sep):
+-        raise RuntimeError(f"sandbox {rc_} is not disjoint from the repo {rh}")
+     return clone, created
+ 
+ 
