@@ -45,3 +45,8 @@ INTERVENTION: I-2 2026-11-27T16:32:42Z GH-1626 receipt publication needed one ma
 APPLIED: I-2 → applied receipt e14a44bd6 published, PR #1651 opened, reservation finished and archived 2026-11-27T16:36:15Z
 GATE: GH-1626 head fd811951f0b5dae07077d36fe9dbe90c36b7c440 full green (duration not recorded)
 BASELINE: GH-1626 delivered as PR #1651 (head e14a44bd6e630c7d235c4f6d509a5992c6c6ce16, lane head fd811951f); row parked awaiting-landing; GH-792 pending 0 attempts; item boundary reached 2026-11-27T16:36Z
+BASELINE: fresh-observer read of checkpoint 556b4891a at 2026-11-27T16:52Z passed 28 of 28 checks (stopped ownership, remote PR 1651 / ref / receipt hashes, queue); resuming GH-792 with wake 2 under the same deadline and authority
+INTERVENTION: I-3 2026-11-27T17:01:52Z GH-792 receipt publication needed the same manual gate attempt reservation (task GH-792-start-task), jog resume 792 and attempt-finish; PR 1652 body rewritten with evidence; filed issue 1653 for the recurring refusal
+APPLIED: I-3 → applied receipt 140f5f9a2 published, PR 1652 head 140f5f9a2, reservation finished and archived 2026-11-27T17:03:24Z
+GATE: GH-792 head 5c185ac2e436042b87f0c0ceb11ce7985c4b83be full green (duration not recorded)
+BASELINE: wake 2 16:52:51Z to 17:01:33Z dispatched GH-792 only (one builder turn, one agy review, approved on first review, gate green); GH-1626 and GH-1315 not re-selected; PR 1651 unchanged at e14a44bd6; PR 1652 open at 140f5f9a2; queue has no pending rows; deadline unchanged
