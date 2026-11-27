@@ -1,0 +1,5 @@
+separator=0x000a stamp=aaaaaaaaaaaa calls=5 reason='stale-evidence: cited paths changed since prepared_commit aaaaaaaaaaaa (target.ref development at bbbbbbbbbbbb) in PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md: utils/py/jog_run.py'
+separator=0x2028 stamp=aaaaaaaaaaaa calls=0 reason=None
+Traceback (most recent call last):
+  File "<stdin>", line 35, in <module>
+AssertionError: None

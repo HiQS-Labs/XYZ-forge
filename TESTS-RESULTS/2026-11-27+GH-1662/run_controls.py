@@ -516,6 +516,33 @@ print(json.dumps({"fork_info_has_field": run(True, True), "fork_production_shape
             pm["fork_main_pair"]["listed_1"], r, "Would merge PR #118" in o, rm, "Would merge PR #118" in om, "depends on deferred prerequisite (#119)" in (om + em)), REV_CAND,
         "probes: runs/A16-fork-probe.json, runs/A16-protect-probe.json")
 
+# A17 ---------------------------------------------------------------------------------------------------------
+if want("A17"):
+    f = build("a17")
+    prim = os.path.join(f, "primary")
+    ge = dict(os.environ, GIT_AUTHOR_NAME="o", GIT_AUTHOR_EMAIL="o@o", GIT_COMMITTER_NAME="o", GIT_COMMITTER_EMAIL="o@o")
+    open(os.path.join(prim, ".merge-cleanup.json"), "w").write('{"preserve_commit_history": true}\n')
+    for a in (["add", ".merge-cleanup.json"], ["commit", "-q", "-m", "policy: preserve history"], ["push", "-q", "origin", "main"]):
+        subprocess.run([REAL_GIT, "-C", prim] + a, check=True, env=ge, capture_output=True)
+    st = json.load(open(os.path.join(f, "ghstate.json")))
+    for p in st["prs"]:
+        if p["number"] == 101:
+            p["mergeable_override"] = "CONFLICTING"  # GitHub says CONFLICTING; the local merge is clean
+    json.dump(st, open(os.path.join(f, "ghstate.json"), "w"))
+    tip = lambda: subprocess.run([REAL_GIT, "--git-dir=" + os.path.join(f, "origin.git"), "rev-parse", "main"], capture_output=True, text=True).stdout.strip()
+    before = tip()
+    r1, o1, e1, _ = run(f, "A17-dry", CAND, ["--standalone", "--prs", "101"], root=False)
+    r2, o2, e2, _ = run(f, "A17-exec", CAND, ["--standalone", "--prs", "101", "--execute"], root=False)
+    st2 = json.load(open(os.path.join(f, "ghstate.json")))
+    state101 = [p["state"] for p in st2["prs"] if p["number"] == 101][0]
+    rec("A17", "GH-1656 local-merge rung in standalone: a GitHub-CONFLICTING PR with a clean local merge, policy merge, no installed hook: the dry run says the push would be refused; --execute stops before any push (origin unchanged, PR still open)",
+        cmd_s + " --standalone --prs 101 [--execute]   (policy preserve_commit_history, PR scripted CONFLICTING)", r2,
+        r1 == 0 and "that push would be refused" in o1 and r2 == 2 and "push refused before pushing" in (o2 + e2) and "githooks/install.sh is missing" in (o2 + e2)
+        and before == tip() and state101 == "OPEN",
+        "dry rc %d (refusal foretold=%s); execute rc %d (push refused=%s); origin tip unchanged=%s; PR 101 state %s" % (
+            r1, "that push would be refused" in o1, r2, "push refused before pushing" in (o2 + e2), before == tip(), state101), REV_CAND,
+        "the rung and its push belong to GH-1656; the gate check before the push is the existing gate_unwired_reason")
+
 bad = [a for a, ok in results if not ok]
 print("\nrows: %d, failed: %s" % (len(results), bad or "none"))
 sys.exit(1 if bad else 0)

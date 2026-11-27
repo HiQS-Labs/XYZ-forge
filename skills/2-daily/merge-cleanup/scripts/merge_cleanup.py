@@ -1218,6 +1218,79 @@ def push_resolved_head(pr: Dict[str, Any], clone: Path, sha: str, primary_repo: 
     return True, f"pushed {sha[:10]} to {pr['headRefName']}"
 
 
+LOCAL_MERGE_RUNG = "local-merge"
+
+
+def land_via_local_merge(info: Dict[str, Any], clone: Path, primary_repo: Path, branch: str,
+                         pin: str) -> Tuple[str, str, str]:
+    """GH-1656: GitHub reads CONFLICTING, but the landing clone's merge of the pinned head onto
+    origin/<branch> was clean and passed the ledger gate. Publish exactly that merge as a merge
+    commit through the clone's pre-push gate, leased on the gated base, then wait for GitHub to
+    confirm the PR MERGED at that commit.
+
+    Returns (outcome, candidate, reason). outcome: "merged" (confirmed; candidate is the merge
+    commit), "dirty" (reason lists the conflicted files; nothing pushed), "refused" (nothing
+    pushed), "unknown" (the push result cannot be read), "unconfirmed" / "mismatch" (published,
+    GitHub has not confirmed this landing)."""
+    def git(*a):
+        return run_git(clone, list(a))
+    tree = git("write-tree")
+    base = git("rev-parse", f"origin/{branch}")
+    if tree.returncode or base.returncode or not tree.stdout.strip() or not base.stdout.strip():
+        return "refused", "", "cannot read the gated tree or base in the landing clone"
+    tree, base = tree.stdout.strip(), base.stdout.strip()
+    # A pin that already contains the base simulates as "up to date" with no MERGE_HEAD to abort.
+    if git("rev-parse", "-q", "--verify", "MERGE_HEAD").returncode == 0 and git("merge", "--abort").returncode:
+        return "refused", "", "could not abort the simulated merge in the landing clone"
+    if git("checkout", "--quiet", "--detach", base).returncode:
+        return "refused", "", f"could not check out the gated base {base[:10]}"
+    m = git("merge", "--no-ff", "--no-edit", "-m", f"Merge pull request #{info['number']} from {info.get('headRefName') or pin[:10]}",
+            "-m", f"Landed by merge-cleanup's {LOCAL_MERGE_RUNG} rung (GH-1656): GitHub reported CONFLICTING; "
+            f"the local merge of pinned head {pin} onto {branch} was clean.", pin)
+    if m.returncode:
+        files = sorted(set(git("diff", "--name-only", "--diff-filter=U").stdout.split()))
+        git("merge", "--abort")
+        return "dirty", "", ", ".join(files) or (m.stderr.strip() or m.stdout.strip())[-200:]
+    cand = git("rev-parse", "HEAD").stdout.strip()
+    got = (git("rev-parse", "HEAD^1").stdout.strip(), git("rev-parse", "HEAD^2").stdout.strip(),
+           git("rev-parse", "HEAD^{tree}").stdout.strip())
+    if got != (base, pin, tree):
+        return "refused", "", (f"the base-first merge is not what was gated (parents {got[0][:10]}/{got[1][:10]}, "
+                               f"tree {got[2][:10]}; gated {base[:10]}/{pin[:10]}, tree {tree[:10]}) — nothing pushed")
+    # Publish from the local integration branch, as commit_and_push_phase5_writes does from the primary:
+    # the pre-push gate admits a commit on an administrative branch, never a detached task head.
+    if git("checkout", "--quiet", "-B", branch, cand).returncode or git("rev-parse", "HEAD").stdout.strip() != cand:
+        return "refused", "", f"could not put local {branch} at the candidate {cand[:10]} — nothing pushed"
+    unwired = gate_unwired_reason(clone)
+    if unwired:
+        return "refused", "", f"push refused before pushing: {unwired}"
+    env = {k: v for k, v in os.environ.items() if k != "XYZ_SKIP_PREPUSH"}  # the hook is the gate; never bypassed
+    push = _net_git(clone, ["push", f"--force-with-lease=refs/heads/{branch}:{base}", "origin",
+                            f"refs/heads/{branch}:refs/heads/{branch}"], timeout=PUSH_GATE_TIMEOUT_S, env=env)
+    if push.returncode:
+        # Rejected, or the acknowledgement was lost (rc 124). Read the destination before deciding.
+        fetched = _net_git(clone, ["fetch", "--quiet", "origin", branch])
+        tip = git("rev-parse", f"origin/{branch}").stdout.strip() if fetched.returncode == 0 else ""
+        contains = git("merge-base", "--is-ancestor", cand, tip).returncode if tip else None
+        if contains == 1:
+            return "refused", cand, f"push refused (origin/{branch} is {tip[:10]}): {push.stderr.strip()[-400:]}"
+        if contains != 0:
+            return "unknown", cand, f"push exited {push.returncode} and origin/{branch} cannot be read back"
+        log_warn(f"PR #{info['number']}: push exited {push.returncode} but origin/{branch} contains {cand[:10]} — published")
+    log(f"PR #{info['number']}: {LOCAL_MERGE_RUNG} rung published {cand[:10]} to origin/{branch}; waiting for GitHub to confirm")
+    for attempt in range(MERGEABLE_POLL_ATTEMPTS + 1):
+        live = refresh_pr_with_retry(info["number"], primary_repo)
+        if live.get("state") == "MERGED":
+            oid = (live.get("mergeCommit") or {}).get("oid")
+            if live.get("headRefOid") == pin and live.get("baseRefName") == branch and oid == cand:
+                return "merged", cand, ""
+            return "mismatch", cand, (f"GitHub reads MERGED at head {str(live.get('headRefOid'))[:10]}, base "
+                                      f"{live.get('baseRefName')}, merge commit {str(oid)[:10]}")
+        if attempt < MERGEABLE_POLL_ATTEMPTS:
+            _sleep(MERGEABLE_POLL_S)
+    return "unconfirmed", cand, "GitHub has not confirmed the PR MERGED"
+
+
 CLOSES_RE = re.compile(r"\b(?:closes|fixes|resolves)\s+#(\d+)", re.I)
 
 
@@ -1543,7 +1616,7 @@ def standalone_prerequisites(primary: Path) -> Tuple[List[str], List[str]]:
                  f"{lsof or 'not found; checkouts are then preserved, never removed'}")
     hook = (Path(primary) / "githooks" / "install.sh").is_file()
     lines.append(f"  [info] gate hook (only a push needs it): "
-                 f"{'githooks/install.sh present; it runs in each landing clone' if hook else 'no githooks/install.sh; standalone makes no push and any push from a clone stays refused'}")
+                 f"{'githooks/install.sh present; it runs in each landing clone' if hook else 'no githooks/install.sh; the only pushes a standalone run can attempt (the GH-1656 local-merge rung, post-merge writes) are refused'}")
     return lines, hard
 
 
@@ -2054,14 +2127,16 @@ def _final_eligibility_veto(live: Dict[str, Any]) -> Optional[str]:
     return hold_label(live)
 
 
-def _record_merge_outcome(batch, pr_num: int, merged_oid: str, primary_repo: Path) -> None:
+def _record_merge_outcome(batch, pr_num: int, merged_oid: str, primary_repo: Path,
+                          rung: Optional[str] = None) -> None:
     """GH-1064: record the remote merge before anything else can stop. GH-1140: the OID verified
     by execute_pr_merge wins; the confirmation re-fetch only fills a gap, never overrides."""
     if batch is None:
         return
     confirm = refresh_pr_with_retry(pr_num, primary_repo)
-    batch_record.set_outcome(batch, pr_num, status="merged",
-                             merge_oid=merged_oid or (confirm.get("mergeCommit") or {}).get("oid") or "")
+    oid = merged_oid or (confirm.get("mergeCommit") or {}).get("oid") or ""
+    batch_record.set_outcome(batch, pr_num, status="merged", merge_oid=oid,
+                             **({"rung": rung, "rung_oid": oid} if rung else {}))  # GH-1656
 
 
 def _note_external_state(p_num: int, info: Dict[str, Any], batch, track) -> None:
@@ -2353,6 +2428,10 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                         attempt_record.finish(record, idx, "handoff", reason=b1["reason"])
                     log_err(f"PR #{p_num}: HANDOFF — {b1['reason']}")
                     log_err(f"  conflict set: {', '.join(b1['conflict_set']) or '(none extracted)'}")
+                    outside = sorted(set(b1.get("conflict_set") or []) - ledger_merge.ledger_repair_paths(clone))
+                    if outside:  # GH-1656: say plainly that this is not a ledger conflict, before any merge call
+                        log_err(f"PR #{p_num}: non-ledger conflict; local merge dirty: {', '.join(outside)} "
+                                f"(GitHub said {mergeable}) — not calling `gh pr merge`")
                     log_err(f"  export {attempt_record.RECORD_ENV}={record}  # caller ladder: /debug-mantra → /recon → /ponytail → /start-task → /unstuck")
                     failed[p_num] = "handoff"
                     keep_workdir = True
@@ -2520,7 +2599,23 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     "(checks passed on that commit)")
 
             if dry_run:
-                log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy}`")
+                if info.get("mergeable") != "CONFLICTING":
+                    log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy}`")
+                elif checks != "ok":
+                    pass  # the checks preview above already said --execute would not merge it yet
+                elif strategy == "merge":
+                    # GH-1662: that rung pushes from the clone, so standalone without a proven gate hook is refused there
+                    rung_gate = gate_unwired_reason(clone) if standalone else ""
+                    if rung_gate:
+                        log(f"[DRY RUN] PR #{p_num}: GitHub reports CONFLICTING but the local merge is clean — the "
+                            f"{LOCAL_MERGE_RUNG} rung pushes from the clone and that push would be refused ({rung_gate}); "
+                            "--execute would stop before landing it")
+                    else:
+                        log(f"[DRY RUN] PR #{p_num}: GitHub reports CONFLICTING but the local merge is clean — "
+                            f"--execute would land it through the {LOCAL_MERGE_RUNG} rung (GH-1656)")
+                else:
+                    log(f"[DRY RUN] PR #{p_num}: non-ledger conflict; local merge clean, but strategy {strategy} "
+                        "cannot be landed locally — --execute would stop before `gh pr merge` (GH-1656)")
                 if pr.get("headRefName") and not pr.get("isCrossRepository"):
                     landing_heads.add(pr["headRefName"])
                 continue
@@ -2554,15 +2649,54 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                         f"{str(pinned)[:10]}; re-run the dry run to re-pin once its checks finish")
                 failed[p_num] = "deferred: head is not the dry-run pin"
                 continue
+            if live.get("state") != "OPEN" or (live.get("baseRefName") or "") != branch:
+                log_err(f"PR #{p_num}: at final eligibility the PR is {live.get('state')} targeting "
+                        f"'{live.get('baseRefName')}', not an open PR into '{branch}' — not merged")
+                return 2
+            # GH-1656: GitHub refuses `gh pr merge` on a PR it reads CONFLICTING, even when the gated
+            # local merge was clean. Never send it there: land it locally (merge strategy) or stop now.
+            conflicting = live.get("mergeable") == "CONFLICTING"
+            if conflicting and strategy != "merge":
+                log_err(f"PR #{p_num}: non-ledger conflict; local merge clean: no conflicted files; strategy "
+                        f"{strategy} cannot be landed locally — not calling `gh pr merge` (GH-1656); land it by "
+                        "hand or under policy merge")
+                return 2
             open_prs = getattr(args, "_open_prs_for_stacks", ordered_prs)
             _protect_stacked_dependents(info, open_prs, primary_repo, branch)
-            _MATCH_HEAD[p_num] = pinned
-            merged_ok, merged_oid = execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False)
-            _MATCH_HEAD.pop(p_num, None)
-            if not merged_ok:
-                return 2
+            rung = None
+            if conflicting:
+                outcome, cand, why = land_via_local_merge(info, clone, primary_repo, branch, pinned)
+                if outcome != "merged":
+                    if batch is not None and cand:
+                        batch_record.set_outcome(batch, p_num, rung=LOCAL_MERGE_RUNG, rung_oid=cand)
+                    if outcome == "dirty":
+                        log_err(f"PR #{p_num}: non-ledger conflict; local merge dirty: {why} — nothing pushed")
+                    elif outcome == "refused":
+                        log_err(f"PR #{p_num}: {LOCAL_MERGE_RUNG} rung did not land — {why}")
+                    elif outcome == "unknown":
+                        log_err(f"PR #{p_num}: {LOCAL_MERGE_RUNG} rung publication unknown for {cand} on "
+                                f"origin/{branch} (pin {pinned}): {why}; verify origin/{branch} before anything "
+                                "else — do not re-land")
+                    else:
+                        nxt = ("investigate before reconciling" if outcome == "mismatch" else
+                               f"once GitHub reads PR #{p_num} MERGED into {branch} at head {pinned[:10]} with merge "
+                               f"commit {cand[:10]}, run `" + shlex.join([
+                                   sys.executable, str(Path(__file__).resolve()), "--primary", str(primary_repo),
+                                   "--integration-branch", branch, "--reconcile-pr", str(p_num), "--execute"]) + "`")
+                        log_err(f"PR #{p_num}: {LOCAL_MERGE_RUNG} rung published {cand} to origin/{branch} "
+                                f"(pin {pinned}); {why} — {nxt}; do not re-land")
+                    keep_workdir = True
+                    return 2
+                merged_oid, rung = cand, LOCAL_MERGE_RUNG
+                log(f"✅ PR #{p_num} is MERGED as {cand[:10]} through the {LOCAL_MERGE_RUNG} rung (GH-1656)")
+            else:
+                _MATCH_HEAD[p_num] = pinned
+                merged_ok, merged_oid = execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False)
+                _MATCH_HEAD.pop(p_num, None)
+                if not merged_ok:
+                    return 2
             _MERGED_THIS_RUN.add(p_num)
-            _record_merge_outcome(batch, p_num, merged_oid, primary_repo)
+            _record_merge_outcome(batch, p_num, merged_oid, primary_repo, rung=rung)
             landed_scratch += [(d, f"pr-{p_num}-") for d in sorted(workdir.glob(f"pr-{p_num}-*"))]
             if own_repair:
                 landed_scratch.append((workdir / f"verify-{own_repair[:8]}", "verify-"))
@@ -2584,7 +2718,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 log(f"PR #{p_num}: standalone — post-merge reconcile (wave_reconcile, releases check, pdda, Jog) skipped")
             elif not run_post_merge_reconcile(
                     p_num, primary_repo, integration_branch=branch, dry_run=False,
-                    pr_head=info.get("headRefOid"), is_intermediate=is_intermediate):
+                    pr_head=info.get("headRefOid"), is_intermediate=is_intermediate,
+                    merged_head=merged_oid if rung else None):  # GH-1656: the rung's exact landing
                 log_err(f"PR #{p_num}: post-merge reconciliation FAILED — stopping before the next PR")
                 return 2
             # GH-549/GH-624: report only after the merge, primary fast-forward, and reconcile

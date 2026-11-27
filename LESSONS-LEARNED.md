@@ -240,3 +240,12 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: skills
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1527
 - **date**: 2026-11-19
+
+## A new push path needs one replay against the real pre-push installer, not a substitute hook
+- **cue**: adding or changing a code path that runs `git push` (a rung, a repair, a publisher) whose tests stub hook wiring or install a stand-in hook
+- **lesson**: Forge's installed pre-push stub runs attempt admission before the gate, and admission refuses a detached task head with no reservation. Fixture stubs and pass-through hooks never reach it. Replay the exact publication shape (source ref, destination, lease) once against `githooks/install.sh` in a throwaway bare-origin clone, and keep the refused shape as the red control.
+- **evidence**: `TESTS-RESULTS/2026-11-27+GH-1656/real-hook-detached.log` (refused, origin unchanged) vs `real-hook-branch.log` (admitted, full gate GREEN, exact candidate published)
+- **confidence**: high; deterministic red/green on the same candidate. Edit verdicts: publishing from the local integration branch helped; the fixture's rejecting-hook test showed no observed effect on this defect
+- **area**: gate
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1656
+- **date**: 2026-11-27

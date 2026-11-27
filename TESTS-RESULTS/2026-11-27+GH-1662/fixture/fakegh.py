@@ -50,6 +50,7 @@ def view(pr, state):
     if pr["state"] == "OPEN" and head and base:
         mt = git("merge-tree", "--write-tree", "--no-messages", base, head)
         mergeable = "CONFLICTING" if mt.returncode == 1 else "MERGEABLE"
+        mergeable = pr.get("mergeable_override") or mergeable  # a scripted "GitHub says CONFLICTING" (GH-1656 rung control)
         d = git("diff", "--name-only", base + "..." + head)
         files = [{"path": p} for p in d.stdout.split() if p]
     roll = []
