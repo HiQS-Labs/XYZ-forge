@@ -1,7 +1,7 @@
 ---
 Goal: Independent preparation QA — Conveyor packets for Flywheel Run A (ledger #1658): #1590, #1666, #1423 ready; #1480 held
 Date: 2026-11-27
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ---
 
@@ -139,3 +139,58 @@ All five findings accepted. The ready set changed: **#1590 is withdrawn and #163
 
 Read for round 2: the three ready captures and `GH-1480-MERGE-CLEANUP-DECOMPOSE.md`; `TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/` (`SUMMARY.md`, `matrix.txt`, `preflight-arms.txt`, `provenance.jsonl`, `probe-gh1666.py`, `probe-gh1423.py`, `probe-gh1638.sh`, `sim-gh*.patch`, `fake*-gh*.patch`, `consumer-validation.txt`, `admission-checks.txt`, `prs-readback.txt`, `preflight-*.json`). Seams for #1638: `relay-automation/relay-turn-lib.sh:722-791`, `utils/py/rtl.py:1156-1161`, `skills/1-hourly/relay-automation/make-pkg.sh`. You may run `probe-gh1638.sh` read-only (`bash TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/probe-gh1638.sh; echo $?`): it writes only under its own mktemp dir in `$TMPDIR` and removes it. Same rules as round 1 otherwise.
 
+### Round 2 · Reviewer · codex
+
+VERDICT: FAIL
+
+#1590 is withdrawn, #1423 is ready for preparation handoff, and #1480 is correctly held. #1638 needs a bounded directory-mirror proof and a package check. #1666 needs one stronger counterexample for its CR/LF-only criterion.
+
+1. **[Blocker] #1638's green arm changes file seeding and its probe accepts an incomplete directory mirror.**
+   - Observed input: the capture requires current host contents and declares file entries unchanged (`PROJECT/1-INBOX/GH-1638-RELAY-SEED-DIR-NESTING.md:12-19,32-34,52`). Both Python and Bash use the same seed loop (`utils/py/rtl.py:1156-1161`, `relay-automation/relay-turn-lib.sh:722-750,774-791`). `sim-gh1638.patch:7-10` adds recursive removal to every existing host input, including files. The loop currently checks only for an absolute entry and source existence before the copy. Normalization at `relay-automation/relay-turn-lib.sh:395-433` does not prove the resolved destination is strictly below the scratch worktree at the point of removal. The loop traces SEED and eventually reports success without checking the copy (`:784-799,826-828`). The green arm therefore endorses a new destructive operation on an unproven destination and can drop a previously checked-out entry on a failed copy.
+   - Observed input: `probe-gh1638.sh:7-20` has no tracked child deleted on the host. A contents-only overlay can satisfy all three checks while leaving a stale HEAD file in the worktree. Direct command replay with only temporary directories, no Git, returned interpreter exit 0 and printed `cp exit=0; seeded assertions=True; retired file survives=True`. The three seeded assertions in that replay were absence of the extra directory, current top-level bytes, and preservation of the nested file.
+   - Affected scope: the GH-1638 packet's plan, simulated proof and common producer worktree seeding. Keep the fix confined to directory entries and require any replacement to stay strictly inside the worktree, with an explicit failed-copy outcome. Use a tracked child deleted on the host as the smallest extra input. Keep the directory commit-pathspec fix out of this partial lane. Jog strips `--lane-closes-issue` (`utils/py/jog_run.py:520-523`), so the issue can stay open for that second item.
+   - Falsifier: a directory-only simulated fix retains the latest host files, removes the deleted child, creates no nested copy and preserves ordinary file seeds. A contents-only overlay fails the deleted-child control. A controlled copy failure never yields a successful but incomplete seed. The proof shows a resolved worktree-relative boundary before any recursive removal.
+   - Narrow replay command, run with `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -`:
+
+     ```python
+     from pathlib import Path
+     from subprocess import run
+     from tempfile import TemporaryDirectory
+     with TemporaryDirectory(prefix="gh1638-overlay-") as tmp:
+         host, dst = (Path(tmp) / name / "seeded" for name in ("host", "checkout"))
+         for path, version in ((host, "v2"), (dst, "v1")):
+             (path / "sub").mkdir(parents=True)
+             (path / "sub/g.txt").write_text("s1")
+             (path / "f.txt").write_text(version)
+         (dst / "retired.txt").write_text("only in HEAD")
+         result = run(["cp", "-R", str(host) + "/.", str(dst)], check=True)
+         ok = (not any(p.name == "seeded" for p in dst.glob("*"))
+               and not any(p.name == "seeded" for p in dst.glob("*/*"))
+               and (dst / "f.txt").read_text() == "v2"
+               and (dst / "sub/g.txt").read_text() == "s1")
+         print(f"cp exit={result.returncode}; seeded assertions={ok}; "
+               f"retired file survives={(dst / 'retired.txt').exists()}")
+     ```
+
+2. **[Should] Check that #1638's packaged copy actually contains the fix.**
+   - Observed input: the archive regeneration is explicit acceptance and a declared write (`GH-1638-RELAY-SEED-DIR-NESTING.md:34,81-101`). The probe loads the live library and the second probe checks only receipt path existence (`probe-gh1638.sh:2,13`, `utils/py/swarm_preflight.py:265-266,283-293`). The selected gate, `test/worktree-isolation.sh`, exercises the live library (`:181-191`) and does not compare archive bytes. The retained fixed+receipt arm returns exit 4 (`preflight-arms.txt:10`) without reporting an archive freshness measurement. A read-only `PYTHONDONTWRITEBYTECODE=1 python3 -` comparison extracted the library member with `tarfile`, then compared it with the live source and the source with the one insertion from `sim-gh1638.patch:9`. Python exited 0 and printed `archive == baseline: True` and `archive == simulated source: False`.
+   - Affected scope: #1638 delivery acceptance for the installed relay skill. Use the existing `test/relay-pkg-freshness.sh:7-34` as part of the selected gate or record its result as a required delivery check. Keep the existing worktree gate and introduce no new suite.
+   - Falsifier: a source-only fix plus a receipt fails the package check. The same source with the package regenerated passes, and the delivery records that result.
+   - Clone probe: from the disposable full clone on the source-only simulated-fix arm, run `bash test/relay-pkg-freshness.sh` and retain its exit and reported drift. Then run `bash skills/1-hourly/relay-automation/make-pkg.sh && bash test/relay-pkg-freshness.sh` on the same arm and retain the exit and output. I did not run these gates here.
+
+3. **[Should] Prove #1666's CR/LF-only rule beyond the three reported Unicode examples.**
+   - Observed input: `GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md:35,101` requires the readers to split on CRLF, CR and LF only. `probe-gh1666.py:3-15` catches the issue-only and two-reader mutants and checks raw fidelity, but it checks only U+0085/U+2028/U+2029 as non-breaks. I ran `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 -` with the three readers loaded from memory, wrapping each original `text.splitlines()` with masking/restoration of just those three code points (to/from U+E100/U+E101/U+E102) and setting `marker_lines = list(lines)` as in the simulated patch. The command ran the exact seeded probe and then extracted and inlined `"## Acceptance\n- [ ] Alpha\vbeta\n- [ ] Gamma\n"`. It exited 0 and printed `seeded probe passed`, `U+000B extraction: ['Alpha', 'Gamma']` and `U+000B raw checklist: ['- [ ] Alpha']`. The capture's simulated fix already uses the broader rule.
+   - Affected scope: the inline probe and its planned case in the existing #400 suite. Extend the same loop to the other Python line separators (U+000B, U+000C and U+001C–U+001E). Preserve the three reported examples, raw-line equality and real CR/LF controls.
+   - Falsifier: the current full simulated fix passes the extended table. A reader retaining broader Python splitting fails on a non-CR/LF separator even when it explicitly handles the original three. A correct fix may normalize criterion whitespace while preserving the separator in the raw checklist.
+
+4. **[Should] Make the retained provenance replayable for the cited consumer arms.**
+   - Observed input: `SUMMARY.md:4-6` says every command, head and exit is retained. `provenance.jsonl:14-19` has the full consumer-arm commit IDs and exits, but its command is the label `swarm-preflight --dry-run (target-root scratch clone)`, omitting the project doc, actual entry point and target arguments. The hostile `GIT_DIR` arms in `matrix.txt:12-14` and the admission checks in `admission-checks.txt:1-4` have no corresponding invocation in the provenance. The table distinguishes the two exits correctly.
+   - Affected scope: replay of the preparation evidence requested in Round 1. Record exact invocations with a bound variable for the disposable clone and identify how each proof arm was constructed so the commit ID has a reproducible input.
+   - Falsifier: a producer can replay the base, fixed-with-receipt and fixed-without-receipt arms from the retained commands and patch/receipt inputs, and correlate the selected command, evaluated commit, exit and output. The preparation evidence remains labelled as pending publication, merge and the exact-ref recheck.
+
+#### Verified preparation evidence
+
+- Capture parsing and linting agreed with the readable probe files. `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 -` using `swarm_preflight.extract_contract`, `jog_run.lint_probe` and direct JSON reads exited 0. Each packet reported cap 9, the full expected pin, `(True, 'ok')` and identical here-doc contents. The three base receipts evaluated `development` at `6142128d9c433d6b12972c6cd9a6f864f0ed9da2`, READY with two unfixed probes. `python3 TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/probe-gh1666.py` with bytecode disabled returned 1 with `AssertionError: ('0x85', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])`. The producer's positive and negative clone-arm receipts were inspected; I did not rerun Git fixtures or consumer gates.
+- The effective lane intersections extracted from the three base JSONs match `SUMMARY.md:34-39`. The declared paths are disjoint, and the shared inferred paths are reserved. The stated pin and cited paths reach the #1664 stale check (`utils/py/jog_run.py:1779-1818`), ahead of lease acquisition (`:3163-3179`).
+- An immutable SQLite read using `PYTHONDONTWRITEBYTECODE=1 python3 -` returned the exact four ratings in `prs-readback.txt`, all in Queue / parked intake with no override, zero matching Jog rows and no #1590 row. The seeded project tree has no #1590 capture. The historical-pin backlog scan remains retained producer evidence. The source graph was from a separate checkout, so I used exact local source for the cited lines.
+- GitHub returned #1480 and #1475 open. The issue's explicit dependency matches the capture's `HELD:` marker and the recorded pre-lease refusal. #1666 and #1423 each match all three live issue checkboxes literally, including U+2028 in #1666. #1423's only issue comment records the already-reused #1424 capture and an open fix. Its AST constraint is explicit and permits both local fix shapes. Its helper proof and full-driver delivery requirements are now distinguished. #1638's source issue confirms both symptoms and has zero comments. The packet states its partial scope and the issue closure behavior supports that scope.
