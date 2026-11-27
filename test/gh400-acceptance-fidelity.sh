@@ -572,7 +572,8 @@ printf '## Acceptance\n- [ ] First\n\n```text\n- example output\n```\n' >"$D20/f
 printf '## Acceptance\n- [ ] First\n\n```text\n~~~\n- example output\n```\n' >"$D20/fence-tilde.md"
 printf '## Acceptance\n- [ ] First\n\n````\n```\n- example output\n````\n' >"$D20/fence-long.md"
 printf '## Acceptance\n\n~~~text\n    ~~~\n- example output\n~~~\n\n- [ ] First\n' >"$D20/fence-indent.md"
-for f in fence fence-tilde fence-long fence-indent; do
+printf '## Acceptance\n- [ ] First\n\n~~~text\n~~~\302\240\n- example output\n~~~\n' >"$D20/fence-nbsp.md"
+for f in fence fence-tilde fence-long fence-indent fence-nbsp; do
   c20 "fenced example text is not a criterion ($f)" "$D20/$f.md" "$D20/first.md" 'match|[]|[]'
 done
 printf '## Acceptance\n- [ ] First\n\n```inline code```\n\n- Second\n' >"$D20/inline.md"

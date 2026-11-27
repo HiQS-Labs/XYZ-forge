@@ -36,6 +36,7 @@
   PASS: C20 fenced example text is not a criterion (fence-tilde)
   PASS: C20 fenced example text is not a criterion (fence-long)
   PASS: C20 fenced example text is not a criterion (fence-indent)
+  PASS: C20 fenced example text is not a criterion (fence-nbsp)
   PASS: C20 an inline code span does not open a fence (full copy)
   PASS: C20 an inline code span does not open a fence (partial copy)
-  gh400-acceptance-fidelity: 38 pass, 0 fail
+  gh400-acceptance-fidelity: 39 pass, 0 fail

@@ -32,10 +32,25 @@ Explicit replay of the archived #792 capture (old workaround still declared), fi
 stated in the plan and PR: the archive is a historical record and is not edited; stale-deviation
 enforcement is intentionally unchanged.
 
+## Adjacent path — nested plain sub-bullet, plain sibling and fenced example (final QA r1)
+
+`smoke-nested/`: issue body served by a hermetic `gh` stub on PATH (`issue-body.md`: a checkbox
+criterion with a nested plain detail, a plain sibling criterion, and a fenced `- literal example
+output`), capture `capture.md` copying the two criteria as checkboxes. Same CLI command.
+
+| Parser | acceptance line | exit |
+|---|---|---|
+| unfixed | `diverged — 1 doc criterion(a) absent from the issue with no declared deviation` | 5 |
+| fixed | `match — 2/2 criteria copied verbatim from issue #99001` | 5 |
+
+Exit 5 in the fixed run is the synthetic contract's artifact path (`readiness: artifact path not
+found at target.ref`), not acceptance; see `preflight-fixed.txt`.
+
 ## Suites
 
-- `red-gh400-unfixed.txt`: final `test/gh400-acceptance-fidelity.sh` against the unfixed parser —
-  31 pass, 7 fail (all 7 are the new GH-1646 cases; the 6 new regression guards pass on both).
-- `green-gh400.txt`: 38 pass, 0 fail. `green-gh557.txt`: 16 pass, 0 fail.
+- `red-gh400-unfixed.txt`: final `test/gh400-acceptance-fidelity.sh` against the base parser —
+  32 pass, 7 fail (the 7 are GH-1646 cases; the other 6 C20 cases are regression guards that pass
+  on both).
+- `green-gh400.txt`: 39 pass, 0 fail. `green-gh557.txt`: 16 pass, 0 fail.
 
 Verdict: PASS.

@@ -1,4 +1,4 @@
-# red control: final test/gh400-acceptance-fidelity.sh against utils/py/swarm_preflight.py at 4f606a380 (unfixed)
+# red control: final test/gh400-acceptance-fidelity.sh against utils/py/swarm_preflight.py at base 52813e56f (unfixed)
 == test: gh400-acceptance-fidelity ==
   workdir: <abs-path>
   PASS: C1 the real GH-202 inversion is refused (4 issue criterion(a) missing from the doc with no declared deviation; 3 doc criterion(a) absent from the issue with no declared deviation)
@@ -37,6 +37,7 @@
   PASS: C20 fenced example text is not a criterion (fence-tilde)
   PASS: C20 fenced example text is not a criterion (fence-long)
   PASS: C20 fenced example text is not a criterion (fence-indent)
+  PASS: C20 fenced example text is not a criterion (fence-nbsp)
   FAIL: C20 an inline code span does not open a fence (full copy): expected 'match|[]|[]', got 'diverged|[]|["Second"]'
   FAIL: C20 an inline code span does not open a fence (partial copy): expected 'diverged|["Second"]|[]', got 'match|[]|[]'
-  gh400-acceptance-fidelity: 31 pass, 7 fail
+  gh400-acceptance-fidelity: 32 pass, 7 fail
