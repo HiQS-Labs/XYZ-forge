@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -147,5 +147,34 @@ Handing off to Producer (claude) — correct provenance and acceptance specifica
 **Ask for round 2:** re-grade R1-1 and R1-2 against the revised plan (`.relay-artifacts/GH-1663-CI-OPTIMIZE-SKILL-DEFECTS.md`), in particular (a) is the repo split supported by subject evidence you can read (the archive entries at `docs/ROADMAP-UPSTREAM-ARCHIVE.md` and the GitHub titles)? (b) does the nine-assertion contract plus the single-edit red controls reject a partial fix? Keep `swept file: yes|no`, `VERDICT:` and `Basis:`. Use bold labels, not markdown heading lines.
 
 handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+**What this proposes**
+Make six text edits to ci-optimize: reconcile fourteen principles with twelve scored dimensions, explain the situational extensions, repair the roadmap scope and P9 omission, split issue provenance by repository, and add a name-resolution fallback. Keep all principle bodies, score rows and bands intact.
+
+**How the existing system works, per this document**
+The loader reads the description; two existing suites pin selected headings and body phrases. The four waves and scorecard cover P1-P12, while P13/P14 already describe conditional applications. Relative links depend on installation layout; repository names disambiguate issue numbers inherited from two histories.
+
+**What it's not**
+Accept all listed non_goals: no redesign, score rescaling, extra rows/waves, merge-cleanup changes, umbrella closure or new registered tests. This is plan approval, not implementation sign-off (inference from the Status row and unchecked Acceptance section).
+
+**source-backed**
+
+swept file: yes
+
+- [Pass] Re-swept the whole skill, including pre-existing text. The defects remain grounded at `skills/4-occasional/ci-optimize/SKILL.md:8` (description), :36 (heading), :42-107 (fourteen principles), :149-160 (twelve rows), :15 (bare provenance), :127 (roadmap scope), :133 versus :139 (P9 omission), and :171 (missing fallback). No additional small count, dead-anchor or cross-section defect found. Anti-pattern references (:119-121), no-new-tests scope (:38-40), wave membership (:136-139), and scoring bands (:163-165) were checked.
+- [Pass] R1-1 closed at plan level: artifact :46-49/:73 now splits provenance by subject instead of existence. Independent local corroboration: `docs/ROADMAP-UPSTREAM-ARCHIVE.md:94/:102/:110/:140` identify predecessor #544/#564/#549/#376; :72 identifies predecessor #528; :544 identifies the predecessor #42 driver lock. `PROJECT/3-COMPLETED/GH-377-TEST-SUITE-RECALIBRATION.md:25` links Forge's successor to #365; `PROJECT/1-INBOX/gh549-impl-qa-brief.md:73` identifies #558's flaky releases-app section; `ROUTER.md` names Forge #35's tier/width work. This supports the corrected split and closes the contradiction raised in R1. The Producer's nine-title lookup is reported evidence, not a lookup repeated this turn; its retained provenance is still to inspect at implementation review because that evidence directory is absent in this seeded worktree. Naming each source repo is portable even where the private predecessor requires account access.
+- [Pass] The smallest rubric-preserving fix remains fourteen principles with two situational extensions outside the twelve rows/waves (artifact :74/:76). P13 calls the stress loop a diagnostic option (`skills/4-occasional/ci-optimize/SKILL.md:103`); P14 scopes its mechanism to performance-critical workloads (:108). “Applied when the situation arises” preserves those obligations. Additional rows/waves would change the current 24-point scoring contract (:149-165), so are not better for this task.
+- [Pass] Static compatibility prediction remains sound: `test/gh578-ci-optimize-skill.sh:15` greps only `description:`; :17 is a comment, while :18-33 assert numbered principle headings/titles. :43-47 pin the roadmap/scorecard headings, Wave 1/Wave 4 and `20–24 Points`, all preserved. No assertion pins the changed foundational section heading, roadmap sentence, diagram node or Related Skills bullet. `test/gh609-sdlc-agent-gaps.sh:139-149` pins the P13/P14 headings and phrases, which remain untouched. This is source inspection, not a suite execution; both suite runs remain owed in a disposable full clone.
+- [Pass] Link treatment is now accurate and proportionate: artifact :55/:77/:86-87 recognizes that `../ci-suite-audit/SKILL.md` resolves with a flat sibling and that fallback is needed when absent. The sanity-check sentence at skill :34 is sufficient in its named section despite following the link at :24. Matching its sentence shape at :171 is enough; no link resolver subsystem is needed.
+- [Pass] R1-2 closed at plan level: artifact :78-88 now specifies nine separate assertions, nonempty guards, base exit 1, candidate exit 0, and six single-edit revert controls with expected assertion failures. Each edit has coverage: edit 1 → assertion 2; edit 2 → 7; edit 3 → 1/3; edit 4 → 5/6; edit 5 → 4; edit 6 → 8; assertion 9 retains tree-link validity. This rejects an unchanged or partially fixed candidate by contract. There is no observed checker rejection in this worktree yet: :98 is an unchecked acceptance requirement, not a completed result. Actual base/candidate/red-control receipts remain required before delivery; this approval does not assume a later relay gate.
+- [Pass] Narrow non-mutating probe, exit 0: `python3` read the nonempty skill and used `re.findall(r'^### \d+\.', s, re.M)` and `re.findall(r'^\| \d+ \|', s, re.M)`, then inspected its relative targets and exact fallback sentences. Decisive output: `principles 14 rows 12`; `sanity-check tree True ... fallback True`; `ci-suite-audit tree True ... fallback False`. The flat targets were lexical observations, not a populated-install run. All scratch configuration stayed under `.relay-scratch/tmp`.
+- [Unverified — no citation] Scope is surgical: artifact :72-77 changes one skill, preserves requirements and scoring, and :78 labels the retained checker as manual evidence rather than a suite/gate. No duplicate subsystem or registration is proposed. Keep that checker bounded to this evidence task; the nine explicit assertions address the previous review's concrete acceptance gap.
+
+VERDICT: PASS
+Basis: Both earlier findings are resolved in the revised plan. Source inspection supports the six edits and their acceptance contract; implementation, retained red/green receipts and disposable-clone suite verification remain subsequent work, not claims established by this review.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with implementation under the approved plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
