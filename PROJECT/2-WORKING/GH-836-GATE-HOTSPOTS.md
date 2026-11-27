@@ -425,3 +425,7 @@ Operator authorized publication and one required full local gate after the other
 ## Merge evidence
 
 - PR #1434 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1588 merged 2026-11-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
