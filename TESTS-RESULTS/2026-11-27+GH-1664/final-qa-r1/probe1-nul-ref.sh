@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 python3 -B - <<'PY'
 import io, json, subprocess, sys
 from pathlib import Path

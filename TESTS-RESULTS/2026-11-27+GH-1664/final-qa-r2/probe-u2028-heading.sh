@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
 mkdir -p "$TMPDIR"
 python3 -B - <<'PY'

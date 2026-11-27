@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
 import inspect, io, json, os, sys, tempfile, time
 from pathlib import Path
