@@ -2,7 +2,7 @@
 gh_issue: 1664
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1664
 title: "GH-1664: Jog refuses a prepared packet whose cited evidence changed (OL-10 stale-evidence admission)"
-status: "In progress (plan QA cap + consult tie-break: GO with amendments)"
+status: "In progress (final QA approved; PR pending)"
 created: 2026-11-27
 updated: 2026-11-27
 doc_type: bug
@@ -24,7 +24,7 @@ Parent: [#1476](https://github.com/HiQS-Labs/XYZ-forge/issues/1476) (admission p
 
 | What was just completed | What's next |
 |---|---|
-| Built: `stale_evidence_refusal` + `_admission_captures` in `utils/py/jog_run.py` at both pre-lease points; G9–G13 in `test/gh280-jog-marathon-adapter.sh` (green 244/0; red at G9, G11, G13 on base `jog_run.py`); replay witness green, base red; smoke and icase manual check pass. Evidence: `TESTS-RESULTS/2026-11-27+GH-1664/`. | Final relay QA (Codex), full gate via push hook, ready PR (parent lands). |
+| Built: `stale_evidence_refusal` + `_admission_captures` in `utils/py/jog_run.py` at both pre-lease points; G9–G13 in `test/gh280-jog-marathon-adapter.sh` (green 244/0; red at G9, G11, G13 on base `jog_run.py`); replay witness green, base red; smoke and icase manual check pass. Evidence: `TESTS-RESULTS/2026-11-27+GH-1664/`. | Final relay QA Approved (Codex r3, `relay-system/2026-11-27/gh1664-final-qa.md`); next: full gate via the push hook, ready PR (parent lands). |
 
 ## Acceptance
 
