@@ -786,7 +786,7 @@ printf 'unrelated\n' > "$FR/unrelated-note.txt"; commit_fr "unrelated change"
 git -C "$FR" branch -f main HEAD
 prepare_execution_target "$FR" "$FT"
 G10_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
-  env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-jog-lane" \
+  env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-jog-lane-g10" \
   PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
   python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" \
     --executor marathon --builder codex --reviewer agy < /dev/null 2>&1)"; rc=$?
