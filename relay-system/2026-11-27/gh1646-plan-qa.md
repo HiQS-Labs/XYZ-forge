@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -287,5 +287,45 @@ Handing off to Producer to correct fence handling and retain both controls in th
 This is the last plan round (4/4). Remaining edge cases beyond the stated controls are proposed as out of scope.
 
 <!-- ROUND 4 -->
+
+### Reviewer · Round 4
+
+**What this proposes**
+
+Count plain dash and asterisk bullets alongside checkboxes in GitHub issue Acceptance sections. The plan retains the existing continuation logic and uses issue-side fence tracking so real criteria after a fenced example are still read.
+
+**How the existing system works, per this document**
+
+Fidelity extracts checkboxes from both the issue and the capture. A verbatim checkbox copy of a plain issue list therefore looks like an addition. The packet inliner also consumes capture checkboxes, so I infer that the capture grammar is part of the packet contract.
+
+**What it's not**
+
+The capture grammar, packet inliner, accepted headings, and stale-deviation rules remain as they are.
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: Both Round 3 replays pass for their specified inputs. The same fence design introduces a false refusal for a literal checkbox and can suppress a real criterion after an inline code span. Round 4 reached the cap, so this relay is escalated to the Producer.
+
+Probe commands `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 "$PWD/.relay-scratch/tmp/gh1646-r4.py"` and `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 "$PWD/.relay-scratch/tmp/gh1646-r4-corrected.py"` both exited 0 after asserting the results below. The first compiled the exact planned regex, substituted the Round 4 fence and classification rules into the seeded extractor in memory, and used that version for the issue call only. The second rejected backticks in backtick opener info and skipped fenced lines before classification. Both used seeded fidelity with injected issue bodies and scratch captures. Tuples are `(status, dropped, added)`. These are plan simulations.
+
+- [Blocker] Prevent newly reachable literal checkboxes from becoming required criteria. When skipping a literal heading or rule inside a fence, suppress criterion creation from the fence content the old loop would never reach. Preserve the capture path and normal checkbox parsing.
+  - Observed input: Issue `"## Acceptance\n- [ ] First\n\n```text\n## sample output\n- [ ] example output\n```\n"`, capture `"## Acceptance\n- [ ] First\n"`. The existing parser stops at the sample heading (`utils/py/swarm_preflight.py:618–623`). The plan skips that break but still runs checkbox matching inside the fence (`PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:56–59`, `utils/py/swarm_preflight.py:624–627`). Probe `fenced checkbox after heading` printed baseline `('match', [], [])`, plan `('diverged', ['example output'], [])`, and corrected simulation `('match', [], [])`.
+  - Affected scope: Issue-side fenced examples with a literal section boundary followed by a sample checkbox. Ordinary checkboxes outside the fence still count.
+  - Falsifier: The exact capture matches. Add `- Second` after the closer and the partial copy reports only `dropped=['Second']`. Skipping every issue-side fenced line also fixed the reproduced input in simulation, but if taking that broader route, account for the existing continuation behavior on fenced text that is indented under a criterion.
+
+- [Blocker] Require a valid backtick fence opener before suppressing plain criteria. A backtick opener's info string cannot contain a backtick. A same-line closing run can belong to an inline code span.
+  - Observed input: Issue `"## Acceptance\n- [ ] First\n\n```inline code```\n\n- Second\n"`. The stripped-prefix opener in `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:54–57` starts a fence on the inline span, then suppresses Second. With both criteria copied as checkboxes the plan reports `('diverged', [], ['Second'])`. With only First it reports `('match', [], [])`. Probe `inline code/full` and `inline code/partial` returned `('match', [], [])` and `('diverged', ['Second'], [])` after the opener check was tightened.
+  - Affected scope: Plain issue criteria after a line beginning with a backtick code span of width three or greater.
+  - Falsifier: The full copy matches and the partial copy identifies Second as dropped. A real opener such as three backticks followed by `text` still shields literal bullets until the valid closer.
+
+- [Pass] The Round 3 controls close for their exact inputs. A tilde run inside a backtick fence and a three-backtick run inside a four-backtick fence both preserved `match`. Fenced `## sample output` and `---` both preserved Second after the closer, yielding full `match` and partial `dropped=['Second']`. An outside `- - -` still ends Acceptance. See plan lines 54–59 and 106–110, and `utils/py/swarm_preflight.py:618–623`.
+- [Pass] The full plain copy moved from `('diverged', [], ['First', 'Second'])` to `('match', [], [])`; plain and mixed partial copies both reported `('diverged', ['Second'], [])` in the simulation. The tab pair, padded empty task, absent and empty sections, deviations heading, and bold controls also passed. For the new directional assertion read `dropped` directly because the existing shell helper prints status and detail only. See plan lines 98–113, `utils/py/swarm_preflight.py:605–635`, and `test/gh400-acceptance-fidelity.sh:55–63`.
+- [Pass] The issue body and capture reads are separate (`utils/py/swarm_preflight.py:985–986`). Capture packet inlining still uses the checkbox reader (`:826–838`, `:1754–1760`). The reconstructed #792 issue shape diverged on the retained archive and matched the scratch copy without the workaround, as described at plan lines 73–79 and implemented by the stale-deviation check at `utils/py/swarm_preflight.py:1003–1018`. The nearest index generation was `2026-11-26T04:31:47Z`. Its extractor snippet reports one caller, inbound tracing was unavailable under the session approval policy, and both task docs were absent from that index. The call sites and docs were checked directly in the relay checkout.
+
+[Unverified — needs clone run] The two shell suites, the actual gh400 red/green addition, and the preflight CLI smoke remain implementation checks for the disposable full clone. No phase gate was specified for this reviewer turn. The sweep surfaced no further defects in the reviewed scope.
+
+Handing off to Producer (claude-a) to address the two blockers and arrange a fresh plan review after escalation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
