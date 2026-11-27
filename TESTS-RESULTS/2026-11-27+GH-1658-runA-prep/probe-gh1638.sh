@@ -59,5 +59,36 @@ out3="$(cd "$R3" && TMPDIR="$T" bash -c '
 [ "$rc3" -eq 9 ] && [ -z "$out3" ] || fail "uncleared checkout copy still reported a seed (rc=$rc3, path=${out3:-none})"
 w3="$(printf '%s\n' "$out3" | tail -1)"; [ -n "$w3" ] && [ -d "$w3" ] && git -C "$R3" worktree remove --force "$w3" >/dev/null 2>&1
 git -C "$R3" worktree prune >/dev/null 2>&1
+# Arm 4: the checkout's parent of the entry is a tracked symlink escaping the worktree while the host
+# has a real directory there. The begin must fail with no path and create nothing outside.
+O="$T/outside"; mkdir -p "$O"
+R4="$T/repo4"; mkdir -p "$R4" && cd "$R4" || exit 2
+git init -q && git config user.name probe && git config user.email probe && git config commit.gpgsign false
+ln -s "$O" parent && echo x > keep.txt && git add -A && git commit -qm init || exit 2
+rm parent && mkdir -p parent/new/seeded && echo h > parent/new/seeded/f.txt
+out4="$(cd "$R4" && TMPDIR="$T" bash -c '
+  source "$1" >/dev/null 2>&1 || exit 3
+  RTL_ROOT="$2"; RTL_ALLOW=("parent/new/seeded")
+  wt="$(rtl_worktree_begin)" || exit 9
+  echo "$wt"' _ "$L" "$R4" 2>/dev/null)"; rc4=$?
+[ "$rc4" -eq 9 ] && [ -z "$out4" ] || fail "escaping checkout parent still reported a seed (rc=$rc4)"
+[ ! -e "$O/new" ] || fail "seeding created a directory outside the worktree ($O/new)"
+w4="$(printf '%s\n' "$out4" | tail -1)"; [ -n "$w4" ] && [ -d "$w4" ] && git -C "$R4" worktree remove --force "$w4" >/dev/null 2>&1
+git -C "$R4" worktree prune >/dev/null 2>&1
+# Arm 5: a failed seed whose Git teardown is refused must say so and must not raw-delete the worktree.
+R5="$T/repo5"; mkrepo "$R5"
+echo v2 > seeded/f.txt; chmod 000 seeded/f.txt
+mkdir -p "$T/wt5" && err5="$(cd "$R5" && TMPDIR="$T/wt5" bash -c '
+  source "$1" >/dev/null 2>&1 || exit 3
+  git() { if [ "${3:-}" = worktree ] && [ "${4:-}" = remove ]; then return 1; fi; command git "$@"; }
+  RTL_ROOT="$2"; RTL_ALLOW=("seeded")
+  wt="$(rtl_worktree_begin)" || exit 9
+  echo "$wt"' _ "$L" "$R5" 2>&1 >/dev/null)"; rc5=$?
+chmod 644 "$R5/seeded/f.txt" 2>/dev/null
+[ "$rc5" -eq 9 ] || fail "seed failure with refused teardown reported success (rc=$rc5)"
+printf '%s' "$err5" | grep -qi 'worktree remove' || fail "refused Git teardown was not reported"
+ls -d "$T"/wt5/rtl-wt.* >/dev/null 2>&1 || fail "worktree was raw-deleted after Git refused to remove it"
+for w5 in "$T"/wt5/rtl-wt.*; do [ -d "$w5" ] && git -C "$R5" worktree remove --force "$w5" >/dev/null 2>&1; done
+git -C "$R5" worktree prune >/dev/null 2>&1
 cd / && rm -rf "$T"
 exit $st

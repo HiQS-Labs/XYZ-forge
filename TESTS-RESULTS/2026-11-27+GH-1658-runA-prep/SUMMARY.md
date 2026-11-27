@@ -54,12 +54,14 @@ Standalone probe exits (0 = fixed; `matrix.txt`):
 | fake fix (`fake-gh<N>.patch`) | 1 (issue side only) | 1 (`return True` before committing) | 1 (skip directory entries) |
 | second fake | 1 (`fake2-…-two-reader`: deviations reader left on `splitlines()`) | — | 1 (`fake2-…-overlay`: contents-only `cp -R src/.`, keeps a host-deleted child) |
 | third fake | 1 (`fake3-…-mask-three`: masks only U+0085/U+2028/U+2029) | — | 1 (`fake3-…-rm-unchecked`: ignores a failed removal) |
+| fourth fake | — | — | 1 (`fake4-…-mkdir-first`: creates the parent before proving containment, raw-deletes on failure) |
 | #1423 with hostile inherited `GIT_DIR=/nonexistent` | — | base 1, simulated 0 | — |
 
 #1666's probe covers every non-CR/LF separator Python `splitlines()` breaks on (U+000B, U+000C,
 U+001C-U+001E, U+0085, U+2028, U+2029). #1638's probe also requires a host-deleted child to be
 absent, an ordinary file entry to seed, a failed directory copy or an uncleared checkout copy to
-fail the begin with no worktree path, and the
+fail the begin with no worktree path, an escaping checkout parent (tracked symlink) to fail
+without creating anything outside, a refused Git teardown to be reported without a raw deletion, and the
 packaged `relay-pkg.tar.gz` member to equal the live library. `pkg-freshness-arms.txt`: on the
 source-only arm `bash test/relay-pkg-freshness.sh` exits 1 (drift: `relay-turn-lib.sh`); after
 `make-pkg.sh` it exits 0.
