@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -104,5 +104,58 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: The core plain-bullet, mixed-list, and capture-side behavior checks out. A non-ASCII character on an apparent fence closer still makes example output count as a required criterion. The adjacent CLI smoke receipt also leaves the planned nested-bullet input unspecified.
+
+- [Blocker] Check the suffix after the matched fence run for ASCII spaces and tabs only. Keep the existing same-character, width, and indentation checks.
+  - Observed input: The issue body `"## Acceptance\n- [ ] First\n\n~~~text\n~~~\u00a0\n- example output\n~~~\n"` with capture `"## Acceptance\n- [ ] First\n"` returns `('diverged', ['example output'], [])`. The checkbox-only extract was `['First']`. The plan requires a valid closer at `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:54–59`. At `utils/py/swarm_preflight.py:643–650`, `line.strip()` strips U+00A0 along with ordinary blanks, clears the fence, and lets the next literal line become a criterion. That false drop reaches the readiness check at `:1793–1797`.
+  - Affected scope: Issue Acceptance fences with a marker-only apparent closer followed by non-ASCII whitespace, then a plain example bullet.
+  - Falsifier: The U+00A0 input returns `match` with empty dropped and added lists. Replace U+00A0 with an ASCII space or tab and the valid closer exposes `example output` as a dropped criterion. A suffix with ordinary text still keeps the fence open.
+
+- [Should] Disposition the pre-existing deviation parser defect surfaced by the sweep. A follow-up can make the splitter select the last reason delimiter as documented at `utils/py/swarm_preflight.py:705–713`.
+  - Observed input: For issue criterion `Render — reason: help`, the capture's declaration `- [dropped] Render — reason: help — reason: follow-up` is refused. The probe reports the full criterion as dropped and `[dropped] names a criterion the issue does not state (or that the doc still carries): Render`. The first regex match greedily consumes the rest of the line, so the loop never sees the last delimiter. This input follows the checkbox path.
+  - Affected scope: Declarations for criterion text containing a literal reason delimiter.
+  - Falsifier: The concrete declaration reconciles as `match` with one declared deviation and no unresolved diff. A declaration without a reason still diverges.
+
+- [Should] Complete the adjacent smoke receipt required at `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:120–122`. `TESTS-RESULTS/2026-11-27+GH-1646/SMOKE.md:20–28` lists three checkbox-style verdicts but gives no nested plain input. Identify any existing replay that used that shape and retain its decisive excerpt and exits, or record a focused disposable-clone replay. For the refreshed green suites, bind the provenance to the tested candidate revision or exact source file hashes. The current green rows in `provenance.jsonl:2–3` label a fixed working tree under the base SHA.
+- [Nit] Correct the regression-guard count in `TESTS-RESULTS/2026-11-27+GH-1646/SMOKE.md:37–39`. There are five C20 cases passing on both revisions (`red-gh400-unfixed.txt:35–39`), and seven failing on base. All 12 pass in the retained candidate run (`green-gh400.txt:29–41`).
+
+- [Pass] The existing parser is the single production fidelity path. The issue opts in at `utils/py/swarm_preflight.py:1011–1012`; the capture uses the default and the packet uses the checkbox inliner at `:816–867` and `:1780–1786`. The heading, deviations-heading skip, rule, blank filtering, and raw continuation branches remain in the existing loop at `:613–661`. The 4-space false-closer and inline-span controls in `test/gh400-acceptance-fidelity.sh:570–581` address the plan adjudication's exact inputs. The known in-fence heading/rule limit and the archived #792 stale declarations are recorded in the approved plan at lines 62–63 and in the smoke at lines 30–33.
+- [Pass] C20 calls the actual `check_acceptance_fidelity` with an injected issue body and a scratch capture, then asserts the status and both directions at `test/gh400-acceptance-fidelity.sh:514–529,553–562,578–581`. The retained base full copy fails as `diverged` with three additions, the partial plain copy fails with an empty dropped list, and the partial mixed copy wrongly reports `match|[]|[]` (`red-gh400-unfixed.txt:30–33`, exit 1 in provenance line 1). Retained greens are gh400 38/0 and gh557 16/0 (`green-gh400.txt:41`, `green-gh557.txt:19`). The #792 receipt reports `diverged` → `match` with exit 4 in both runs (`SMOKE.md:12–18`).
+- [Pass] Plan and ledger agree on 65/55/50/85 (`PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:124–129`, `releases.sql:1072`). `sqlite3 -readonly releases.db 'SELECT gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr,doc_path FROM roadmap_items WHERE gh_number=1646;'` exited 0 and returned `1646|65|55|50|85||PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md`. A local readiness refusal with a workaround and one observed incident supports the stated severity. Batch priority and appeal remain judgment calls.
+
+The probe below exited 0. It printed `'\xa0' ('diverged', ['example output'], []) checkbox-only: ['First']`, both ASCII blank controls also reported `diverged`, and `' text' ('match', [], []) checkbox-only: ['First']`. The deviation line was `reason: ('diverged', ['Render — reason: help'], [], ['[dropped] names a criterion the issue does not state (or that the doc still carries): Render'])`.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+PYTHONPATH=utils/py python3 - <<'PY'
+from pathlib import Path
+import os
+from swarm_preflight import check_acceptance_fidelity as check, extract_acceptance_criteria as extract
+p = Path(os.environ["TMPDIR"]) / "gh1646-final-qa-probe.md"
+h = "## Acceptance\n"
+first = h + "- [ ] First\n"
+def fidelity(issue, doc):
+    p.write_text(doc, encoding="utf-8")
+    r = check(str(p), 1646, ".", issue_details={"body": issue})
+    return r["status"], r["dropped"], r["added"], r.get("problems", [])
+for suffix in ("\u00a0", " ", "\t", " text"):
+    issue = first + "\n~~~text\n~~~" + suffix + "\n- example output\n~~~\n"
+    print(repr(suffix), fidelity(issue, first)[:3], "checkbox-only:", extract(issue))
+issue = h + "- [ ] Render — reason: help\n"
+doc = h + "## Acceptance — deviations from the issue\n- [dropped] Render — reason: help — reason: follow-up\n"
+print("reason:", fidelity(issue, doc))
+PY
+```
+
+Review used the seeded files and retained receipts. The nearest graph generation (2026-11-26T04:31:47Z) predates the candidate, so call sites were checked in the relay source. Apart from the deviation split above and the fence-boundary limitation adjudicated in the plan, the sweep surfaced no further pre-existing acceptance-fidelity defects. [Unverified — needs clone run] I did not rerun the shell suites or CLI smoke. This reviewer turn specifies no phase gate.
+
+Handing off to Producer (claude-a) to correct the fence closer, disposition the pre-existing finding, and refresh the evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
