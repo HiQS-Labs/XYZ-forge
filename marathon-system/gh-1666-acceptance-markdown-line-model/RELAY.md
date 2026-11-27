@@ -156,3 +156,13 @@ Reviewed the full contents of `utils/py/swarm_preflight.py` (2251 lines), `test/
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-11-27T23:04:22Z
+task: MARATHON-GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL-TURN
+reviewer: agy
+status: Approved
+reviewed-head: f800470df218215eac4569a924a05bd59deb9e2a
+added-range: 15909+3918
+added-sha256: 07bacf56da0aba5432d6e821d1478715a669631b5379e7aa09dfdcb7aa4282f0
+config-sha256: 6d6d917bf708acc60c941fe5bda9826874f68fe1aa106c988a81d00a3f316712
+gate-run: no
