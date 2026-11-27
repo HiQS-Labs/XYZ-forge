@@ -1707,6 +1707,9 @@ def jog_land(root, gh_num, pr_arg=None):
     return 0
 
 
+LOCK_INIT_GRACE_S = 10  # GH-1653: owner-less lock younger than this is initializing
+
+
 class JogSupervisorLock:
     """Outer driver lock supervisor ensuring exclusive execution on the clone."""
 
@@ -1732,6 +1735,15 @@ class JogSupervisorLock:
 
             if self.conservative and (not holder.isdigit() or int(holder) <= 0):
                 raise ContractError(f"driver lock owner is unknown or initializing: {self.lock_label}")
+            # GH-1653: an owner-less lock this young is another entry between mkdir and its PID
+            # write, not an abandoned one; older empty locks are still reclaimed as stale.
+            if not holder:
+                try:
+                    initializing = time.time() - os.stat(self.lock_dir).st_mtime < LOCK_INIT_GRACE_S
+                except OSError:
+                    initializing = False
+                if initializing:
+                    raise ContractError(f"driver lock owner is initializing: {self.lock_label}")
             is_running = False
             if holder and holder.isdigit():
                 try:
