@@ -2,7 +2,7 @@
 gh_issue: 1638
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1638
 title: "relay turn worktree seeding mirrors an existing allowlisted directory in place instead of nesting it"
-status: "Prepared 2026-11-27 (1-INBOX, not enqueued, not started)"
+status: Active
 created: 2026-11-27
 updated: 2026-11-27
 owner: Conveyor preparation (Flywheel Run A queue; ledger #1658)
