@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -512,5 +512,43 @@ Fixes in `8f47703f5`; gh280 **245/0**, `jog-queue.sh`, `gh139`, `gh460` exit 0 t
 - **[Should] Form 2 unsupervised wake reclaims an initializing lock — Reproduced → fixed.** Your probe at `cc6c73d9e`: AssertionError. `JogSupervisorLock.acquire` now refuses an owner-less lock younger than `LOCK_INIT_GRACE_S` (10 s) for every entry ("driver lock owner is initializing"); older owner-less locks are still reclaimed as stale, preserving crash recovery. At `8f47703f5`: `resume entered=True exit=0; wake entered=False exit=2`; stale control: fresh empty lock refused, 60 s-old empty lock reclaimed (`final-qa-r3-probe-wake.log`).
 
 Handing off to Reviewer for round 4 (cap).
+
+### Round 4 · Reviewer · codex
+
+swept file: no
+
+VERDICT: FAIL
+
+Basis: The installed-hook CLI resume evidence closes that part of Round 3. The lock fix prevents the short interleaving in the retained probe, but an unsupervised wake can still reclaim the lock while a live resume is paused before writing its PID. The extended interleaving is pending clone verification at the round cap. I reviewed the publication, attempt accounting, resume, lock and test evidence paths, including the pre-existing stale-lock behavior. The rest of the legacy Jog and gh280 files were outside this sweep. The graph generation at 2026-11-26T04:31:47Z covers a separate checkout and traces were unavailable under the session approval policy, so citations use the seeded source. The classified gate on the approved delivery commit is [Unverified — needs clone run] under plan lines 30–34 and 154–157. Exact-base byte-for-byte CLI comparison remains unverified. No Git commands, suites or executable fixtures ran in this turn.
+
+- **[Should] Form 2 — an unsupervised wake can still replace a live resume's lock after the 10-second grace period.**
+  Observed input: Resume A acquires before entering its body at `utils/py/jog_run.py:785–791`. It creates the directory at `:1723–1725` and can be paused before the PID write at `:1775–1777`. Wake B without `--supervise-until` is nonconservative at `:3047–3048,3146–3147`. If A stays paused for 11 seconds, B sees no PID at `:1727–1734`. Directory age alone makes the initialization check false at `:1710,1738–1746`. B then replaces the directory at `:1763–1770` and reaches its protected body at `:3180`. A resumes, writes into B's directory and enters its own protected body at `:789`. B can reach publication through `:3279–3287`; either release can also remove the other's lock at `:1783–1789`. The retained probe at `TESTS-RESULTS/2026-11-27+GH-1653/final-qa-r3-probe-wake.sh:16–20,43–57` starts B immediately after A pauses, and its stale control has no initializing process (`final-qa-r3-probe-wake.log:5–10`).
+  Affected scope: An unsupervised wake sharing a coordinator with resume when suspend, scheduling delay or a stalled PID write leaves the live owner unpublished beyond the grace period.
+  Falsifier: With A alive and paused immediately before its PID write for 11 seconds, B refuses before the wake body, then A enters once. Make reclamation distinguish an initializing live owner from an abandoned lock and retain an abandoned-lock recovery control.
+  A local single-process decision probe used `PYTHONPATH=utils/py python3 -` with `os.mkdir` stubbed to raise `FileExistsError` and then succeed, `isfile` false, `st_mtime=100.0`, `time.time=100+age`, and `rmtree` and PID writes mocked. Exit 0, `age=9s acquired=False removed=False` and `age=11s acquired=True removed=True`. This measures the decision, with the two-process overlap still pending.
+  Clone probe: Run from a disposable full clone. Reuse the retained two-process probe with A's wait extended and B started only after the grace period. It uses local temporary files inside the clone and stops before Git, network or queue operations.
+
+  ```bash
+  PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 - <<'PROBE'
+  from pathlib import Path
+
+  path = Path("TESTS-RESULTS/2026-11-27+GH-1653/final-qa-r3-probe-wake.sh")
+  first, *body, last = path.read_text().splitlines()
+  assert first.endswith("<<'PROBE'") and last == "PROBE"
+  source = "\n".join(body)
+  before = "assert release.wait(10)"
+  start = "        b.start()"
+  assert source.count(before) == 1 and source.count(start) == 1
+  source = "import time\n" + source.replace(before, "assert release.wait(30)")
+  source = source.replace(start, "        time.sleep(11)\n" + start)
+  exec(compile(source, str(path), "exec"))
+  PROBE
+  ```
+
+- **[Pass] Installed-hook CLI resume after failure.** `TESTS-RESULTS/2026-11-27+GH-1653/smoke-cli.sh:24,63–99` installs and checks the real hook, invokes the public resume verb and fails if any expectation fails. The retained result at `8f47703f5` shows first refusal exit 2 with one failed row and an unchanged absent remote ref, then resume exit 0 with the bare remote ref at the bundle commit and `failed,completed` archived. A further resume re-projects with the same OID and budget history, and an unreserved push is refused. See `smoke-cli-installed-hook.log:1–28` and `provenance.jsonl:14–15` in the same directory.
+
+- **[Pass] Focused publication evidence and artifact integrity.** The retained `gh280-green.log:110–125,177–183,248` records 245 pass and 0 fail, covering wake, gate-only creation, refusal, retry and exhausted-cap accounting, saved-state settlement and supervised recovery. In this turn, `bash -n` on `test/gh280-jog-marathon-adapter.sh`, `smoke.sh`, `smoke-cli.sh` and `final-qa-r3-probe-wake.sh`, followed by `python3 -` comparing the full directory membership and SHA-256 of every nonempty artifact with the unique entries in `TESTS-RESULTS/2026-11-27+GH-1653/provenance.jsonl:1–21`, exited 0 with `bash syntax: 4 files passed` and `provenance: 21 unique nonempty artifacts match SHA-256`.
+
+Handing off to Producer at escalation for the extended lock probe and its disposition.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
