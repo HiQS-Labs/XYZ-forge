@@ -719,7 +719,8 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     if receipt.get("outcome") == "approved":
         try:
             record["committed_receipt"] = publish_jog_receipt(
-                target, receipt, invocation["result_path"], base_ref="development")
+                target, receipt, invocation["result_path"], base_ref="development",
+                accounting_root=root)
             record["published_head"] = _git(target, "rev-parse", "HEAD").decode().strip()
         except (ContractError, OSError, subprocess.CalledProcessError) as exc:
             record["status"] = "receipt-publication-failed"
@@ -773,12 +774,24 @@ def _jog_exec_dir(root, gid, record):
 
 
 def jog_resume(root, gh_num, args=None):
-    """`jog resume <GH>` — reconcile existing durable state, spend nothing.
+    """`jog resume <GH>` — reconcile existing durable state; spends no build turn.
 
     Reconciliation only: a valid terminal receipt is re-projected idempotently (no dispatch,
-    no token); a dispatched execution without a receipt parks the row (the operator chooses
-    retry-build); anything else is reported. Resume never fires Marathon on its own — a new
-    fire is always the explicit retry-build decision."""
+    no token); an approved receipt not yet published is published, which books one gate
+    attempt (GH-1653); a dispatched execution without a receipt parks the row (the operator
+    chooses retry-build); anything else is reported. Resume never fires Marathon on its own —
+    a new fire is always the explicit retry-build decision. Holds the supervisor lock like the
+    retry verbs (GH-1653); supervised recovery, which already holds it, calls the locked body."""
+    _require_jog_primary(root)
+    supervisor_lock = JogSupervisorLock(root)
+    supervisor_lock.acquire()
+    try:
+        return _jog_resume_locked(root, gh_num, args)
+    finally:
+        supervisor_lock.release()
+
+
+def _jog_resume_locked(root, gh_num, args=None):
     _require_jog_primary(root)
     gid = jog_resolve_ledger_gid(root, gh_num)
     if not gid:
@@ -817,8 +830,17 @@ def jog_resume(root, gh_num, args=None):
             target = _execution_root(root, invocation["target_root"])
             publication["committed_receipt"] = publish_jog_receipt(
                 target, receipt, _ledger_abs_path(root, gid, publication.get("result_path")),
-                base_ref="development")
+                base_ref="development", accounting_root=root)
             publication["published_head"] = _git(target, "rev-parse", "HEAD").decode().strip()
+        elif (receipt.get("outcome") == "approved" and publication.get("committed_receipt")
+              and os.path.isfile(invocation_path)):
+            # GH-1653: a saved publication whose attempt finish was interrupted.
+            invocation = load_marathon_invocation(invocation_path)
+            target = _execution_root(root, invocation["target_root"])
+            head = _git(target, "rev-parse", "HEAD").decode().strip()
+            jog_settle_publication_attempt(
+                target, root, gh_num, receipt.get("head_branch") or "",
+                head_is_bundle=bool(publication.get("published_head")) and head == publication["published_head"])
         action, reason = jog_project_marathon_outcome(
             root, gh_num, receipt,
             execution_id=latest.get("execution_id"), result_path=latest.get("result_path"))
@@ -1061,7 +1083,8 @@ def _jog_retry_gate_locked(root, gh_num, args):
         raise ContractError("gate retry changed execution clone ledger")
     if new_receipt.get("outcome") == "approved":
         gate_retries[-1]["committed_receipt"] = publish_jog_receipt(
-            invocation["target_root"], new_receipt, result_path, base_ref="development")
+            invocation["target_root"], new_receipt, result_path, base_ref="development",
+            accounting_root=root)
         gate_retries[-1]["published_head"] = _git(invocation["target_root"], "rev-parse", "HEAD").decode().strip()
         jog_save_state(root, gid, state)
     action, reason = jog_project_marathon_outcome(
@@ -1173,7 +1196,8 @@ def _require_gate_wired(clone):
                             + (chk.stderr or chk.stdout).strip())
 
 
-def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, push=True):
+def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, push=True,
+                        accounting_root=None):
     """Publish exact terminal evidence on the existing lane; never touch its ledger."""
     from gate_receipt import check_receipt
     issue, execution = str(receipt["issue"]), receipt["execution_id"]
@@ -1228,15 +1252,117 @@ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, pu
             _landing_tail_proof(target, receipt["head_sha"], live_head,
                                 f"refs/remotes/origin/{manifest['base_branch']}", rel)
         _git(target, "add", "--", *paths)
-        if subprocess.run(["git", "-C", target, "diff", "--cached", "--quiet"], capture_output=True).returncode:
+        needs_commit = bool(subprocess.run(["git", "-C", target, "diff", "--cached", "--quiet"],
+                                           capture_output=True).returncode)
+        if needs_commit:
             # Refuse to sweep a pre-existing staged path into the evidence commit.
             staged = set(_git(target, "diff", "--cached", "--name-only", "-z").decode().split("\0")) - {""}
             if staged != set(paths):
                 raise ContractError("receipt publication has unrelated staged changes")
-            _git(target, "commit", "-m", f"jog: publish {execution} approved execution receipts")
         _require_gate_wired(target)
-        _git(target, "push", "origin", f"HEAD:refs/heads/{branch}")
+        _jog_publish_under_attempt(
+            target, accounting_root or target, issue, branch,
+            bundle_committed=not needs_commit and live_head != receipt["head_sha"],
+            commit=(lambda: _git(target, "commit", "-m",
+                                 f"jog: publish {execution} approved execution receipts"))
+            if needs_commit else None)
     return rel
+
+
+def _jog_remote_ref(target, branch):
+    """Exact live lane ref: SHA, or None when absent; a transport failure refuses."""
+    proc = subprocess.run(["git", "-C", target, "ls-remote", "origin", f"refs/heads/{branch}"],
+                          capture_output=True)
+    if proc.returncode:
+        raise ContractError(f"cannot read live lane ref {branch}: "
+                            f"{proc.stderr.decode(errors='replace').strip()}")
+    fields = proc.stdout.decode().split()
+    return fields[0] if fields else None
+
+
+def _jog_live_publication_row(record, key):
+    """The live last row when it is this key's manual publication reservation, else None."""
+    try:
+        with open(record) as stream:
+            lines = [line for line in stream.read().splitlines() if line.strip()]
+        row = json.loads(lines[-1]) if lines else None
+    except (OSError, ValueError):
+        return None
+    if isinstance(row, dict) and row.get("kind") == "manual" and row.get("task") == key:
+        return row
+    return None
+
+
+def jog_settle_publication_attempt(target, accounting_root, issue, branch, head_is_bundle):
+    """GH-1653: close a publication reservation an interrupted finish left live.
+
+    A completed row whose archive failed is archived as-is. An active row is finished as
+    completed only when HEAD is the committed bundle and the exact live lane ref equals it
+    (the receipt is already published). Returns True when the receipt is already published.
+    Never books or pushes; without proof an active row stays a consumed attempt."""
+    from gate_receipt import manual_attempt_finish
+    from rtl import ATTEMPT_CONTEXT_ENV, archive_lane_attempts
+    key = f"GH-{issue}-jog-publish"
+    record = os.path.join(os.path.realpath(accounting_root), ".tick", "attempts", key)
+    head = _git(target, "rev-parse", "HEAD").decode().strip()
+    published = bool(head_is_bundle) and _jog_remote_ref(target, branch) == head
+    saved = os.environ.pop(ATTEMPT_CONTEXT_ENV, None)
+    try:
+        row = _jog_live_publication_row(record, key)
+        if row and row.get("state") == "completed":
+            archive_lane_attempts(record)
+        elif row and row.get("state") == "active" and published:
+            manual_attempt_finish(target, {"kind": "manual", "record": record, "id": row["id"]},
+                                  "completed")
+    except (ValueError, OSError, subprocess.CalledProcessError) as exc:
+        raise ContractError(f"publication accounting for {key} cannot be settled: {exc}") from exc
+    finally:
+        os.environ.pop(ATTEMPT_CONTEXT_ENV, None)
+        if saved is not None:
+            os.environ[ATTEMPT_CONTEXT_ENV] = saved
+    return published
+
+
+def _jog_publish_under_attempt(target, accounting_root, issue, branch, bundle_committed, commit):
+    """GH-1653: book, push and finish the receipt push through gate_receipt's manual writer.
+
+    The key GH-<n>-jog-publish is the canonical publication identity: retries and restarts
+    draw on the same LANE_MAX_ATTEMPTS budget, a failed push keeps its consumed row, and an
+    exhausted budget refuses. The pre-push gate is unchanged; it admits this reservation."""
+    from gate_receipt import manual_attempt_start, manual_attempt_finish
+    from rtl import ATTEMPT_CONTEXT_ENV
+    if jog_settle_publication_attempt(target, accounting_root, issue, branch, bundle_committed):
+        print(f"jog: GH-{issue} receipt already published on {branch}; no attempt booked")
+        return
+    key = f"GH-{issue}-jog-publish"
+    saved = os.environ.get(ATTEMPT_CONTEXT_ENV)
+    try:
+        try:
+            count, context = manual_attempt_start(target, key, accounting_root)
+        except (ValueError, OSError, subprocess.CalledProcessError) as exc:
+            raise ContractError(f"gate-attempt reservation for {key} refused: {exc}") from exc
+        if context is None:
+            raise ContractError(f"gate-attempt budget exhausted after {count} consumed rounds for {key}; "
+                                "publication not attempted")
+        try:
+            if commit is not None:
+                commit()
+            _git(target, "push", "origin", f"HEAD:refs/heads/{branch}",
+                 env={**os.environ, ATTEMPT_CONTEXT_ENV: json.dumps(context)})
+        except BaseException:
+            try:
+                manual_attempt_finish(target, context, "failed")
+            except Exception:  # noqa: BLE001 — the row stays consumed either way
+                pass
+            raise
+        try:
+            manual_attempt_finish(target, context, "completed")
+        except (ValueError, OSError, subprocess.CalledProcessError) as exc:
+            print(f"jog: GH-{issue} receipt pushed; attempt accounting pending: {exc}", file=sys.stderr)
+    finally:
+        os.environ.pop(ATTEMPT_CONTEXT_ENV, None)
+        if saved is not None:
+            os.environ[ATTEMPT_CONTEXT_ENV] = saved
 
 
 def _committed_jog_receipt(root, gh_num, pr_number=None):
@@ -2837,8 +2963,8 @@ def _jog_supervise_recover(root, target):
                     _ledger_abs_path(root, resolved, latest.get("packet_dir")) or "", "marathon-invocation.json"))
                 if os.path.realpath(invocation["target_root"]) != os.path.realpath(target):
                     raise ContractError("recovery target differs from recorded invocation")
-                jog_resume(root, gh_num)
-                print(f"jog: recovered GH-{gh_num} without a new builder or attempt")
+                _jog_resume_locked(root, gh_num)
+                print(f"jog: recovered GH-{gh_num} without a new builder turn")
             except ContractError as exc:
                 jog_set_status(root, gh_num, "parked", failure_reason=f"supervision held: {exc}")
                 print(f"jog: GH-{gh_num} held: {exc}")

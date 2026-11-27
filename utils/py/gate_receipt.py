@@ -187,6 +187,25 @@ def attempt_admission(repo_root, sha=None, ref=None, context_override=None, dest
     return dict(context, sha=sha, state=row["state"])
 
 
+def manual_attempt_start(repo_root, task, accounting_root=None):
+    """Book a manual reservation through the canonical lane writer -> (count, context or None)."""
+    return lane_attempt_reserve(accounting_root or repo_root, task, repo_root,
+                                cap=int(os.environ.get("LANE_MAX_ATTEMPTS", "2")), kind="manual")
+
+
+def manual_attempt_finish(repo_root, context, outcome):
+    """Finish a manual reservation (archive on completed) -> {"id", "state", "context"}."""
+    if context.get("kind") != "manual":
+        raise ValueError("attempt-finish requires the manual reservation context")
+    admitted = attempt_admission(repo_root, context_override=context)
+    context, current = _resolve_lane_context(context)
+    if current.get("state") == "completed" and outcome == "completed" and context.get("archived"):
+        return {"id": current["id"], "state": "completed", "context": context}
+    os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
+    row = lane_attempt_finish(context, outcome, admitted["sha"], archive=outcome == "completed")
+    return {"id": row["id"], "state": row["state"], "context": json.loads(os.environ[ATTEMPT_CONTEXT_ENV])}
+
+
 def get_receipt_dir(repo_root):
     return os.path.join(repo_root, ".xyz", "receipts")
 
@@ -339,9 +358,7 @@ def main():
             print(json.dumps(attempt_admission(repo_root, args.sha, args.ref, destination_ref=args.destination_ref)))
             return
         if args.action == "attempt-start":
-            count, context = lane_attempt_reserve(args.accounting_root or repo_root, args.task, repo_root,
-                                                 cap=int(os.environ.get("LANE_MAX_ATTEMPTS", "2")),
-                                                 kind="manual")
+            count, context = manual_attempt_start(repo_root, args.task, args.accounting_root)
             if context is None:
                 print(f"gate-attempt: budget exhausted after {count} consumed rounds", file=sys.stderr)
                 sys.exit(3)
@@ -352,18 +369,7 @@ def main():
             return
         if args.action == "attempt-finish":
             context = json.loads(os.environ.get(ATTEMPT_CONTEXT_ENV, ""))
-            if context.get("kind") != "manual":
-                raise ValueError("attempt-finish requires the manual reservation context")
-            admitted = attempt_admission(repo_root, context_override=context)
-            context, current = _resolve_lane_context(context)
-            if current.get("state") == "completed" and args.outcome == "completed" and context.get("archived"):
-                print(json.dumps({"id": current["id"], "state": "completed", "context": context}))
-                return
-            os.environ[ATTEMPT_CONTEXT_ENV] = json.dumps(context)
-            row = lane_attempt_finish(context, args.outcome, admitted["sha"],
-                                      archive=args.outcome == "completed")
-            print(json.dumps({"id": row["id"], "state": row["state"],
-                              "context": json.loads(os.environ[ATTEMPT_CONTEXT_ENV])}))
+            print(json.dumps(manual_attempt_finish(repo_root, context, args.outcome)))
             return
     except Exception as exc:
         print(f"gate-attempt: REFUSED — {exc}; use gate_receipt.py attempt-start", file=sys.stderr)

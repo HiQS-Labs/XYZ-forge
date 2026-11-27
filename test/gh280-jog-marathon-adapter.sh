@@ -613,6 +613,42 @@ jog_run_root() {  # primary queue, distinct execution clone
     python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" "$@" )
 }
 
+# GH-1653: the installed gate's per-ref attempt admission (githooks/install.sh _attempt_guard)
+# on an execution clone. The fixture's command-scoped transport rewrite (url.<bare>.insteadOf)
+# leaks into hooks through GIT_CONFIG_PARAMETERS and would change the origin identity, so the
+# hook clears it first. A receipt-only fail sentinel fires AFTER admission for `jog: publish`.
+GH1653_FAIL="$WORK/gh1653-fail-receipt-push"
+install_admission_hook() {  # <execution clone>
+  cat > "$1/.git/hooks/pre-push" <<'HOOK'
+#!/usr/bin/env bash
+unset GIT_CONFIG_PARAMETERS GIT_CONFIG_COUNT
+repo="$(git rev-parse --show-toplevel)"
+while read -r lref lsha rref _rsha; do
+  case "$lsha" in *[!0]*) ;; *) continue ;; esac
+  python3 "$repo/utils/py/gate_receipt.py" admit --repo "$repo" --sha "$lsha" --ref "$lref" \
+    --destination-ref "$rref" >/dev/null || exit 2
+  if [ -f "$GH1653_FAIL" ] && git log -1 --format=%s "$lsha" | grep -q '^jog: publish'; then
+    echo "gh1653 fixture: receipt push failed after admission" >&2; exit 1
+  fi
+done
+exit 0
+HOOK
+  sed -i.bak "s#\\\$GH1653_FAIL#$GH1653_FAIL#" "$1/.git/hooks/pre-push" && rm -f "$1/.git/hooks/pre-push.bak"
+  chmod +x "$1/.git/hooks/pre-push"
+}
+remote_subject() {  # <ref> → subject of the bare remote's ref, or "absent"
+  git --git-dir="$REMOTE" log -1 --format=%s "refs/heads/$1" 2>/dev/null || echo absent
+}
+publish_rows() {  # <live|archive> → "<count> <state,state,...> <id,id,...>" for GH-901-jog-publish
+  local f
+  if [ "$1" = live ]; then f="$FR/.tick/attempts/GH-901-jog-publish"
+  else f="$(ls -d "$FR"/.tick/attempt-history/GH-901-jog-publish-*/attempts 2>/dev/null | tail -1)"; fi
+  [ -n "$f" ] && [ -f "$f" ] || { echo "0 - -"; return; }
+  python3 -c 'import json,sys
+rows=[json.loads(l) for l in open(sys.argv[1]) if l.strip()]
+print(len(rows), ",".join(r["state"] for r in rows), ",".join(r["id"] for r in rows))' "$f"
+}
+
 # G1-G3: reviewer validation fails BEFORE lease mutation (row untouched)
 cleanup_root_fixture
 rm -rf "$FR/.tick/jog"
@@ -632,6 +668,7 @@ cleanup_root_fixture
 use_development
 GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
 prepare_execution_target "$FR" "$FT"
+install_admission_hook "$FT"
 G4_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
   env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-jog-lane" \
   PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
@@ -647,6 +684,99 @@ GRES="$(ledger_latest_result "$GSTATE")"
 jassert "$GRES" 'd["outcome"]=="approved" and d["pr"]["number"]==42 and d["branch_redirect"]==True and d["head_branch"]=="marathon/gh280-jog-lane"' "G4 receipt approved, PR 42, redirected lane branch"
 grep -q 'module.exports = 2' "$FT/src/feature.js" \
   && pass "G4 stub builder landed the artifact through the real chain" || fail "G4 artifact not built"
+
+# GH-1653 G4: the wake published its receipt under its own reservation, through real admission.
+[ "$(remote_subject marathon/gh280-jog-lane)" = "jog: publish gh901-exec1 approved execution receipts" ] \
+  && pass "G4 receipt bundle commit published on the remote lane ref (no manual attempt-start)" \
+  || fail "G4 remote lane ref: $(remote_subject marathon/gh280-jog-lane) / $G4_OUT"
+git --git-dir="$REMOTE" ls-tree -r --name-only refs/heads/marathon/gh280-jog-lane 2>/dev/null \
+  | grep -q '/jog/gh901-exec1/receipt.json$' \
+  && pass "G4 remote lane carries the bundle receipt.json" || fail "G4 bundle missing on remote"
+has "$(publish_rows archive)" "1 completed" && [ "$(publish_rows live)" = "0 - -" ] \
+  && pass "G4 coordinator archived one completed GH-901-jog-publish reservation" \
+  || fail "G4 accounting live=[$(publish_rows live)] archive=[$(publish_rows archive)]"
+
+# GH-1653 G4-neg: the unchanged gate still refuses an unreserved task push from the same clone.
+git -C "$FT" checkout -q -b gh1653-neg && git -C "$FT" commit -q --allow-empty -m "unreserved task change"
+NEG_OUT="$(env -u XYZ_ATTEMPT_CONTEXT -u MERGE_CLEANUP_RECORD git -C "$FT" push origin HEAD:refs/heads/gh1653-neg 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && has "$NEG_OUT" "task qualification has no attempt reservation" \
+  && [ "$(remote_subject gh1653-neg)" = absent ] \
+  && pass "G4-neg unreserved task push refused by admission; remote has no such ref" \
+  || fail "G4-neg rc=$rc remote=$(remote_subject gh1653-neg): $NEG_OUT"
+
+# GH-1653 G4-retry: a failed receipt push keeps its consumed attempt across restarts; at the cap
+# publication refuses with the remote unchanged — nothing renames or resets the budget.
+cleanup_root_fixture
+python3 "$FR/utils/py/releases_app.py" --root "$FR" jog retry 901 >/dev/null 2>&1
+use_development
+prepare_execution_target "$FR" "$FT"
+install_admission_hook "$FT"
+touch "$GH1653_FAIL"
+R1_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh1653-retry" \
+  PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
+  python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" \
+    --executor marathon --builder codex --reviewer agy < /dev/null 2>&1)"
+has "$(queue_status "$FR")" "approved receipt not published" && has "$(publish_rows live)" "1 failed" \
+  && [ "$(remote_subject marathon/gh1653-retry)" != "jog: publish gh901-exec1 approved execution receipts" ] \
+  && pass "G4-retry failed receipt push parks and keeps 1 consumed attempt; remote unchanged" \
+  || fail "G4-retry run: row=$(queue_status "$FR") rows=[$(publish_rows live)] remote=$(remote_subject marathon/gh1653-retry) / $R1_OUT"
+R2_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && has "$(publish_rows live)" "2 failed,failed" \
+  && pass "G4-retry restart (resume) books a second attempt; both failed rows survive" \
+  || fail "G4-retry resume1 rc=$rc rows=[$(publish_rows live)]: $R2_OUT"
+rm -f "$GH1653_FAIL"
+R2_ROWS="$(publish_rows live)"
+R3_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && has "$R3_OUT" "budget exhausted after 2" && [ "$(publish_rows live)" = "$R2_ROWS" ] \
+  && [ "$(remote_subject marathon/gh1653-retry)" != "jog: publish gh901-exec1 approved execution receipts" ] \
+  && pass "G4-retry exhausted budget refuses publication; rows and remote unchanged" \
+  || fail "G4-retry resume2 rc=$rc rows=[$(publish_rows live)]: $R3_OUT"
+
+# GH-1653 G4-archive: interrupted finishes. (b) failed + ACTIVE at the cap, remote at the prior SHA.
+LIVE="$FR/.tick/attempts/GH-901-jog-publish"
+set_last_row() {  # <state>  — rewrite the live file's last row (simulate an interrupted finish)
+  python3 - "$LIVE" "$1" "$(git -C "$FT" rev-parse HEAD)" <<'PYEDIT'
+import json, sys
+path, state, head = sys.argv[1:]
+rows = [json.loads(l) for l in open(path) if l.strip()]
+rows[-1]["state"] = state
+for k in ("finished", "candidate"):
+    rows[-1].pop(k, None)
+if state == "completed":
+    rows[-1]["candidate"] = head
+    rows[-1]["finished"] = rows[-1]["started"]
+open(path, "w").write("".join(json.dumps(r, sort_keys=True) + "\n" for r in rows))
+PYEDIT
+}
+set_last_row active
+B_ROWS="$(publish_rows live)"
+B_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && has "$B_OUT" "budget exhausted after 2" && [ "$(publish_rows live)" = "$B_ROWS" ] \
+  && pass "G4-archive(b) failed+active at the cap with remote at prior SHA refuses; rows unchanged" \
+  || fail "G4-archive(b) rc=$rc rows=[$(publish_rows live)]: $B_OUT"
+# (d) the push landed before the finish (bundle now on the remote, delivered out of band): resume
+# finishes and archives the SAME active row — no booking, no push.
+git --git-dir="$REMOTE" fetch -q "$FT" "HEAD:refs/heads/marathon/gh1653-retry" 2>/dev/null \
+  || git --git-dir="$REMOTE" fetch -q -f "$FT" "+HEAD:refs/heads/marathon/gh1653-retry"
+D_IDS="$(publish_rows live | awk '{print $3}')"
+D_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && [ "$(publish_rows live)" = "0 - -" ] && [ "$(publish_rows archive)" = "2 failed,completed $D_IDS" ] \
+  && has "$D_OUT" "already published" && has "$(queue_status "$FR")" "awaiting-landing" \
+  && pass "G4-archive(d) active row after a landed push is completed+archived as the same row (no booking)" \
+  || fail "G4-archive(d) rc=$rc live=[$(publish_rows live)] archive=[$(publish_rows archive)] ids=$D_IDS: $D_OUT"
+jassert "$GSTATE" 'd["executions"][-1].get("committed_receipt")' "G4-archive(d) resume saved the published receipt"
+# (c)/(d') receipt already saved: the archive failed (completed row back on the live path), then the
+# finish failed before the completed write (active row) — resume settles the same row, never books.
+REMOTE_BEFORE="$(git --git-dir="$REMOTE" rev-parse refs/heads/marathon/gh1653-retry)"
+for case_state in completed active; do
+  mv "$(ls -d "$FR"/.tick/attempt-history/GH-901-jog-publish-*/attempts | tail -1)" "$LIVE"
+  set_last_row "$case_state"
+  C_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
+  [ "$rc" -eq 0 ] && [ "$(publish_rows live)" = "0 - -" ] && [ "$(publish_rows archive)" = "2 failed,completed $D_IDS" ] \
+    && [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/marathon/gh1653-retry)" = "$REMOTE_BEFORE" ] \
+    && pass "G4-archive saved receipt + live $case_state row: resume archives the same row, no booking or push" \
+    || fail "G4-archive saved/$case_state rc=$rc live=[$(publish_rows live)] archive=[$(publish_rows archive)]: $C_OUT"
+done
 
 # G5: controlled failure — reviewer refuses every round → escalated receipt → row failed, queue stops
 cleanup_root_fixture
@@ -881,6 +1011,7 @@ printf '#!/usr/bin/env bash\ntest -f %s\n' "$GATE_MARKER" > "$FR/test/fixture-ga
 git -C "$FR" add -A >/dev/null 2>&1; git -C "$FR" commit -qm "marker-driven gate" >/dev/null 2>&1
 
 prepare_execution_target "$FR" "$FT"
+install_admission_hook "$FT"
 K1_OUT="$(env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-k-lane" \
   PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
   python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" \
@@ -929,6 +1060,7 @@ git -C "$FT" commit -qm "extra review turn on relay"
 K3C_HEAD="$(git -C "$FT" rev-parse HEAD)"
 
 touch "$GATE_MARKER"
+K2_REF_BEFORE="$(remote_subject marathon/gh280-k-lane)"
 K2_OUT="$(jog_verb retry-gate 901 --reviewer agy --builder codex 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "K2 gate-only retry accepts a relay-receipt-only tail and exits 0 (GH-1332)" || fail "K2 rc=$rc: $K2_OUT"
 has "$(queue_status "$FR")" "parked|awaiting-landing" \
@@ -943,6 +1075,13 @@ K2_TASK_COUNT="$(grep -h -c '"type":"task.created"' "$FT"/.tick/events/*MARATHON
 [ "$K2_TASK_COUNT" = "$K1_TASK_COUNT" ] \
   && pass "K2 gate retry spent no new tick token ($K2_TASK_COUNT task.created)" \
   || fail "K2 token re-seeded: before=$K1_TASK_COUNT after=$K2_TASK_COUNT"
+# GH-1653: the gate-only caller publishes under its own reservation in the coordinator accounting.
+[ "$K2_REF_BEFORE" = absent ] && [ "$(remote_subject marathon/gh280-k-lane)" = "jog: publish gh901-exec1-gateretry1 approved execution receipts" ] \
+  && pass "K2 first publication created the absent lane ref with the retry's receipt bundle" \
+  || fail "K2 remote lane before=$K2_REF_BEFORE after=$(remote_subject marathon/gh280-k-lane): $K2_OUT"
+has "$(publish_rows archive)" "1 completed" && [ ! -e "$FT/.tick/attempts/GH-901-jog-publish" ] \
+  && pass "K2 publication reservation archived under the coordinator root, not the execution clone" \
+  || fail "K2 accounting archive=[$(publish_rows archive)] ft=$(ls "$FT/.tick/attempts" 2>/dev/null)"
 
 # K4: retry-build — a FRESH execution on a FRESH suffixed token, prior history intact
 K4_OUT="$( cd "$FR" && PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
@@ -1374,7 +1513,7 @@ JOG_SRC="$(cat "$FR/utils/py/jog_run.py")"
   && pass "P1 jog never creates PRs (Marathon owns PR identity)" \
   || fail "P1 jog_run.py creates PRs directly"
 ! has "$JOG_SRC" "bin/tick" && ! has "$JOG_SRC" '".tick/attempts' \
-  && pass "P2 jog never invokes the tick binary or writes executor attempt state" \
+  && pass "P2 jog never invokes the tick binary or writes executor attempt state (Marathon keeps executor attempts and Tick tokens; Jog writes only GH-1653 publication rows through gate_receipt)" \
   || fail "P2 jog_run.py touches executor-owned Tick state"
 ! has "$JOG_SRC" "checkout -b" \
   && pass "P3 jog never cuts lane branches (branch identity is Marathon's)" \
