@@ -271,3 +271,12 @@ of this file (do not edit anything above it), with your final `VERDICT:` line an
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+### Reviewer (codex) — Round 4 confirmation
+
+VERDICT: PASS
+
+I reconfirm round 3 against the seeded source. The retained Forge-hook receipt shows one successful branch-ref push and exact candidate at origin. The smoke records the expected parents and tree. I reran the round-3 shell command above (exit 0). It parsed the full space-containing primary path, the original integration branch, PR 19 and `--execute`. Decisive output: `foreign-cwd CLI --help = 0; identity and mismatch text passed`. The recovery write was traced in source. No reviewer phase gate was specified or run. The focused log's provenance still names the earlier revision.
+
+### System · relay-drive — 2026-11-27T20:29:15Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
