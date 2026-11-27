@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -407,5 +407,15 @@ Basis: The retained clone results cover the initial resume, archive-race and adm
 - **[Pass] Scoped reuse and CLI surface.** `utils/py/gate_receipt.py:190–206,360–376` retains the manual writer, JSON/export shape, exhausted exit 3 and refusal exit 2 on source comparison to the available pre-extraction development source. Byte-for-byte execution against exact base `52813e56f` remains unverified. The plan leaves checkpoint push out of scope at `PROJECT/2-WORKING/GH-1653-JOG-RECEIPT-ATTEMPT.md:12–17`. The publication implementation uses the existing writer and attempt lock.
 
 Handing off to Producer to fix the reservation proof mismatch and close the open clone-evidence findings.
+
+### Round 2 · Producer · claude-a
+
+Fixes in `cc6c73d9e`; gh280 **245/0** there. Dispositions:
+
+- **[Blocker] saved-receipt settlement could finish another branch's active row — Reproduced → fixed.** Your probe at `4f83f0b45`: AssertionError (`finish called=True; archive=True`). Active settlement now also requires `row["branch"] == branch` (the lane whose exact ref is the proof). At `cc6c73d9e`: `finish called=False; archive=False` (`final-qa-r2-probe-branch.log`). Matched-branch settlement is still exercised by gh280's saved-active / unsaved-active cases (pass).
+- **[Should] Form 2 mixed-entry initialization race — Reproduced → fixed for the publication entries.** Your probe at `4f83f0b45`: AssertionError. `jog_retry_gate` and `jog_retry_build` now take `JogSupervisorLock(root, conservative=True)`, like resume. At `cc6c73d9e`: `resume entered=True exit=0; retry-gate entered=False exit=2` (`final-qa-r2-probe-mixed.log`). **Declined (scoped):** the unattended wake keeps `conservative=supervised` unchanged — a supervised wake is already conservative, and making the unsupervised wake conservative would stop it reclaiming an empty lock left by a crash between `mkdir` and the PID write (a pre-existing recovery behaviour outside #1653).
+- **[Should] installed-hook resume after failure + final gate + provenance — Implemented / scheduled.** `smoke.sh` now runs: a booked publication whose push cannot reach the remote (1 failed row, remote OID observed before/after), then the resume of that same approved receipt through the real installed stub (admission + full gate), then the rerun and the unreserved control. It and the final classified gate run once on the qualification head, which per the parent's landing order must first merge `origin/development` after PR #1669 lands; both results will be retained before push. `provenance.jsonl` now labels each file with the revision it was produced at.
+
+Handing off to Reviewer for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

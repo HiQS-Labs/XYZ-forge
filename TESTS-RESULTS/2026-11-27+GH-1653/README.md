@@ -9,13 +9,14 @@ All runs in disposable full clones, never the primary.
 
 | Check | Command | Result |
 |---|---|---|
-| Focused suite, fix | `bash test/gh280-jog-marathon-adapter.sh` at `4f83f0b45` (final QA r1 fixes) | **245 pass, 0 fail** (`gh280-green.log`); at `e9127b18` it was 242/0 |
+| Focused suite, fix | `bash test/gh280-jog-marathon-adapter.sh` at `cc6c73d9e` (final QA r2 fixes) | **245 pass, 0 fail** (`gh280-green.log`); 245/0 at `4f83f0b45`, 242/0 at `e9127b18` |
 | Red control, base runtime | same suite with `utils/py/jog_run.py` + `gate_receipt.py` from `52813e56f`, `TEST_SOFT_FAIL=1` | **225 pass, 17 fail** (`gh280-red-base-runtime.log`): wake (G4), gate-only retry (K2) and retry-build (K4) each refused with `gate-attempt: REFUSED — task qualification has no attempt reservation`, the Day 3 string |
 | Two-resume probe (plan QA R1-S5) | reviewer's script inserted temporarily after G4-retry's first failed push (`two-resume-probe-fragment.sh`) | `resume A exit=2 B exit=4 rows_while_A_held=2 total_rows=2` — B refused by the supervisor lock, exactly one added row (A's failure is the fixture's receipt-push sentinel) (`two-resume-probe.log`) |
 | Smoke, real installed hook (GH-1088) | `bash smoke.sh <task clone> <empty dir>` | main path: `published`, remote lane subject `jog: publish gh1653-smoke1 approved execution receipts`, one completed row archived; adjacent rerun: `receipt already published ...; no attempt booked`, rows unchanged; control: unreserved push refused by the installed stub (`smoke-installed-hook.log`) |
 | Full gate `./validate.sh` | gate clone at `8164e2ec1` with the start-task attempt context | RED: `gh139-pipe-grep-guard.sh`, `gh460-pipe-buffer-sigpipe.sh` — two `| grep -q` sites in the new test lines (`validate-full-8164e2ec1-tail.log`). Fixed in `e9127b18`; both guards then exit 0 and the smoke's installed-hook full gate (which ran the same suite set at `e9127b18`) passed. The first smoke run hit the same red (`smoke-installed-hook-run1-gate-red.log`); its admission step already passed and each refused push left a consumed `failed` row (1, then 2). |
-
 | Final QA r1 Form 2 probes (reviewer's scripts) | `final-qa-r1-probe1.sh` (resume lock initialization race), `final-qa-r1-probe2.sh` (completed-row archive vs replacement budget) | both **reproduced** at `e9127b18` (AssertionError) and **fixed** at `4f83f0b45`: probe1 `A entered=True exit=0; B entered=False exit=2` (B refused: owner initializing); probe2 replacement active row survives at the live path (`final-qa-r1-probe*.log`) |
+
+| Final QA r2 probes (reviewer's scripts) | `final-qa-r2-probe-branch.py` (saved-receipt settlement vs another branch's active row), `final-qa-r2-probe-mixed.sh` (resume initializing vs retry-gate) | both **reproduced** at `4f83f0b45` (AssertionError) and **fixed** at `cc6c73d9e`: `finish called=False; archive=False`; `resume entered=True exit=0; retry-gate entered=False exit=2` (`final-qa-r2-probe-*.log`) |
 
 ## What the cases assert (gh280)
 
