@@ -1,0 +1,15 @@
+  PASS: G4 receipt bundle commit published on the remote lane ref (no manual attempt-start)
+  PASS: G4 remote lane carries the bundle receipt.json
+  PASS: G4 coordinator archived one completed GH-901-jog-publish reservation
+  PASS: G4-neg unreserved task push refused by admission; remote has no such ref
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G4-retry failed receipt push parks and keeps 1 consumed attempt; remote unchanged
+PROBE: seeded rows before=1
+PROBE: resume A exit=2 B exit=4 rows_while_A_held=2 total_rows=2
+PROBE: --- A log ---
+jog: git push origin HEAD:refs/heads/marathon/gh1653-retry failed: gh1653 fixture: receipt push failed after admission
+error: failed to push some refs to '<tmp>
+PROBE: --- B log ---
+jog: another driver is active in this repo (pid 85865, lock: .git/relay-driver.lock).
+jog: Concurrent runs in the same clone are unsafe (GH-42 / GH-354).
+PROBE: done

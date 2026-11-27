@@ -1,0 +1,28 @@
+githooks: INSTALLED — <scratch>/smokecli2/exec/.git/hooks/pre-push is the gate stub (executable)
+== 1 refused publication (remote unreachable after booking)
+
+Please make sure you have the correct access rights
+and the repository exists.
+  rc=2 oid_before=absent oid_after=absent live=failed archived=-
+  OK: refused resume exits nonzero
+  OK: one failed row consumed
+  OK: remote lane OID unchanged
+== 2 jog resume publishes through the installed stub
+jog: resume GH-1653: terminal Marathon result re-projected (parked) — awaiting-landing (no PR yet — open one from the receipt's branches: head=marathon/gh1653-cli; base=development)
+  rc=0 oid=da884dab06d831d3e6bb648bf7df629007b0814b head=da884dab06d831d3e6bb648bf7df629007b0814b live=- archived=failed,completed
+  OK: resume exits 0
+  OK: remote lane at the bundle commit
+  OK: bundle subject on remote
+  OK: budget archived as failed,completed
+  OK: receipt saved in state
+== 3 rerun re-projects without booking
+jog: resume GH-1653: terminal Marathon result re-projected (parked) — awaiting-landing (no PR yet — open one from the receipt's branches: head=marathon/gh1653-cli; base=development)
+  rc=0 oid=da884dab06d831d3e6bb648bf7df629007b0814b live=- archived=failed,completed
+  OK: rerun exits 0 and re-projects
+  OK: rerun booked nothing, ref unchanged
+== 4 control: unreserved task push
+gate-attempt: REFUSED — task qualification has no attempt reservation; use gate_receipt.py attempt-start; use gate_receipt.py attempt-start
+error: failed to push some refs to '<scratch>/smokecli2/remote.git'
+  OK: unreserved push refused by admission
+  OK: remote has no unreserved ref
+== smoke-cli: 0 expectation(s) failed

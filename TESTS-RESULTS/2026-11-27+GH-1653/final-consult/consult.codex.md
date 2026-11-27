@@ -1,0 +1,3 @@
+DECISION: HOLD
+
+- [Blocker] `jog resume` can close a later reservation using proof of an earlier push on the same branch. After a receipt is published, book a new manual attempt under the same issue key while local `HEAD` and the remote ref still point to that receipt. A read-only probe of the settlement and admission code showed that resume asks the writer to mark the new attempt `completed` with `archive=True` before it has pushed anything. Archiving removes that attempt from the live budget. Bind settlement to the reservation used for that publication before qualifying the commit. `utils/py/jog_run.py:835–847`, `utils/py/jog_run.py:1328–1347`, `utils/py/gate_receipt.py:179–184`, `utils/py/gate_receipt.py:196–205`, `utils/py/rtl.py:250–267`.
