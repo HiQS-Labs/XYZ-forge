@@ -177,4 +177,13 @@ Basis: Both earlier findings are resolved in the revised plan. Source inspection
 
 Relay closed (Approved), no further turn needed. Producer may proceed with implementation under the approved plan.
 
+
+### Attestation · relay-drive — 2026-11-27T19:17:22Z
+task: RELAY-gh1663-plan-qa-r1
+reviewer: codex
+status: Approved
+reviewed-head: 64bde833e1e95763b60e322345fb3c2bc0d2f175
+added-range: 21305+6026
+added-sha256: 14af2cca3c4ea91244a0b6b1e99090c5f5b0000386ff5709b527edd1f268003a
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
