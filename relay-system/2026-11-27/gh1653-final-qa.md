@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -105,5 +105,178 @@ Write your verdict below and set STATUS to Approved if it passes.
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Round 1 · Reviewer · codex
+
+swept file: no
+
+VERDICT: FAIL
+
+Basis: The retained wake and gate-only controls show the intended booking path, but the candidate can report publication without its destination branch and can stop a saved receipt from being re-projected. The concurrency probes below are pending. I reviewed the publication, admission, resume, recovery, lock and fixture paths, including pre-existing code on those paths. The full outlying legacy code and fixture sections were outside this turn's sweep. The nearest graph generation (2026-11-26T04:31:47Z) indexes a separate development checkout, so citations use the seeded worktree source. The candidate/base CLI byte comparison and exact-commit qualification remain unverified. No suites or executable fixtures were run in this turn.
+
+- **[Blocker] The already-published shortcut can accept a tag in place of the destination branch.**
+  Observed input: The installed `git-ls-remote(1)` manual describes glob matching after any slash. `utils/py/jog_run.py:1274–1280` accepts the first OID without reading the returned refname. The allowed wire row `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<TAB>refs/tags/refs/heads/marathon/gh1653` produced that OID with the actual parser, expected `None`. Command under the relay scratch environment was `PYTHONPATH=utils/py python3 -` with:
+
+  ```python
+  from subprocess import CompletedProcess
+  from unittest.mock import patch
+  import jog_run as j
+  head = "a" * 40
+  ref = "refs/heads/marathon/gh1653"
+  wire = f"{head}\trefs/tags/{ref}\n".encode()
+  with patch.object(j.subprocess, "run", return_value=CompletedProcess([], 0, wire, b"")):
+      result = j._jog_remote_ref("/unused", "marathon/gh1653")
+      print(f"wire={wire.decode().strip()!r}; lookup returned {result!r}; expected None")
+      assert result is None
+  ```
+
+  Exit 1, `lookup returned 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'; expected None`. At `jog_run.py:1308,1334–1336` that answer can skip both the reservation cap and the push, and at `:1314–1316` it can complete an active row using the wrong ref.
+  Affected scope: A committed bundle at HEAD with an absent or different destination branch and a matching-suffix ref in the remote advertisement.
+  Falsifier: Advertise the suffix tag at HEAD and either no exact branch or an exact branch at a different SHA. The former must return absent, the latter must return the exact branch's SHA regardless of row order. Select by the full returned refname, with transport errors still distinct.
+
+- **[Blocker] Resume now requires a live execution clone even when the saved publication has no accounting left to settle.**
+  Observed input: A saved `committed_receipt` and `published_head`, retained invocation file, retired execution clone and no live publication row. `utils/py/jog_run.py:835–843` now loads and validates the invocation/target before the durable projection at `:844–852`. An actual invocation loader can reject the missing target at `:120–125` or the missing drive at `:104–107`; with invocation data supplied directly, the real target validator rejects it at `:537–549`. Command under the relay scratch environment was `PYTHONPATH=utils/py python3 -` with:
+
+  ```python
+  from pathlib import Path
+  from unittest.mock import patch
+  import jog_run as j
+  root = Path(".").resolve()
+  packet = root / "relay-system/2026-11-27/gh1653-final-qa.md"
+  retired = packet / "retired-clone"
+  state = {"executions": [{"execution_id": "e1", "packet_dir": ".", "result_path": "result.json",
+                           "committed_receipt": "TESTS-RESULTS/e1", "published_head": "a" * 40}]}
+  receipt = {"outcome": "approved", "issue": "1653", "execution_id": "e1",
+             "head_branch": "marathon/gh1653"}
+  with patch.multiple(j, _require_jog_primary=lambda *_: None, jog_resolve_ledger_gid=lambda *_: "g",
+                      jog_load_state=lambda *_: state,
+                      _jog_latest_receipt=lambda *_: (state["executions"][0], receipt),
+                      _ledger_abs_path=lambda *_: str(packet.parent),
+                      load_marathon_invocation=lambda *_: {"target_root": str(retired)},
+                      jog_save_state=lambda *_: None, jog_set_status=lambda *_, **kw: None):
+      with patch.object(j.os.path, "isfile", return_value=True):
+          with patch.object(j, "jog_project_marathon_outcome", return_value=("parked", "awaiting-landing")) as project:
+              try:
+                  result = j._jog_resume_locked(str(root), 1653)
+              except j.ContractError as exc:
+                  print(f"saved receipt, retired clone: {exc}; projected={project.called}")
+                  raise SystemExit(2)
+              print(f"resume={result}; projected={project.called}")
+  ```
+
+  Exit 2, `saved receipt, retired clone: execution target must be a separate full clone, not the primary or a worktree; projected=False`.
+  Affected scope: Approved saved publications with retained coordinator evidence and either a retired clone or an unavailable origin. The saved case currently calls the remote before reading the live row (`jog_run.py:1307–1314`), even for an already archived budget.
+  Falsifier: The saved-receipt case with neither a pending row nor an execution clone exits 0 and re-projects without consulting Git. With an active row and unavailable exact-ref proof, preserve the row and report the accounting problem without derailing the known publication. Read potential pending accounting before loading the disposable clone or querying origin.
+
+- **[Should] Form 2 — a second resume can reclaim the first resume's initializing supervisor lock.**
+  Observed input: `utils/py/jog_run.py:785–789` uses the nonconservative lock default at `:1682`. A creates the lock directory at `:1690`, then has a window before writing its PID at `:1733`. In that window B sees an empty owner at `:1693–1702`, removes the directory at `:1724–1727` and enters the locked body at `:789`. A then writes its PID and also enters. The recorded two-resume probe holds A after booking (`TESTS-RESULTS/2026-11-27+GH-1653/two-resume-probe-fragment.sh:12–21`), so it only covers a published lock owner.
+  Affected scope: Two resume processes (or a resume and another Jog driver) sharing the coordinator during lock initialization.
+  Falsifier: With A paused at the PID write, B refuses before entering the body, and A enters exactly once after being unpaused. Reuse the conservative acquisition behavior for this boundary and verify it refuses initialization without misreporting another publication.
+  Clone probe: From a disposable full clone only. Uses no Git, network, credentials or queue writes.
+
+  ```bash
+  PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 - <<'PY'
+  import builtins, multiprocessing as mp, tempfile
+  from pathlib import Path
+  from unittest.mock import patch
+  import jog_run as j
+  ctx = mp.get_context("fork")
+  a_ready, release_a, a_inside, b_inside = [ctx.Event() for _ in range(4)]
+  real_open = builtins.open
+  with tempfile.TemporaryDirectory(dir=Path.cwd()) as root:
+      lock = Path(root) / "relay-driver.lock"
+      def run(role):
+          def gated_open(file, *args, **kwargs):
+              if role == "A" and str(file) == str(lock / "pid") and args == ("w",):
+                  a_ready.set()
+                  if not release_a.wait(10):
+                      raise RuntimeError("probe timed out")
+              return real_open(file, *args, **kwargs)
+          def enter(*_):
+              (a_inside if role == "A" else b_inside).set()
+              if role == "B" and not a_inside.wait(10):
+                  raise RuntimeError("A did not enter")
+          with patch.multiple(j, driver_lock_path=lambda *_: (str(lock), str(lock)),
+                              _require_jog_primary=lambda *_: None, _jog_resume_locked=enter):
+              with patch("builtins.open", gated_open):
+                  try:
+                      j.jog_resume(root, 1653)
+                  except j.ContractError as exc:
+                      print(f"{role} refused: {exc}")
+                      raise SystemExit(2)
+      a = ctx.Process(target=run, args=("A",))
+      b = ctx.Process(target=run, args=("B",))
+      a.start()
+      assert a_ready.wait(5), "A did not reach lock initialization"
+      b.start()
+      b_inside.wait(3)
+      release_a.set()
+      a.join(12)
+      b.join(12)
+      print(f"A entered={a_inside.is_set()} exit={a.exitcode}; B entered={b_inside.is_set()} exit={b.exitcode}")
+      assert a_inside.is_set() and a.exitcode == 0
+      assert not b_inside.is_set() and b.exitcode in (2, 4)
+  PY
+  ```
+
+- **[Should] Form 2 — completed-row settlement can archive a replacement active budget.**
+  Observed input: Jog reads completed row A at `utils/py/jog_run.py:1311–1312` before taking the attempt lock. A concurrent manual writer can finish and archive A through `utils/py/gate_receipt.py:196–206` and `utils/py/rtl.py:153–190`, then reserve row B at the same key through `rtl.py:82–114`. Jog calls `archive_lane_attempts(record)` at `jog_run.py:1313`; `rtl.py:194–200,254–267` then locks and renames the current file with no binding to the observed row. The Jog supervisor lock does not cover the manual CLI entry at `gate_receipt.py:360–373`.
+  Affected scope: A completed live manual publication budget only when the same key is retired and restarted between Jog's read and rename. The newly consumed active attempt belongs to the replacement budget.
+  Falsifier: At that interleaving the replacement active row remains at the live path with the same id and counts against the cap. Read and validate the last row under the same canonical lock as the rename.
+  Clone probe: From a disposable full clone only. Use temporary state inside that clone, with Git metadata stubbed and real attempt locking and archival.
+
+  ```bash
+  PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 - <<'PY'
+  import json, multiprocessing as mp, tempfile
+  from pathlib import Path
+  from unittest.mock import patch
+  import jog_run as j, rtl
+  ctx = mp.get_context("fork")
+  read, proceed = ctx.Event(), ctx.Event()
+  key, sha = "GH-1653-jog-publish", "a" * 40
+  with tempfile.TemporaryDirectory(dir=Path.cwd()) as coord:
+      record = Path(coord) / ".tick" / "attempts" / key
+      def reserve():
+          with patch.multiple(rtl, attempt_origin=lambda *_: "b" * 64,
+                              attempt_git=lambda _r, cmd, *_: "marathon/one" if cmd == "branch" else sha):
+              return rtl.lane_attempt_reserve(coord, key, coord, kind="manual")[1]
+      first = reserve()
+      rtl.lane_attempt_finish(first, "completed", sha, archive=False)
+      def settle():
+          original = j._jog_live_publication_row
+          def pause(path, issue_key):
+              row = original(path, issue_key)
+              if row and row["id"] == first["id"]:
+                  read.set()
+                  assert proceed.wait(10)
+              return row
+          with patch.multiple(j, _jog_live_publication_row=pause, _git=lambda *_: sha.encode()):
+              j.jog_settle_publication_attempt(coord, coord, 1653, "marathon/one", False)
+      p = ctx.Process(target=settle)
+      p.start()
+      assert read.wait(5), "settlement did not observe A"
+      def rotate():
+          rtl.lane_attempt_finish(first, "completed", sha, archive=True)
+          reserve()
+      other = ctx.Process(target=rotate)
+      other.start()
+      other.join(2)
+      rotated_while_paused = other.exitcode == 0
+      proceed.set()
+      p.join(12)
+      other.join(12)
+      live = json.loads(record.read_text().splitlines()[-1]) if record.exists() else None
+      print(f"rotation finished while A paused={rotated_while_paused}; settlement={p.exitcode} rotation={other.exitcode}; live={live}")
+      assert p.exitcode == 0
+      assert (rotated_while_paused and live and live["state"] == "active" and live["id"] != first["id"]) or (
+          not rotated_while_paused and other.exitcode in (0, 1) and (live is None or live["state"] == "active"))
+  PY
+  ```
+
+- **[Should] Complete the missing resume witnesses and compare the actual failed-push ref.** `PROJECT/2-WORKING/GH-1653-JOG-RECEIPT-ATTEMPT.md:140–143,150–152` calls for supervised recovery with the lock held and an installed-hook resume after failure. `TESTS-RESULTS/2026-11-27+GH-1653/smoke.sh:35–44,49–56` calls the publication helper directly twice, with the first push already successful. `test/gh280-jog-marathon-adapter.sh:722–732,756–777` demonstrates failed/refused resumes and accounting recovery after an out-of-band publish. At `:718–731` the check labelled remote unchanged rejects one commit subject, so a missing ref or a move to a different commit still passes. Record an exact baseline OID and assert equality after each failure/exhaustion. Also retain an actual resume that publishes a still-unpublished bundle with room in the cap, and a supervised recovery of an approved pending publication. These can use the existing fixture/manual receipt. Until then those end-to-end claims are [Unverified — needs clone run].
+
+- **[Pass] Core booking and admission.** Wake, CLI resume and gate-only retry pass the coordinator root at `utils/py/jog_run.py:719–724,828–834,1084–1089`. The write path calls the existing manual writer before commit and push, supplies its context, best-effort finishes failures, and reports the common post-push finish errors as accounting pending (`:1338–1365`, `utils/py/gate_receipt.py:190–206`). The CLI retains its JSON/export output and exit 3 for exhaustion and 2 for refusal at `gate_receipt.py:360–376` on source inspection. The successful push, negative admission, and cap controls have retained results at `TESTS-RESULTS/2026-11-27+GH-1653/gh280-green.log:111–122,174–180` and the missing-attempt red control at `gh280-red-base-runtime.log:105,168,222,311,324` in that directory. The hook reproduces the established per-ref seam (`test/gh280-jog-marathon-adapter.sh:616–634`, `githooks/install.sh:156–181`). The scoped `jog_resume` caller search found the CLI dispatch at `utils/py/releases_app.py:5245–5246` and supervised recovery calls the already-locked body at `utils/py/jog_run.py:2920–2923,2966`. The separate checkpoint push remains outside scope as specified in the plan at line 16 (`skills/1-hourly/kickstart/scripts/run_record.py:602–609`).
+
+- **[Pass] Post-push error and environment restoration at the helper boundary.** Read-only command `PYTHONPATH=utils/py python3 -` under the relay scratch environment imported `jog_run` and patched the start and push calls to append to an in-memory sequence, patched finish to raise `ValueError("finish red control")`, and ran the real helper with an absent, empty, then nonempty caller context. Exit 0, `receipt pushed; attempt accounting pending: finish red control` and `book → commit → push → finish, successful return with pending accounting, caller env restored (absent/empty/nonempty)`, consistent with `utils/py/jog_run.py:1338–1365`. The same command compared SHA-256 against the retained `TESTS-RESULTS/2026-11-27+GH-1653/provenance.jsonl:1–9` and printed `provenance: 9 hashes match`. The syntax-only check `bash -n test/gh280-jog-marathon-adapter.sh` produced no diagnostics.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
