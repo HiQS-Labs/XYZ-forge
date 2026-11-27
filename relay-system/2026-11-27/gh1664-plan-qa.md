@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -107,5 +107,43 @@ Output: graded findings with `file:line` citations, the paraphrase sections, `sw
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1 (codex) — transcribed by the Producer
+
+> Provenance: codex's round-1 review turn ran to completion, but the harness refused to commit it:
+> `rtl_enforce: VALIDATION_FAILED exit=8` because the block had no `VERDICT:` line (stop receipt
+> `turn-error`). The text below is copied verbatim from the codex transcript (sha256 prefix
+> `7e32a10637c0f13f`). The Producer records the implied verdict as FAIL; the reviewer stated
+> "Acceptance 1 and 2 unproven as written". This is not a Producer-authored review.
+
+swept file: yes
+
+**What this proposes.** Conveyor records the commit used to prepare the packet. Jog compares cited paths before leasing and parks stale packets for refresh and retry on the same row.
+
+**How the existing system works, per the plan.** Jog runs hold checks before taking a lease, and `jog retry` preserves the attempt count. Preflight runs after the lease and can report the fix already landed. My inference was that both checks needed to use the same capture and evaluated commit.
+
+**What it’s not.** The proposal leaves queue ownership, schema, and review attestation with their existing owners.
+
+- **[Blocker] Use the capture that Preflight will consume.** **Observed input:** The Day 1 replay already creates two `2-WORKING` captures for GH-901 (`control.txt:212–219`). With two equally preferred candidates and no ledger tie-break, `find_issue_doc` returns `None` (`wave_reconcile.py:1129–1144`), so the proposed check skips (`GH-1664-STALE-EVIDENCE-ADMISSION.md:71–77`). Preflight still takes the first filename match (`swarm_preflight.py:1439–1446`), and existing hold handling explicitly documents the mismatch (`jog_run.py:1687–1698`). **Affected scope:** Multiple working captures, or an inbox capture whose promotion changes what Preflight selects. **Falsifier:** Give both working captures `prepared_commit=A` and the same cited file changed at B. Neither enumeration order may lease or dispatch the row. Reuse a shared selector, pass the selected document through, or park ambiguous candidates before leasing.
+- **[Blocker] Check the revision Preflight actually evaluates.** **Observed input:** The plan resolves the locally visible ref before leasing (`GH-1664-STALE-EVIDENCE-ADMISSION.md:85–94`). Python Preflight fetches and *then* resolves the ref (`swarm_preflight.py:1519–1521,1560–1584`). For `target.ref=origin/development`, a local tracking ref at A can pass the check while Preflight’s own fetch advances it to B. This requires no simultaneous landing. Python Preflight also uses the execution root supplied by Jog, while the plan joins it with `target.repo` (`jog_run.py:644–647`, `swarm_preflight.py:1408–1418`). **Affected scope:** Fetchable tracking refs and contracts whose `target.repo` differs from `.`. **Falsifier:** In the existing fixture, put `origin/development` at A in the execution clone and B in its local fixture remote before invoking Jog. A cited change at B must park with zero attempts and zero worker calls. Specify how admission and Preflight share the repository root and resolved revision.
+- **[Blocker] Prove dispatch after refresh.** **Observed input:** G10 accepts attempt count 1, one execution, and any reason outside `stale-evidence` (`GH-1664-STALE-EVIDENCE-ADMISSION.md:122–125`). Jog writes the execution before calling Preflight and retains it on refusal (`jog_run.py:624–659`). A Preflight refusal can satisfy those predicates. **Affected scope:** G10 and the same-row recovery witness. **Falsifier:** Remove the runnable capture after retry. The recovery assertion must fail even though a lease and execution record exist. Assert the same `global_id`, exactly one worker call or an equivalent positive G4 receipt, and the expected attempt transition.
+- **[Should] Keep the fixture and replay evidence discriminating.** Prepare A/B on the primary fixture before cloning it, or invoke Jog directly after preparing the target. `jog_run_root` recreates the execution clone, and primary cleanup resets `development` while leaving an advanced `main` ref in place (`test/gh280-jog-marathon-adapter.sh:230–236,543–556,610–614`). Explicitly restore any primary `main` movement and prove the base run reaches the worker in G9/G11. For replay reuse, propagate assertion failure as nonzero and count the refresh calls. The old control prints `FAIL` without exiting there, and its refresh line only checks that the call log exists (`control.txt:303–328`). The existing suite plus retained provenance can provide the proof without a second wrapper.
+- **[Should] Define cited paths using the consumer’s semantics.** The planned Git pathspec expansion contradicts Python Preflight’s literal path handling (`GH-1664-STALE-EVIDENCE-ADMISSION.md:90–94`, `swarm_preflight.py:257–282`). For example, `grep_present` on `src/*.js` checks a literal filename in Preflight while Git can match ordinary `.js` files. Use normalized literal paths for those probes, and handle `artifacts_new` as the existing subset of `artifacts` (`swarm_preflight.py:167–176`). A tree diff is appropriate for comparing cited content across squash and merge histories.
+- **[Pass]** Both validators accept an unknown `prepared_commit` key (`swarm_preflight.py:61–93`, `swarm-preflight.sh:165–194`). Parking and `jog retry` preserve the row and attempt count, while the lease increments it and `jog add` can reset it (`releases_app.py:4770–4773,4967–4969,5096–5099,5124–5128`). The missing-key warning is a reasonable compatibility choice if the plan explicitly limits the freshness guarantee to packets recording a SHA. Preflight’s already-landed probe verdict is separate from evidence freshness (`jog_run.py:648–651`).
+
+**Basis:** The static contradictions above leave Acceptance 1 and 2 unproven as written. The source sweep also found the pre-existing capture-selection mismatch described above. Suite and replay behavior remain **[Unverified — needs clone run]**. With the plan corrected, Producer `claude-a` should return it for Reviewer QA.
+
+VERDICT: FAIL (recorded by the Producer from the reviewer's Basis; the reviewer's block omitted the line)
+
+### Producer · Round 1 (claude-a)
+
+Dispositions (plan revised in `PROJECT/1-INBOX/GH-1664-STALE-EVIDENCE-ADMISSION.md`; each change is tagged R1):
+- **B1 capture selection — Implemented.** Verified: `swarm_preflight.py:1439–1446` takes the first 2-WORKING glob match, and `hold_refusal` already enumerates the union (`jog_run.py:1687–1698`). The plan now extracts that enumeration into `_admission_captures` (a pure extract; hold behaviour unchanged) and refuses if ANY capture is stale or unavailable.
+- **B2 root/revision parity — Implemented.** Verified: Preflight fetches (`swarm_preflight.py:1519–1521`), then resolves `target.ref` in the execution root (`:1560–1561`), and ignores `target.repo` (`:1412–1418`; Jog passes `SWARM_PREFLIGHT_ROOT=target` at `jog_run.py:644–647`). The plan now uses `target` only and runs the same tolerant fetch first, but only for captures recording `prepared_commit`. New case G12 (`target.ref=origin/main`, B only on the fixture remote, no re-clone) is your falsifier.
+- **B3 positive dispatch — Implemented.** G10 now asserts the same `global_id`, one row, attempt 1, exactly one execution with `outcome=="approved"`, the row `awaiting-landing (PR #42` as in G4, and the builder's artifact present. The replay counts refresh worker calls from the append-only log and asserts exactly 1.
+- **S1 fixture discipline — Implemented.** A/B commits are made in `$FR` before the re-clone; `main` is restored after each case; the red run proves base reaches the worker. The replay exits nonzero on failure for this case kind; the wrapper script is dropped (provenance records the commands).
+- **S2 literal cited paths — Implemented.** `:(literal)` pathspecs; `artifacts` already contains the `artifacts_new` subset (`swarm_preflight.py:167–176`).
+
+Reviewer: please re-review the revised plan (round 2). **Your block must include a literal `VERDICT: PASS|FAIL|PARKED` line and a `Basis:` line**, or the harness refuses it again (exit 8).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

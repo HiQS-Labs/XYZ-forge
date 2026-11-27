@@ -24,7 +24,7 @@ Parent: [#1476](https://github.com/HiQS-Labs/XYZ-forge/issues/1476) (admission p
 
 | What was just completed | What's next |
 |---|---|
-| Recon at base `52813e56f`; capture and plan written. | Relay plan QA (Codex), then build in `utils/py/jog_run.py` beside `hold_refusal`. |
+| Plan QA round 1 (Codex) FAIL: 3 Blockers and 2 Shoulds, all accepted and folded in (marked R1 below). | Plan QA round 2, then build in `utils/py/jog_run.py` beside `hold_refusal`. |
 
 ## Acceptance
 
@@ -70,11 +70,17 @@ plan was written. The operator gets a precise reason and the row survives untouc
    annotations document it. A refresh re-grounds the work and rewrites it to the newly fetched SHA.
 2. **`stale_evidence_refusal(target, gh_num)` in `jog_run.py`, directly after `hold_refusal`.**
    It returns a reason or `None`:
-   - It resolves the doc with `find_issue_doc(target, gh_num)`, the same doc Jog promotes and
-     Marathon runs. If there is no doc or no contract heading, it returns `None`: preflight already
-     refuses that case after the lease, as today.
-   - It parses with `extract_contract`, catching `SystemExit` as `contract_probes_from_doc` does. An
-     unparseable contract returns `None`, because preflight's exit 3 already parks it.
+   - **(R1 B1) It checks every capture that either selector could execute,** not one pick.
+     Preflight `--gh-issue` takes the first `PROJECT/2-WORKING/GH-N-*.md` glob match
+     (`swarm_preflight.py:1439–1446`). `find_issue_doc` can return `None` on a tie
+     (`wave_reconcile.py:1129–1144`). `hold_refusal` already enumerates that set:
+     `find_issue_doc_candidates` (2-WORKING, 1-INBOX), the 2-WORKING glob, and the canonical pick
+     (`jog_run.py:1687–1698`). That enumeration moves into one small shared helper,
+     `_admission_captures(target, gh_num)`, which both refusals call. The hold behaviour is
+     unchanged; it is a pure extract. A stale or unavailable verdict on **any** capture refuses.
+     A capture with no contract heading, or an unparseable contract, is skipped, because preflight
+     already refuses those after the lease, as today.
+   - It parses with `extract_contract`, catching `SystemExit` as `contract_probes_from_doc` does.
    - If `prepared_commit` is absent, it returns `None` and prints one note:
      `jog: GH-N stale-evidence check skipped: packet records no prepared_commit`. **Warn, not
      fail-closed. Reason:** every existing capture (start-task, express and legacy rows) records no
@@ -82,24 +88,35 @@ plan was written. The operator gets a precise reason and the row survives untouc
      a hand edit, and it would break Acceptance 3. Without a recorded point there is no claim to go
      stale, and preflight's ref-pinned probe evaluation stays the freshness check. A packet that
      *does* record one is enforced fail-closed (below).
+   - **(R1 B2) Same root and revision as Preflight.** The repository is the execution root `target`,
+     the same `SWARM_PREFLIGHT_ROOT`/`--target-root` Jog hands Preflight (`jog_run.py:644–647`).
+     Python Preflight ignores `target.repo` (`swarm_preflight.py:1412–1418`), so this check does
+     too. Preflight runs `git fetch --prune --quiet` in that root, tolerating failure, and then
+     resolves `target.ref` (`swarm_preflight.py:1519–1521, 1560–1561`). This check performs the
+     same fetch first, only for a capture that records `prepared_commit`, so legacy rows make no
+     new network call. It then resolves `target.ref` the same way, so it compares against the
+     commit Preflight will evaluate seconds later. The remaining window is a landing between the
+     two fetches; at this scale that is accepted, and the next admission catches it.
    - If `prepared_commit` is present but is not a 40-hex string, or does not resolve to a commit in
-     the target repo (`target` joined with `target.repo`), it returns
-     `stale-check-unavailable: <why>`. If `target.ref` does not resolve, or git fails, it also
-     returns `stale-check-unavailable: <why>`. A check that cannot be made refuses, matching
-     `hold_refusal`.
-   - The cited paths are `artifacts` + `artifacts_new` + every non-`command` `fix_probes[].path`,
-     deduplicated. Command probes cite no path field, so they are out of scope (non-goal). It runs
-     `git diff --name-only <prepared_commit> <ref_commit> -- <paths>` in the target repo. This is
-     a tree diff, so a squash, merge or parallel landing is all handled the same. Git pathspec
-     handles the glob probe paths.
+     `target`, it returns `stale-check-unavailable: <why>`. If `target.ref` does not resolve, or
+     git fails, it also returns `stale-check-unavailable: <why>`. A check that cannot be made
+     refuses, matching `hold_refusal`.
+   - **(R1 S2) The cited paths use the consumer's literal semantics.** They are `artifacts`
+     (which includes the `artifacts_new` subset) plus every non-`command` `fix_probes[].path`,
+     deduplicated. Preflight evaluates probe paths literally (`swarm_preflight.py:257–282`), so each
+     is passed as a `:(literal)<path>` pathspec. Command probes cite no path field, so they are out
+     of scope (non-goal). It runs `git diff --name-only <prepared_commit> <ref_commit> -- <paths>`
+     in `target`. This is a tree diff, so a squash, merge or parallel landing is all handled the
+     same.
    - If anything changed, it returns
      `stale-evidence: cited paths changed since prepared_commit <12> (target.ref <ref> at <12>): a, b`.
      The paths are sorted, with at most 10 listed and the rest shown as `+N more`.
 3. **Call it at the two existing pre-lease points.** Each call becomes
    `held = hold_refusal(...) or stale_evidence_refusal(...)`, reusing the same refusal handling:
    park with the reason, no lease, no promotion, no execution record, attempt count unchanged.
-   `--simulate` stays exempt, as for holds. These are the only `jog_run.py` edits. They are confined
-   to the admission path, away from the #1653 receipt-publication work.
+   `--simulate` stays exempt, as for holds. These edits, plus the `_admission_captures` extract,
+   are the only `jog_run.py` changes. They are confined to the admission path, away from the #1653
+   receipt-publication work.
 4. **Refresh path (no new code).** A Conveyor refresh publishes the capture with a new
    `prepared_commit` (B). Then `jog retry N` followed by `jog run`, or `jog retry-build N`,
    re-admits the **same row**: no `jog add`, no new row, no reset. The attempt count then
@@ -115,29 +132,48 @@ plan was written. The operator gets a precise reason and the row survives untouc
   reusing its fixture, `prepare_execution_target`, `jog_run_root` and `queue_status`. AGENTS.md *No
   new tests* allows editing an existing suite. The issue's Acceptance requires the proof in an
   existing Jog suite, so this is a case inside one, not a new file.
+  - **(R1 S1) Fixture discipline.** A/B commits are made on the primary fixture `$FR` *before*
+    `jog_run_root` re-clones the execution target, so the target sees them. Moving `main` (the
+    contract's `target.ref`) is restored to `$INIT_HEAD_R` immediately after each case's last run,
+    not only at the end of the section, because `cleanup_root_fixture` resets `development` but not
+    `main` (`test/gh280-jog-marathon-adapter.sh:230–236`).
   - G9: `prepared_commit` = A, then commit a change to `src/feature.js` (a cited artifact) at B and
-    advance `main` (the contract's `target.ref`). `jog run` must exit with the row
-    `parked|stale-evidence: …src/feature.js…|0`, the output must say `not started: stale-evidence`,
-    and there must be no execution ledger entry and no worker dispatch.
-  - G10: refresh, so `prepared_commit` = B, committed, plus an unrelated file change committed after
-    it. Then `jog retry 901` and `jog run` must lease the same row: exactly one `jog_queue` row for
-    901, `attempt_count` 1, one execution, and a reason not starting with `stale-evidence`. This also
-    covers Acceptance 3: unchanged cited files with an unrelated diff admit.
+    advance `main`. `jog run` must leave the row `parked|stale-evidence: …src/feature.js…|0`, the
+    output must say `not started: stale-evidence`, and there must be no execution ledger entry
+    (no lease, no preflight, no worker).
+  - **(R1 B3) G10, positive dispatch after refresh.** Refresh so `prepared_commit` = B, committed,
+    plus an unrelated file change committed after it. Then `jog retry 901` and `jog run` with G4's
+    environment (canned PR, suggested lane branch, approving agent stubs). The assertions: the same
+    `global_id` as before the refusal; exactly one `jog_queue` row for 901; `attempt_count` 1; the
+    ledger holds exactly one execution with `outcome == "approved"`; the row is
+    `parked|awaiting-landing (PR #42`, as in G4; and the stub builder's artifact edit is present in
+    the target. A preflight refusal or a missing capture cannot satisfy those, unlike the round-1
+    predicates. This also covers Acceptance 3: unchanged cited files with an unrelated diff admit
+    and dispatch.
   - G11 (fail-closed control): `prepared_commit` set to a well-formed SHA that is not in the repo must
-    give `parked|stale-check-unavailable: …|0`.
+    give `parked|stale-check-unavailable: prepared_commit … not found…|0` and no execution.
+  - **(R1 B2) G12, fetched-ref parity.** The contract's `target.ref` is `origin/main` and
+    `prepared_commit` = A. The execution clone is prepared while the fixture remote's `main` is at A.
+    The cited file then changes at B on the fixture remote only, and Jog runs directly, without
+    re-cloning. The check must fetch as Preflight does, see `origin/main` at B, and park with
+    `stale-evidence: …src/feature.js…|0` and no execution. Without the fetch it would read A and
+    dispatch.
   - Existing G4 and later sections (no `prepared_commit`) must stay green. That is the "admits as
     before" regression.
-  - **Red:** run the edited suite with `utils/py/jog_run.py` reverted to base. G9 and G11 must fail,
-    because the row dispatches. **Green:** run it with the change. Both runs happen in a disposable
-    full clone, and the outputs go under `TESTS-RESULTS/2026-11-27+GH-1664/`.
+  - **Red:** run the edited suite with `utils/py/jog_run.py` reverted to base. G9, G11 and G12 must
+    fail, because the row dispatches. This proves the base run reaches the worker. **Green:** run it
+    with the change. Both runs happen in a disposable full clone, with outputs under
+    `TESTS-RESULTS/2026-11-27+GH-1664/` and `provenance.jsonl`.
 - **Disposable replay / Run A stale witness:** add a `stale-evidence` case kind to the existing
   Day 1 replay `TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt`. It is the same fixture as the
   GH-1476 holds cases and takes the clone as an argument. Steps: prepare at A, change the cited file
   at B, expect a 0-call refusal with the reason prefix `stale-evidence:` and an unchanged attempt
-  count; then refresh `prepared_commit` to B, run `jog retry 901` and `jog run`, and expect 1 worker
-  call, the same row and attempt 0→1. A wrapper `TESTS-RESULTS/2026-11-27+GH-1664/run-witness.sh
-  <label> <clone>` writes a labelled log plus `provenance.jsonl`. Its `base` run is red, its
-  `change` run is green, and the `change` log is the labelled stale witness Run A can cite.
+  count; then refresh `prepared_commit` to B, run `jog retry 901` and `jog run`, and expect exactly
+  1 refresh worker call (counted from the append-only call log), the same `global_id`, one row and
+  attempt 0→1. **(R1 S1)** For this case kind, the control exits nonzero when either assertion
+  fails. There is no new wrapper script: the exact env and command lines are recorded in
+  `provenance.jsonl`. The `base` log is red, the `change` log is green, and the `change` log is the
+  labelled stale witness Run A can cite.
 - **Smoke (GH-1088):** the main path is the replay's `jog run` refusal. The adjacent path is
   `jog retry-build 901` on the same stale packet (also refused, same row), then a re-admit after the
   refresh.
