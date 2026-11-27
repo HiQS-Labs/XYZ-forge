@@ -64,7 +64,7 @@ source-only arm `bash test/relay-pkg-freshness.sh` exits 1 (drift: `relay-turn-l
 `make-pkg.sh` it exits 0.
 
 Consumer arms (real Preflight, `--dry-run`, simulated fix committed on the scratch clone's
-`development`):
+`development`; #1638 uses `sim-gh1638-with-pkg.patch`):
 
 | Arm | #1666 | #1423 | #1638 |
 |---|---|---|---|
