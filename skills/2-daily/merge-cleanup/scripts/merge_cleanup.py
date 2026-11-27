@@ -2542,7 +2542,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 if gone:
                     log(f"Released landed PRs' clones: {', '.join(gone)}")
             log(f"Landing clones retained for inspection under {workdir}")
-        prune_retained_scratch(workdir)
+        if not dry_run:
+            prune_retained_scratch(workdir)
 
 
 def prepare_primary_landing(primary_repo: Path, args) -> Dict[str, Any]:

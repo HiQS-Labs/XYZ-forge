@@ -1,6 +1,6 @@
 # Marathon Phase gh-1626-dry-run-scratch-prune
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1626-DRY-RUN-SCRATCH-PRUNE-TURN builder=codex reviewer=agy round-cap=2 -->
 
@@ -120,3 +120,12 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Guarded retained-scratch pruning in `_land_prs_loop` with the existing `dry_run` flag. The executing path uses the existing helper.
+- Recorded the manual check in `TESTS-RESULTS/2026-11-27+GH-1626/delivery.md`. The pre-edit probe reproduced the bug (exit 1). The post-edit probe passed (exit 0), and the same check with a `merge-check-*` fixture passed (exit 0). Dry runs kept the old folders, and execute runs removed them. The probe stubs the process check and `lsof`.
+- Reviewed the merge-cleanup assertions in `test/gh549-work-events.sh` and left the file unchanged.
+
+unverified: `bash test/gh436-merge-cleanup.sh` — configured harness gate reserved for after the turn.
+unverified: `test/gh549-work-events.sh` runtime — relay scope forbids running the suite.
