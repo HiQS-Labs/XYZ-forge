@@ -47,8 +47,12 @@ Batch: item 2 of #1657.
    payload required, so `- ` alone is never a criterion).
 2. `extract_acceptance_criteria(text, plain_bullets=False)`: inside the existing loop, after the
    checkbox match fails and only when `plain_bullets` is true, try the plain regex. A plain bullet
-   is a new criterion unless it is indented deeper than the current criterion; then it is a
-   continuation (folded into the parent, exactly as the doc side folds the same nested line).
+   becomes a new criterion only when no criterion exists yet or its tab-expanded indent is not
+   deeper than the current criterion's. Otherwise it is not classified at all and falls through to
+   the existing continuation branch unchanged (raw-indent fold or skip), so it gets exactly the
+   result the doc side gives the same verbatim line, including mixed tab/space indents.
+   Lines inside a fenced code block (``` or ~~~ toggles, tracked only when `plain_bullets` is true)
+   are never classified as plain bullets; checkbox handling inside fences is unchanged.
    Checkbox lines still match `ACC_BULLET_RE` first, including `-  [ ]` with extra spacing (an empty
    one is dropped by the existing blank filter), so the plain branch never sees a task marker.
 3. `check_acceptance_fidelity` passes `plain_bullets=True` for the issue body only.
@@ -63,10 +67,12 @@ heading skip; HR and heading termination (checked before bullets); `None` (no se
 dodge the gate with plain bullets and the packet/fidelity views of the doc stay in agreement.
 
 Archived #792 capture (plan QA r1): `PROJECT/3-COMPLETED/GH-792-...md` declares three `[added]`
-deviations as the old workaround. After this fix a re-run of preflight on it would read `diverged`
-(stale deviations). Not edited here: #792 is closed (COMPLETED), the doc is an archived record of
-the packet that was actually delivered, and preflight does not re-run completed captures. Recorded
-as a known effect in the PR.
+deviations as the old workaround. After this fix, an explicit `--project-doc` replay of that
+archived file reads `diverged` (stale deviations): issue-number discovery only scans
+`PROJECT/2-WORKING` (`swarm_preflight.py:1434-1447`), but `--project-doc` accepts any file. Not
+edited here: #792 is closed (COMPLETED) and the doc is the archived record of the packet actually
+delivered; stale-deviation enforcement stays. The smoke uses a scratch copy of the three verbatim
+criteria without the workaround block. Recorded as a known effect in the PR.
 
 Why issue-side only: the doc's criteria are what the packet inlines (`collect_inline_checklist`,
 checkbox-only). Accepting plain bullets on the doc side would let fidelity read `match` while the
@@ -93,6 +99,9 @@ sub-bullet into its own criterion and diverge from a verbatim copy, which folds 
 - [ ] Mixed control: an issue with `- [ ] First`, nested `  - detail`, plain sibling `- Second`
       matches a full checkbox copy and diverges with `dropped=['Second']` when `Second` is omitted.
 - [ ] Whitespace control: `-  [ ]` (empty, padded task) plus `- First` yields only `First`.
+- [ ] Fence control: `- [ ] First` followed by a fenced block containing `- example output` matches a
+      capture holding only `First`.
+- [ ] Tab control: verbatim `  - [ ] First` / `\t- detail` / `- [ ] Last` on both sides still matches.
 - [ ] All existing cases in `test/gh400-acceptance-fidelity.sh` and
       `test/gh557-unknown-blocks-manifest.sh` still pass.
 - [ ] Smoke: `swarm-preflight.sh` dry run against the #792 issue body shape (main path) and a

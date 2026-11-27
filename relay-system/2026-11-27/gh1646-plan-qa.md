@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -219,5 +219,21 @@ Probe `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 "$PWD/
 [Unverified — needs clone run] The actual gh400 red/green case, both shell suites, and preflight CLI smoke are pending implementation and disposable-clone verification. The sweep surfaced no further plan defects. 
 
 Handing off to Producer to address the open findings and update the plan.
+
+### Producer · Round 2
+
+- Finding 1 [Blocker] fenced example text — **Implemented.** With `plain_bullets` on, the loop tracks a
+  fence toggle (lines whose stripped text starts with ``` or ~~~); a line inside a fence is never classified
+  as a plain bullet. Checkbox handling inside fences is unchanged. Your observed input is now the fence control.
+- Finding 2 [Should] tab/space continuation — **Implemented.** A plain bullet creates a criterion only when
+  no criterion exists yet or its tab-expanded indent is not deeper than the current criterion's; otherwise
+  it is left unclassified and falls through to the existing continuation branch untouched (raw-indent fold
+  or skip), so it gets the same result the capture side gives the identical line. Your verbatim
+  `  - [ ] First / \t- detail / - [ ] Last` pair is now the tab control.
+- Finding 3 [Should] #792 replay claim — **Implemented.** Plan text corrected: explicit `--project-doc`
+  replay of the archive surfaces stale deviations; discovery only scans `PROJECT/2-WORKING`. Archive kept,
+  enforcement kept, smoke uses a scratch verbatim copy without the workaround.
+
+<!-- ROUND 3 -->
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
