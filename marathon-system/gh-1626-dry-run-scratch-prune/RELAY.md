@@ -149,3 +149,13 @@ gate run: no — harness gate
 **Verdict:** Approved
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-11-27T16:12:49Z
+task: MARATHON-GH-1626-DRY-RUN-SCRATCH-PRUNE-TURN
+reviewer: agy
+status: Approved
+reviewed-head: c91560364023c5c462894cbc077c5a3bbcfaf5cc
+added-range: 12591+2488
+added-sha256: 1d022cfe4277ef11c41783318f968dd6c18fea9c61f0f851520cd8eae76bdcd2
+config-sha256: a64312846488eda91decf108c386419bf6e3b3edf2a92f83b5da7dcd27608396
+gate-run: no
