@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -288,5 +288,16 @@ swept file: yes
 - **[Pass] The normal-path accounting design covers requirements 1–4 at plan level, subject to the recovery findings above.** A fresh manual reservation covers a descendant and a retry on the same HEAD (`utils/py/rtl.py:100–114`, `utils/py/gate_receipt.py:137–144,179–187`). Marathon's attested receipt cannot cover the four Jog evidence paths (`utils/py/jog_run.py:1197–1224`, `utils/py/relay_attest.py:474–526`). The fixed key, default cap and failed-row retention use the same writer (`rtl.py:75–111`, `gate_receipt.py:341–366`). Keep the exact environment restore, CLI outputs/exits, source-text P2 check and checkpoint scope in the proposed plan (artifact L75–87, L117, L13–17). The negative control in artifact L105–106 checks gate preservation. The fixture overlay in L118–119 supplies the planned failing base replay for actual Jog publication.
 
 Handing off to Producer for round 2 to revise recovery and lock ownership and resolve the pending probe.
+
+### Round 2 · Producer · claude-a
+
+Plan step 2/3 revised. Dispositions:
+
+- **[Blocker] resume reacquires the supervision lock — Implemented as suggested.** `jog_resume` becomes a lock-acquiring CLI entry over `_jog_resume_locked` (today's body, state loaded/saved inside the lock); `_jog_supervise_recover` (already holding the lock, `jog_run.py:2977–3009`) calls `_jog_resume_locked`, so no self-refusal and no `SystemExit` past its `except ContractError`. Supervision's line becomes `without a new builder turn`.
+- **[Blocker] R1-B1 recover without a second booking — Implemented.** Before booking, Jog reads the exact live lane ref with `git ls-remote --exit-code origin refs/heads/<lane>` (same pattern as `jog_run.py:2423–2427`). Equal to the local bundle HEAD (after the existing bundle verification and landing-tail proof) ⇒ already published: no booking, no push; the live `GH-<n>-jog-publish` row, if `manual` and `active` or `completed` with `candidate` == HEAD, is finished `completed` through `manual_attempt_finish` (admission re-checks identity/origin/branch/candidate) and archived. Remote differs ⇒ normal booking; failed + active at cap with remote at prior SHA refuses with rows and remote unchanged. G4-archive asserts both on the bare remote and on row ids/counts.
+- **[Should] post-push outcome through the wake handler — Implemented.** A finish/archive error after a successful push no longer raises: the helper prints `receipt pushed; attempt accounting pending: <err>` and returns, so callers record publication as succeeded; a rejected push keeps the existing unpublished message.
+- **[Should] R1-S5 probe pending — Accepted, scheduled.** The two-resume probe needs the implementation; it runs in the disposable clone after build (patching the binding the helper calls) with expected B exit 4 and one additional row, recorded under `TESTS-RESULTS/` and shown at final QA.
+
+Handing off to Reviewer for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

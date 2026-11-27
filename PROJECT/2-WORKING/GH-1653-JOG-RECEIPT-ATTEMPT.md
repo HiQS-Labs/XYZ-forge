@@ -80,20 +80,28 @@ Day 2 (#1610) needed the same. Recurrence: 3+ distinct lanes in the last 14 days
    evidence commit; exhausted → `ContractError("gate-attempt budget exhausted after N consumed rounds ...")`;
    push with `env={**os.environ, XYZ_ATTEMPT_CONTEXT: json.dumps(context)}`; on success `manual_attempt_finish(..., "completed")`;
    on a failed push `manual_attempt_finish(..., "failed")` (best effort, the row stays consumed either way) and re-raise.
-   A finish error *after* a successful push is reported as its own error (`receipt pushed; attempt finish failed: ...`),
-   never as a failed push. Save/restore the caller's exact `XYZ_ATTEMPT_CONTEXT` in a `finally` covering reserve,
-   push and finish. Accounting `ValueError`s map to `ContractError` (the existing Jog park/`jog: <msg>` surfaces).
-   The three callers pass `accounting_root=root`. The key `GH-<n>-jog-publish` is the canonical publication identity;
-   retries and restarts draw on the same budget, nothing renames it, and it is not a recovery switch for any other key.
-   **Interrupted-finish recovery (R1-B1):** if `manual_attempt_start` refuses with rtl's
-   `completed reservation awaits archival`, Jog reads the live row (the file's last row) and, only when it is a
-   `manual` row for this key whose `candidate` equals the target's live HEAD, re-finishes it with the existing
-   `manual_attempt_finish(..., "completed")` (same-candidate re-finish, rtl L160–164), which archives it; then it
-   books normally. Any other completed row stays a refusal. A row left `active` by a crash after a successful push
-   simply counts as consumed; the next booking appends a row and the push is a no-op for an up-to-date ref.
-   **Concurrency (R1-S5):** `jog resume`'s publication branch takes the existing `JogSupervisorLock(root)` (as
-   retry-gate/retry-build already do); a held lock refuses with the existing exit 4. Run/retry-gate already hold it.
-   Docstring/wording: resume's "spend nothing" → "spends no build turn; publication books one gate attempt".
+   A finish error *after* a successful push does not fail publication (R2-S3): the helper returns normally, prints
+   `jog: GH-<n> receipt pushed; attempt accounting pending: <err>`, and the wake/resume/retry callers record the
+   publication as succeeded (no `receipt-publication-failed`, no "not published" message). Save/restore the caller's
+   exact `XYZ_ATTEMPT_CONTEXT` in a `finally` covering reserve, push and finish. Accounting `ValueError`s map to
+   `ContractError` (the existing Jog park/`jog: <msg>` surfaces). The three callers pass `accounting_root=root`.
+   The key `GH-<n>-jog-publish` is the canonical publication identity; retries and restarts draw on the same budget,
+   nothing renames it, and it is not a recovery switch for any other key.
+   **Already-published recovery (R1-B1 / R2-B2), no second booking:** after the evidence files are verified/committed
+   and the existing landing-tail proof holds, Jog reads the exact live ref with
+   `git ls-remote --exit-code origin refs/heads/<lane>` (the pattern already used by checkpoint publication,
+   `jog_run.py:2423–2427`). If it equals the local HEAD (the bundle commit), the receipt is already published:
+   Jog books nothing and pushes nothing; if the live row of `GH-<n>-jog-publish` is a `manual` row that is `active`, or
+   `completed` with `candidate` == HEAD (archival pending), Jog finishes that same row as `completed` with the
+   existing `manual_attempt_finish` (admission re-checks identity, origin, branch and candidate), which archives it.
+   If the remote ref differs, the normal booking path runs and the cap applies (e.g. failed + active at cap 2 with
+   the remote still at the prior SHA refuses, rows and remote unchanged).
+   **Lock ownership (R1-S5 / R2-B1):** split `jog_resume` into a lock-acquiring CLI entry
+   (`JogSupervisorLock(root)`, as retry-gate/retry-build do; a held lock refuses with the existing exit 4) and
+   `_jog_resume_locked(root, gh_num, args)` holding today's body. Supervised recovery (`_jog_supervise_recover`,
+   which already holds the coordinator lock, `jog_run.py:2977–3009`) calls `_jog_resume_locked`. State is loaded and
+   saved inside the lock. Supervision's line `recovered ... without a new builder or attempt` becomes
+   `without a new builder turn`. Docstring: resume "spends no build turn; publication books one gate attempt".
 3. **`test/gh280-jog-marathon-adapter.sh`** (existing suite, focused cases only) — an execution-clone fixture
    pre-push hook that, per pushed ref, unsets the fixture's command-scoped transport rewrite
    (`GIT_CONFIG_PARAMETERS`/`GIT_CONFIG_COUNT`, R1-S4: probe showed the hook otherwise sees the local bare URL and
@@ -108,9 +116,16 @@ Day 2 (#1610) needed the same. Recurrence: 3+ distinct lanes in the last 14 days
      row, remote lane ref unchanged; `jog resume` (new process) → 2 failed rows; sentinel off → `jog resume` refused
      `budget exhausted after 2`, still 2 rows, remote unchanged. Optional fixture-only: `LANE_MAX_ATTEMPTS=3 jog resume`
      publishes and the archive holds 3 rows.
-   - G4-archive (R1-B1): after a successful publication, rewrite the archived row back into the live file as a
-     `completed` row for the same candidate (simulating a crash before archival) with `committed_receipt` unset;
-     `jog resume` exits 0, archives that row, and publishes with no refusal.
+   - G4-archive (R1-B1/R2-B2): continuing G4-retry's state (1 failed row live): (a) push the bundle commit to the
+     bare remote out of band and append a `completed` row with `candidate` = HEAD to the live file (crash before
+     archival) — `jog resume` exits 0, books nothing, the archive holds exactly those 2 rows (same ids), state has
+     `committed_receipt`; (b) seed failed + `active` at cap with the remote still at the prior SHA — `jog resume`
+     refuses `budget exhausted`, both live rows and the remote ref unchanged. (Case "active + already pushed" is
+     covered by the same code path as (a) and checked in the smoke.)
+   - Lock (R1-S5/R2-S4): the Round 1 two-resume clone probe, run against the implementation in a disposable clone
+     (patching the binding the publication helper calls), expects B exit 4 and exactly one additional row; recorded
+     under `TESTS-RESULTS/`. Supervised recovery publishing with the lock held is exercised by the existing gh280
+     supervision section if it covers an approved pending publication; otherwise by the smoke.
    - K2 (R1-B2, gate-only caller): the same hook on K2's execution clone; after the approved retry, the bare remote
      holds the retry's `jog: publish` commit and `$FR/.tick/attempt-history/GH-901-jog-publish-*` holds a completed
      row (omitting `accounting_root=root` would put it under `$FT` and fail). K2's no-builder/no-new-token checks stay.
