@@ -1,0 +1,74 @@
+{
+  "principle_headings": 14,
+  "scorecard_rows": 12,
+  "heading_says": 14,
+  "description_point": 12,
+  "wave4_node": [
+    4,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "wave4_list": [
+    4,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "provenance_forge": [
+    35,
+    365,
+    558
+  ],
+  "provenance_predecessor": [
+    42,
+    376,
+    528,
+    544,
+    549,
+    564
+  ],
+  "relative_links": [
+    {
+      "link": "../../1-hourly/sanity-check/SKILL.md",
+      "skill": "sanity-check",
+      "resolves_in_forge_tree": true,
+      "resolves_in_flat_install_with_sibling": false,
+      "resolves_in_flat_install_sibling_absent": false,
+      "flat_fallback_sentence": true
+    },
+    {
+      "link": "../ci-suite-audit/SKILL.md",
+      "skill": "ci-suite-audit",
+      "resolves_in_forge_tree": true,
+      "resolves_in_flat_install_with_sibling": true,
+      "resolves_in_flat_install_sibling_absent": false,
+      "flat_fallback_sentence": true
+    }
+  ],
+  "assertions": {
+    "a1_heading_count_matches_headings": true,
+    "a2_description_names_principle_count_and_rubric_rows": true,
+    "a3_extension_intro_present": true,
+    "a4_scorecard_note_present_and_bands_unchanged": true,
+    "a5_roadmap_sentence_scoped": true,
+    "a6_wave4_node_matches_wave4_list": true,
+    "a7_provenance_attributed_by_repo": true,
+    "a8_every_relative_link_has_flat_fallback": true,
+    "a9_relative_links_valid_in_forge_tree": true
+  },
+  "ok": true,
+  "kind": "ci-optimize-selfconsistency",
+  "label": "candidate",
+  "file_sha1": "bbc2163fed04c61e24e7114dea400103ba20e388"
+}
+{"kind": "ci-optimize-red-control", "label": "candidate", "mutant": "edit1_description", "exit_status_of_checker": 1, "assertions_false": ["a2_description_names_principle_count_and_rubric_rows"], "expected_false": ["a2_description_names_principle_count_and_rubric_rows"], "mutant_sha1": "c99e5ef8748e144c1981be892dfbf14eb801921e", "pass": true}
+{"kind": "ci-optimize-red-control", "label": "candidate", "mutant": "edit2_provenance", "exit_status_of_checker": 1, "assertions_false": ["a7_provenance_attributed_by_repo"], "expected_false": ["a7_provenance_attributed_by_repo"], "mutant_sha1": "834d448c6ff9eef99a683cee358a5804ae4f73c9", "pass": true}
+{"kind": "ci-optimize-red-control", "label": "candidate", "mutant": "edit3_heading_and_intro", "exit_status_of_checker": 1, "assertions_false": ["a1_heading_count_matches_headings", "a3_extension_intro_present"], "expected_false": ["a1_heading_count_matches_headings", "a3_extension_intro_present"], "mutant_sha1": "11cecc1477d0a7aa1d1f7efae04348e89a72f66c", "pass": true}
+{"kind": "ci-optimize-red-control", "label": "candidate", "mutant": "edit4_roadmap_sentence_and_node", "exit_status_of_checker": 1, "assertions_false": ["a5_roadmap_sentence_scoped", "a6_wave4_node_matches_wave4_list"], "expected_false": ["a5_roadmap_sentence_scoped", "a6_wave4_node_matches_wave4_list"], "mutant_sha1": "20cbbb2db8108d860b5546000913644c5c6e1b54", "pass": true}
+{"kind": "ci-optimize-red-control", "label": "candidate", "mutant": "edit5_scorecard_note", "exit_status_of_checker": 1, "assertions_false": ["a4_scorecard_note_present_and_bands_unchanged"], "expected_false": ["a4_scorecard_note_present_and_bands_unchanged"], "mutant_sha1": "4e0d68264f823b598e374aeaa2c34f843752bb77", "pass": true}
+{"kind": "ci-optimize-red-control", "label": "candidate", "mutant": "edit6_ci_suite_audit_fallback", "exit_status_of_checker": 1, "assertions_false": ["a8_every_relative_link_has_flat_fallback"], "expected_false": ["a8_every_relative_link_has_flat_fallback"], "mutant_sha1": "a6cb627f4148ae3472d8497b23d6ed65b44ef802", "pass": true}

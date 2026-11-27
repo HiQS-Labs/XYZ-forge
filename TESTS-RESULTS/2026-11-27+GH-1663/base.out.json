@@ -1,0 +1,66 @@
+{
+  "principle_headings": 14,
+  "scorecard_rows": 12,
+  "heading_says": 12,
+  "description_point": 12,
+  "wave4_node": [
+    4,
+    8,
+    10,
+    11,
+    12
+  ],
+  "wave4_list": [
+    4,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "provenance_forge": [
+    35,
+    42,
+    365,
+    376,
+    528,
+    544,
+    549,
+    558,
+    564
+  ],
+  "provenance_predecessor": [],
+  "relative_links": [
+    {
+      "link": "../../1-hourly/sanity-check/SKILL.md",
+      "skill": "sanity-check",
+      "resolves_in_forge_tree": true,
+      "resolves_in_flat_install_with_sibling": false,
+      "resolves_in_flat_install_sibling_absent": false,
+      "flat_fallback_sentence": true
+    },
+    {
+      "link": "../ci-suite-audit/SKILL.md",
+      "skill": "ci-suite-audit",
+      "resolves_in_forge_tree": true,
+      "resolves_in_flat_install_with_sibling": true,
+      "resolves_in_flat_install_sibling_absent": false,
+      "flat_fallback_sentence": false
+    }
+  ],
+  "assertions": {
+    "a1_heading_count_matches_headings": false,
+    "a2_description_names_principle_count_and_rubric_rows": false,
+    "a3_extension_intro_present": false,
+    "a4_scorecard_note_present_and_bands_unchanged": false,
+    "a5_roadmap_sentence_scoped": false,
+    "a6_wave4_node_matches_wave4_list": false,
+    "a7_provenance_attributed_by_repo": false,
+    "a8_every_relative_link_has_flat_fallback": false,
+    "a9_relative_links_valid_in_forge_tree": true
+  },
+  "ok": false,
+  "kind": "ci-optimize-selfconsistency",
+  "label": "base",
+  "file_sha1": "52eed7d33c2a6d6a97792e35a0690412e8acb89a"
+}
