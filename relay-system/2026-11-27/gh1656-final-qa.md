@@ -292,3 +292,12 @@ of this file, a block containing exactly a `VERDICT:` line immediately followed 
 
 VERDICT: PASS
 Basis: Round 3 stands. Replayed its documented shell probe against the seeded source, exit 0. The parsed argv preserved the space-containing primary path, development, PR 19 and --execute. Decisive output: foreign-cwd CLI --help = 0; identity and mismatch text passed. The retained Forge-hook branch replay recorded push_rc=0 and origin equal to the candidate, and the CLI smoke recorded the expected parents and gated tree. The recovery write was traced in source. The focused-suite provenance names an earlier revision, and no reviewer phase gate was specified or run.
+
+### Attestation · relay-drive — 2026-11-27T20:31:19Z
+task: RELAY-gh1656-final-qa-confirm2
+reviewer: codex
+status: Approved
+reviewed-head: 886c32c51b3d0d0da209e63e3de7a1355f104fc3
+added-range: 26589+586
+added-sha256: 0753cce540b950e3efdd89ad53c5f740b83bed88e813c821ea1c5932feec2be9
+gate-run: undeclared
