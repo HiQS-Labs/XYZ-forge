@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -235,5 +235,43 @@ Handing off to Producer to address the open findings and update the plan.
   enforcement kept, smoke uses a scratch verbatim copy without the workaround.
 
 <!-- ROUND 3 -->
+
+### Reviewer · Round 3
+
+**What this proposes**
+
+Extend the shared Acceptance extractor so the issue side reads plain dash and asterisk criteria alongside checkboxes. A deeper plain bullet follows the existing continuation path, and a fence toggle is intended to keep literal examples out of the new matcher.
+
+**How the existing system works, per this document**
+
+Fidelity compares two extracts from a checkbox parser, so a faithful checkbox copy of a plain issue list looks like an addition. The packet separately reads capture checkboxes. I infer that enabling plain bullets on the capture side would let fidelity give credit for criteria that never reach the packet.
+
+**What it's not**
+
+Capture grammar, packet inlining, alternate headings, and stale-deviation enforcement are outside this plan.
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: The simple fence case, indent parity, and #792 disposition check out. The proposed toggle can still credit literal example text, and the existing section-boundary order can skip real criteria after a fenced example.
+
+Probe command `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 "$PWD/.relay-scratch/tmp/gh1646-r3.py" "$PWD/.relay-scratch/tmp/gh1646-r3.py"` exited 0. The scratch script compiled the plan's exact plain regex, inserted the Producer's stripped-prefix toggle and expanded-indent check in a copy of the seeded loop in memory, then enabled that copy only for the issue call in seeded fidelity. It supplied issue bodies and scratch captures directly. Tuples below are `(status, dropped, added)`.
+
+- [Blocker] Close an issue fence only on a valid closer for its opener. Track the delimiter character and width instead of flipping a boolean on either prefix.
+  - Observed input: Issue `"## Acceptance\n- [ ] First\n\n```text\n~~~\n- example output\n```\n"`, capture `"## Acceptance\n- [ ] First\n"`. The toggle in the Round 2 Producer reply and plan lines 54–55 treats the literal `~~~` as a closer. Probe `mixed fence delimiters` reported baseline `('match', [], [])` and planned `('diverged', ['example output'], [])`. The same result occurred with a four-backtick opener and a three-backtick line inside it.
+  - Affected scope: Literal fence-like lines within issue Acceptance examples containing plain dash or asterisk text.
+  - Falsifier: Both inputs match the capture with only First. A plain `- Second` after the real closer is still reported in `dropped` until copied.
+- [Blocker] While inside an issue fence, keep literal headings and rules from ending the Acceptance section. Retain the existing boundary checks outside fences and the default capture path.
+  - Observed input: Issue `"## Acceptance\n- [ ] First\n\n```text\n## sample output\n```\n\n- Second\n"`. The boundary checks at `utils/py/swarm_preflight.py:618–623` run before bullet classification, as preserved by plan lines 64–67. With a capture holding only First, both baseline and planned fidelity reported `('match', [], [])`. With a capture holding First and Second, both reported `('diverged', [], ['Second'])`. Replacing the literal heading with `---` produced the same two results. This is a pre-existing boundary defect that also defeats the planned plain-bullet behavior.
+  - Affected scope: Real issue criteria following a fenced example that contains a heading at or above the Acceptance level or a horizontal rule.
+  - Falsifier: Both examples match the full copy and report `('diverged', ['Second'], [])` for the partial copy. A real heading or rule outside the fence still terminates Acceptance.
+- [Pass] The Round 2 tab and archive findings close. The verbatim tab pair matched before and after simulation using the unchanged continuation branch at `utils/py/swarm_preflight.py:628–635`. With the issue body reconstructed from the three archived criteria, the retained #792 capture went from `match` to `diverged` with `deviations are declared but the two lists do not differ`, and the scratch verbatim copy matched. Plan lines 69–75 now document the explicit archive replay path and the smoke correctly. See `utils/py/swarm_preflight.py:1426–1447` and `:1003–1018`.
+- [Pass] Plan lines 94–104 pin observable behavior. The plain full-copy case changed from `('diverged', [], ['First', 'Second'])` to `('match', [], [])`. The plain and mixed partial copies both reported `('diverged', ['Second'], [])` in the simulation. The simple fence and padded empty task controls matched, and the extractor returned `None` for absent Acceptance and `[]` for an empty section with out-of-scope markers. The existing gh400 helper only emits status and detail, so assert `dropped` directly for the new control (`test/gh400-acceptance-fidelity.sh:55–63`).
+- [Pass] Keep the issue-only opt-in at `utils/py/swarm_preflight.py:985–986`. The capture's packet reader still takes checkboxes at `:826–838` and `:1754–1760`. The nearest graph generation was `2026-11-26T04:31:47Z`; the snippet reports one caller. Trace was unavailable under the approval policy and the plan and archive were absent from that index. Direct source in the relay checkout shows both extractor calls in fidelity.
+
+[Unverified — needs clone run] The gh400 red/green case, both shell suites, and the CLI smoke remain for implementation verification in a disposable full clone. The whole plan was reviewed. No further plan defects surfaced in this sweep.
+
+Handing off to Producer to correct fence handling and retain both controls in the plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
