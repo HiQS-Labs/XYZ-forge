@@ -627,7 +627,7 @@ while read -r lref lsha rref _rsha; do
   case "$lsha" in *[!0]*) ;; *) continue ;; esac
   python3 "$repo/utils/py/gate_receipt.py" admit --repo "$repo" --sha "$lsha" --ref "$lref" \
     --destination-ref "$rref" >/dev/null || exit 2
-  if [ -f "$GH1653_FAIL" ] && git log -1 --format=%s "$lsha" | grep -q '^jog: publish'; then
+  if [ -f "$GH1653_FAIL" ] && case "$(git log -1 --format=%s "$lsha")" in "jog: publish"*) true ;; *) false ;; esac; then
     echo "gh1653 fixture: receipt push failed after admission" >&2; exit 1
   fi
 done
@@ -689,8 +689,7 @@ grep -q 'module.exports = 2' "$FT/src/feature.js" \
 [ "$(remote_subject marathon/gh280-jog-lane)" = "jog: publish gh901-exec1 approved execution receipts" ] \
   && pass "G4 receipt bundle commit published on the remote lane ref (no manual attempt-start)" \
   || fail "G4 remote lane ref: $(remote_subject marathon/gh280-jog-lane) / $G4_OUT"
-git --git-dir="$REMOTE" ls-tree -r --name-only refs/heads/marathon/gh280-jog-lane 2>/dev/null \
-  | grep -q '/jog/gh901-exec1/receipt.json$' \
+grep -q '/jog/gh901-exec1/receipt.json$' <<<"$(git --git-dir="$REMOTE" ls-tree -r --name-only refs/heads/marathon/gh280-jog-lane 2>/dev/null)" \
   && pass "G4 remote lane carries the bundle receipt.json" || fail "G4 bundle missing on remote"
 has "$(publish_rows archive)" "1 completed" && [ "$(publish_rows live)" = "0 - -" ] \
   && pass "G4 coordinator archived one completed GH-901-jog-publish reservation" \
