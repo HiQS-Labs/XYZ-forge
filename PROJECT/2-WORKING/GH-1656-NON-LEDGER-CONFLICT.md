@@ -29,7 +29,7 @@ goal: "A PR GitHub reports CONFLICTING never reaches `gh pr merge`: a clean loca
 
 | What was just completed | What's next |
 |---|---|
-| Recon and plan written. | Codex plan QA (relay), then implementation. |
+| Plan revised after Codex plan QA round 1 (3 blockers accepted). | Codex plan QA round 2. |
 
 ## Problem (observed)
 
@@ -106,49 +106,76 @@ R4. The batch issue names the rung used.
 ### Implementation (ordered, verification inline)
 
 1. **Red first.** In `test/gh534_phase_b_tests.py` (existing suite; no new file, no registry
-   entry): teach the gh stub's `pr merge` to refuse, with GitHub's message, a PR whose
-   `force_mergeable` value is `CONFLICTING` (as GitHub does), and teach `view` to report an OPEN
-   PR whose head is already on `origin/<base>` as MERGED with the merge commit that brought it in
-   (as GitHub does after a direct push). Add `TestGh1656NonLedgerConflict`:
-   - `test_clean_local_merge_lands_through_rung`: one PR, non-ledger change, forced
-     `CONFLICTING`, policy `merge`. Expect rc 0, PR MERGED at the pinned head, origin/development
-     has a merge commit whose second parent is the pin, **no `pr merge` call** in the stub log,
-     the log names the rung, and the batch outcome row records `rung: local-merge`.
-   - `test_dirty_non_ledger_conflict_stops_before_gh_merge`: a real non-ledger conflict (both
-     sides edit `README.md`). Expect rc 2 (handoff path), message
-     `non-ledger conflict; local merge dirty: README.md`, no `pr merge` call.
-   - `test_clean_conflicting_under_squash_stops_before_gh_merge`: same as the first, default
-     (squash) policy. Expect rc 2, message `non-ledger conflict; local merge clean: …`, no
-     `pr merge` call, development unchanged.
-   - `test_dry_run_conflicting_clean_previews_rung`: dry run, forced CONFLICTING, clean →
-     no "Would merge PR #N", a line naming the local-merge rung.
-   - `test_dry_run_unknown_never_previews_merge`: dry run, `mergeable` stuck UNKNOWN
-     (poll constants patched to 0 s) → no "Would merge", the existing "has not decided" stop.
-     (Expected green before the fix; kept as the R3 control for the UNKNOWN half.)
-   Run on base: the first four must fail (the first and third reach `pr merge` and are refused;
-   the dry-run case prints "Would merge"; the dirty case lacks the message). Record the red
-   output under `TESTS-RESULTS/2026-11-27+GH-1656/`.
+   entry). Stub changes, each mirroring GitHub: `pr merge` refuses, with GitHub's message, a PR
+   whose `force_mergeable` value is `CONFLICTING`; `view` infers MERGED for an OPEN PR **only from
+   real origin ancestry** (its head is reachable from `origin/<base>`), with the merge commit that
+   introduced it; a `confirm_lag` / `confirm_withheld` knob delays or withholds that inference so
+   the confirmation paths are exercised. Tests run with `--strategy merge` (no capability probe).
+   Add `TestGh1656NonLedgerConflict`:
+   - `test_clean_conflicting_lands_through_rung` — two PRs (so a batch issue exists): PR A
+     non-ledger, forced `CONFLICTING`, clean; PR B ordinary. Expect the existing landed/QA-pending
+     exit 4, both MERGED at their pins, origin/development has a merge commit with first parent =
+     the gated base and second parent = A's pin, **no `pr merge` call for A**, the rendered batch
+     issue body shows `merged (local-merge rung)` for A.
+   - `test_rejecting_hook_leaves_origin_unchanged` — a real rejecting `pre-push` hook dropped into
+     the landing clone (by wrapping `prepare_landing_clone`), and `XYZ_SKIP_PREPUSH=1` in the
+     caller env: the push is refused, origin/development is unchanged, rc 2.
+   - `test_moved_base_refused` — origin/development advances (from another clone) between the
+     final refresh and the push: the push is refused, origin keeps the intruder commit, rc 2.
+   - `test_pr_closed_or_retargeted_before_push_stops` — final live read shows CLOSED (and, a
+     second case, a different base): no push, origin unchanged.
+   - `test_confirmation_lag_then_tail_once` — MERGED appears after N polls: the common tail runs
+     once (one reconcile).
+   - `test_confirmation_withheld_stops_without_reconcile` — MERGED never appears: rc 2, origin
+     carries the pushed commit, batch row records the pushed OID with status
+     `published (local-merge rung), GitHub has not confirmed`, no reconcile, no next landing.
+   - `test_clean_conflicting_under_squash_stops` — default squash policy: rc 2, `non-ledger
+     conflict; local merge clean: …` message, no `pr merge` call, development unchanged, stacked
+     dependents untouched.
+   - `test_dirty_non_ledger_conflict_message` — both sides edit `README.md`, forced CONFLICTING:
+     the existing handoff exit (3), plus `non-ledger conflict; local merge dirty: README.md`, no
+     `pr merge` call.
+   - `test_dry_run_conflicting_clean_previews_rung` — dry run: no `Would merge PR #N`, a line
+     naming the local-merge rung.
+   - `test_dry_run_unknown_never_previews_merge` — UNKNOWN stuck (poll constants patched to 0):
+     no `Would merge`, the existing "has not decided" stop. Green on base by design; the R3
+     control for UNKNOWN.
+   On base: the clean, squash, dirty-message and dry-run-preview cases fail red (the clean and
+   squash cases reach the refusing `pr merge`). Record red output under
+   `TESTS-RESULTS/2026-11-27+GH-1656/`.
 2. **Rung (a)** in `merge_cleanup.py`: `land_via_local_merge(info, clone, primary_repo, branch,
-   pinned)`. In the existing landing clone: `git merge --abort`, `checkout --detach
-   origin/<branch>` (the base the ledger gate just ran against), `git merge --no-ff --no-edit -m
-   "Merge pull request #N from <headRefName>" <pinned>` with a body line naming GH-1656 and the
-   rung. Dirty here → return the conflicted files (R2 dirty). Clean → `gate_unwired_reason` check,
-   then `_net_git push origin HEAD:refs/heads/<branch>` with `PUSH_GATE_TIMEOUT_S` (the clone's
-   installed pre-push hook runs the gate; a moved base is refused as non-fast-forward, which is
-   the exact-base discipline). Never `--force`, never `--no-verify`. After the push, poll
-   `refresh_pr_with_retry` (bounded by `MERGEABLE_POLL_*`) until MERGED; `_off_pin` refuses a
-   MERGED-at-another-head read. Returns the verified merge oid (GitHub's, else the pushed commit
-   with a warning that GitHub has not yet re-read the PR).
-3. **Wire it** at the existing merge call (after final eligibility, the pin check and the
-   stacked-dependents protection, so every existing guard still runs first): if
-   `live["mergeable"] == "CONFLICTING"` → strategy `merge` → rung; else stop with
-   `non-ledger conflict; local merge clean: no conflicted files; strategy <s> cannot be landed
-   locally — land by hand or re-run with policy merge`, exit 2. Rung success joins the existing
-   post-merge path (`_MERGED_THIS_RUN`, `_record_merge_outcome` with `rung="local-merge"`,
-   primary fast-forward, reconcile, emit, phase-5 writes). Rung failure → exit 2, clone kept.
-   The dry-run branch above the merge call prints
+   pinned)`, operating on the landing clone the ledger gate just passed:
+   - Capture the **gated tree** (`git write-tree` of the clean `--no-commit` index) and the
+     **gated base** (`rev-parse origin/<branch>` in that clone) before touching it.
+   - `git merge --abort`; `checkout --detach <gated base>`; `git merge --no-ff --no-edit -m
+     "Merge pull request #N from <headRefName>" <pin>` (body names GH-1656 and the rung).
+     Dirty → return its conflicted files (stop (b), "local merge dirty").
+   - Verify before publishing: `HEAD^1 == gated base`, `HEAD^2 == pin`, `HEAD^{tree} == gated
+     tree`. Any mismatch → stop, nothing pushed (the commit must be exactly what was gated).
+   - `gate_unwired_reason(clone)`; env with `XYZ_SKIP_PREPUSH` removed; then
+     `git push --force-with-lease=refs/heads/<branch>:<gated base> origin HEAD:refs/heads/<branch>`
+     via `_net_git(..., timeout=PUSH_GATE_TIMEOUT_S)`. The lease is the atomic compare-and-swap
+     for "the base is still exactly the gated base"; because HEAD descends from that base, the
+     update is always a fast-forward when the lease holds, so it never rewrites history. Never
+     `--force` without a lease, never `--no-verify`. The clone's installed hook runs the gate.
+   - After the push: poll `refresh_pr_with_retry` (bounded by `MERGEABLE_POLL_*`) until MERGED.
+     MERGED at the pin → return `("merged", oid)`. MERGED at another head (`_off_pin`) or no
+     confirmation → return `("unconfirmed", pushed_oid)`.
+3. **Wire it** at the existing merge call. On the final live refresh (which already checks
+   draft/hold/head/pin), add: `state == OPEN` and `baseRefName == branch`, else stop. Route on
+   the live `mergeable`: `MERGEABLE` → unchanged `execute_pr_merge`; `CONFLICTING` → the rung
+   under strategy `merge`, else stop (b) `non-ledger conflict; local merge clean: no conflicted
+   files; strategy <s> cannot be landed locally` — this check runs **before**
+   `_protect_stacked_dependents`, so a stop never edits dependent PRs; anything else → stop
+   "GitHub has not decided". Rung `merged` → the existing tail (`_MERGED_THIS_RUN`,
+   `_record_merge_outcome(..., rung="local-merge")`, fast-forward, reconcile, emit, writes).
+   Rung `unconfirmed` → record the pushed OID with the unconfirmed status, log `published
+   <oid> to origin/<branch>; GitHub has not confirmed PR #N MERGED — re-run merge-cleanup
+   --reconcile-pr N once it does; do not re-land`, exit 2 (no reconcile, no next PR). Rung
+   failure before the push → exit 2, clone kept. The dry-run branch prints
    `[DRY RUN] PR #N: GitHub reports CONFLICTING but the local merge is clean — --execute would
-   land it through the local-merge rung (GH-1656)` (or the squash stop) instead of "Would merge".
+   land it through the local-merge rung (GH-1656)` (or the squash stop) instead of "Would
+   merge", after the existing checks-pending preview.
 4. **Dirty message (R2):** on the existing B1 handoff, when GitHub said CONFLICTING and the
    conflict set holds a non-ledger path, also log
    `PR #N: non-ledger conflict; local merge dirty: <files>`. The handoff itself is unchanged.
