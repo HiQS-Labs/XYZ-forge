@@ -2,9 +2,9 @@
 gh_issue: 1637
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1637
 title: "Factory review loop: 4-round default and consult tie-break at the cap instead of stalling"
-status: "In progress 2026-11-26 (start-task; implemented, final QA)"
+status: Complete
 created: 2026-11-26
-updated: 2026-11-26
+updated: 2026-11-27
 owner: start-task implementation child (Flywheel Day 2, ledger #1610)
 doc_type: feature
 ratings_provisional: true
