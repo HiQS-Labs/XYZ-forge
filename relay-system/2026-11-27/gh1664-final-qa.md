@@ -72,7 +72,7 @@ ROUND: 1 / 4
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the committed implementation on this branch vs `origin/development` (base `52813e56f`): `utils/py/jog_run.py` (`_admission_captures`, `stale_evidence_refusal`, both pre-lease call sites), `test/gh280-jog-marathon-adapter.sh` (G9–G13), docs (`skills/1-hourly/conveyor/SKILL.md`, `skills/2-daily/jog/SKILL.md`, `relay-automation/CONTRACT.example.md`, `PROJECT/2-WORKING/GH-1476-RAW-TASK-PREPARATION.md`), plan `PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md`, evidence `TESTS-RESULTS/2026-11-27+GH-1664/` (provenance.jsonl, suite/, replay/, icase-manual-check.txt, consult/), plan QA thread `relay-system/2026-11-27/gh1664-plan-qa.md`.
+- Artifact under review: the committed implementation on this branch versus the development base commit 52813e56f: `utils/py/jog_run.py` (`_admission_captures`, `stale_evidence_refusal`, both pre-lease call sites), `test/gh280-jog-marathon-adapter.sh` (G9–G13), docs (`skills/1-hourly/conveyor/SKILL.md`, `skills/2-daily/jog/SKILL.md`, `relay-automation/CONTRACT.example.md`, `PROJECT/2-WORKING/GH-1476-RAW-TASK-PREPARATION.md`), plan `PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md`, evidence `TESTS-RESULTS/2026-11-27+GH-1664/provenance.jsonl` (and its sibling suite, replay, consult folders and icase-manual-check.txt), plan QA thread `relay-system/2026-11-27/gh1664-plan-qa.md`.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-11-27
 - Definition of Done: the plan's `## Acceptance` (verbatim from issue #1664) is satisfied by the code, and the evidence substantiates each box.
