@@ -1,6 +1,6 @@
 # Marathon Phase gh-792-gen4-sandbox-disjoint-first
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-792-GEN4-SANDBOX-DISJOINT-FIRST-TURN builder=codex reviewer=agy round-cap=2 -->
 
@@ -120,3 +120,10 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Moved the resolved-path overlap guard in `utils/py/gen4_campaign.py` ahead of directory creation, clone deletion, and the clone subprocess. The guard refuses equality and containment in either direction.
+- Added `TESTS-RESULTS/2026-11-27+GH-792/delivery.md` with the retained red and green probe results. Parsed the delivered Python source and confirmed its blob ID matches the retained symmetric-fix postimage. The existing campaign suite remains the gate.
+
+unverified: fresh readiness probe and campaign self-test — this turn prohibits running the probe and gate. The harness is configured to run the campaign gate after the turn.
