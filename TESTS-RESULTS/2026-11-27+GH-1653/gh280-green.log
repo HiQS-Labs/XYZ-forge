@@ -112,14 +112,17 @@
   PASS: G4 coordinator archived one completed GH-901-jog-publish reservation
   PASS: G4-neg unreserved task push refused by admission; remote has no such ref
   PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
-  PASS: G4-retry failed receipt push parks and keeps 1 consumed attempt; remote unchanged
-  PASS: G4-retry restart (resume) books a second attempt; both failed rows survive
-  PASS: G4-retry exhausted budget refuses publication; rows and remote unchanged
-  PASS: G4-archive(b) failed+active at the cap with remote at prior SHA refuses; rows unchanged
-  PASS: G4-archive(d) active row after a landed push is completed+archived as the same row (no booking)
-  PASS: G4-archive(d) resume saved the published receipt
-  PASS: G4-archive saved receipt + live completed row: resume archives the same row, no booking or push
-  PASS: G4-archive saved receipt + live active row: resume archives the same row, no booking or push
+  PASS: G4-retry failed receipt push parks and keeps 1 consumed attempt; remote not at the bundle
+  PASS: G4-retry restart (resume) books a second attempt; both failed rows survive; remote ref unchanged
+  PASS: G4-retry exhausted budget refuses publication; rows and remote ref unchanged
+  PASS: G4-archive(b) failed+active at the cap with remote at prior SHA refuses; rows and ref unchanged
+  PASS: G4-retry resume saved the published receipt
+  PASS: G4-retry resume with room in the cap publishes the bundle; budget archived with all 3 rows
+  PASS: G4-retry supervised recovery publishes under the held lock (no self-refusal), 3rd row completed
+  PASS: G4-archive saved-completed row: resume archives the same row, no booking or push
+  PASS: G4-archive saved-active row: resume archives the same row, no booking or push
+  PASS: G4-archive unsaved-active row: resume archives the same row, no booking or push
+  PASS: G4-archive saved receipt + no pending row re-projects with the execution clone retired
   PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
   PASS: G5 refusing reviewer → row failed with marathon escalation
   PASS: G5 receipt outcome escalated
@@ -242,4 +245,4 @@
   PASS: P2 jog never invokes the tick binary or writes executor attempt state (Marathon keeps executor attempts and Tick tokens; Jog writes only GH-1653 publication rows through gate_receipt)
   PASS: P3 jog never cuts lane branches (branch identity is Marathon's)
   PASS: seed fixture byte-unchanged after the full suite (final check) (containment)
-  gh280-jog-marathon-adapter: 242 pass, 0 fail
+  gh280-jog-marathon-adapter: 245 pass, 0 fail

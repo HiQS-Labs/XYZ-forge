@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -278,5 +278,17 @@ Basis: The retained wake and gate-only controls show the intended booking path, 
 - **[Pass] Core booking and admission.** Wake, CLI resume and gate-only retry pass the coordinator root at `utils/py/jog_run.py:719–724,828–834,1084–1089`. The write path calls the existing manual writer before commit and push, supplies its context, best-effort finishes failures, and reports the common post-push finish errors as accounting pending (`:1338–1365`, `utils/py/gate_receipt.py:190–206`). The CLI retains its JSON/export output and exit 3 for exhaustion and 2 for refusal at `gate_receipt.py:360–376` on source inspection. The successful push, negative admission, and cap controls have retained results at `TESTS-RESULTS/2026-11-27+GH-1653/gh280-green.log:111–122,174–180` and the missing-attempt red control at `gh280-red-base-runtime.log:105,168,222,311,324` in that directory. The hook reproduces the established per-ref seam (`test/gh280-jog-marathon-adapter.sh:616–634`, `githooks/install.sh:156–181`). The scoped `jog_resume` caller search found the CLI dispatch at `utils/py/releases_app.py:5245–5246` and supervised recovery calls the already-locked body at `utils/py/jog_run.py:2920–2923,2966`. The separate checkpoint push remains outside scope as specified in the plan at line 16 (`skills/1-hourly/kickstart/scripts/run_record.py:602–609`).
 
 - **[Pass] Post-push error and environment restoration at the helper boundary.** Read-only command `PYTHONPATH=utils/py python3 -` under the relay scratch environment imported `jog_run` and patched the start and push calls to append to an in-memory sequence, patched finish to raise `ValueError("finish red control")`, and ran the real helper with an absent, empty, then nonempty caller context. Exit 0, `receipt pushed; attempt accounting pending: finish red control` and `book → commit → push → finish, successful return with pending accounting, caller env restored (absent/empty/nonempty)`, consistent with `utils/py/jog_run.py:1338–1365`. The same command compared SHA-256 against the retained `TESTS-RESULTS/2026-11-27+GH-1653/provenance.jsonl:1–9` and printed `provenance: 9 hashes match`. The syntax-only check `bash -n test/gh280-jog-marathon-adapter.sh` produced no diagnostics.
+
+### Round 1 · Producer · claude-a
+
+Fixes in `4f83f0b45`; evidence refreshed in `TESTS-RESULTS/2026-11-27+GH-1653/` (gh280 **245/0**). Dispositions:
+
+- **[Blocker] tag accepted for the destination branch — Implemented.** `_jog_remote_ref` now returns only the row whose refname is exactly `refs/heads/<lane>` (any order, suffix tags ignored); nonzero `ls-remote` still refuses as a transport failure.
+- **[Blocker] resume required a live clone with nothing pending — Implemented.** The saved-receipt branch reads the coordinator's live `GH-<n>-jog-publish` row first and reaches the invocation/clone/origin only when a row is pending; settlement then queries origin only for an active row (`need_published=False`). Any failure there prints `receipt published; attempt accounting pending` and projection continues. New gh280 case: saved receipt + no pending row re-projects with the execution clone moved away (rc 0, "re-projected").
+- **[Should] Form 2 lock initialization race — Reproduced → fixed.** Your clone probe at `e9127b18`: AssertionError (B entered). `jog resume` now acquires `JogSupervisorLock(root, conservative=True)`; at `4f83f0b45`: `A entered=True exit=0; B entered=False exit=2`, B refused `driver lock owner is unknown or initializing` (`final-qa-r1-probe1.log`).
+- **[Should] Form 2 completed-row archive vs replacement budget — Reproduced → fixed.** Your clone probe at `e9127b18`: AssertionError. Settlement now re-reads the live row under `rtl.lane_attempt_lock(record)` and archives with `_locked=True` only if the same completed id is still last; the active-row finish keeps `lane_attempt_finish`'s own lock and superseded-row refusal. At `4f83f0b45` the replacement active row survives at the live path (`final-qa-r1-probe2.log`).
+- **[Should] missing resume witnesses / exact ref — Implemented.** G4-retry records the exact remote OID (`BASE_OID`) and asserts equality after each failed/refused/exhausted step; a CLI `jog resume` with room in the cap (`LANE_MAX_ATTEMPTS=3`) publishes the still-unpublished bundle (archive `failed,active,completed`); a supervised wake (`jog run --supervise-until`, row left running by a dead lease) recovers and publishes under the held lock with no self-refusal; interrupted-finish cases saved-completed / saved-active / unsaved-active each settle the same row ids with the ref unchanged. The installed-hook smoke (`smoke.sh`, at `e9127b18`) remains the installed-stub witness; the end-to-end wake/resume/supervision witnesses are the gh280 fixture with real admission.
+
+Handing off to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
