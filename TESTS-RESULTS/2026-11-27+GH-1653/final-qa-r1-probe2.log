@@ -1,0 +1,7 @@
+## before (jog_run.py @ e9127b18)
+rotation finished while A paused=True; settlement=0 rotation=0; live=None
+Traceback (most recent call last):
+  File "<stdin>", line 42, in <module>
+AssertionError
+## after (4f83f0b45)
+rotation finished while A paused=True; settlement=0 rotation=0; live={'branch': 'marathon/one', 'id': '43595dd2976040059b26c4a385502b00', 'kind': 'manual', 'origin': 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'schema': 'xyz-attempt@1', 'start_sha': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'started': '2026-11-27T21:01:44.740011+00:00', 'state': 'active', 'target_root': '<home>/Documents/GH Repos/XYZ-forge-gh1653-jog-receipt-attempt-2026-11-27-verify/tmp05rzmch4', 'task': 'GH-1653-jog-publish'}

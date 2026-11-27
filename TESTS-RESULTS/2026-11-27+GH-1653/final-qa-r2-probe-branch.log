@@ -1,0 +1,6 @@
+## before (jog_run.py @ 4f83f0b45)
+    assert not finish.called
+           ^^^^^^^^^^^^^^^^^
+AssertionError
+## after (cc6c73d9e)
+proved=marathon/old; checked out/reserved=marathon/new; finish called=False; archive=False

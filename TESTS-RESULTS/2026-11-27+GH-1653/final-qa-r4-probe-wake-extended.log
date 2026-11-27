@@ -1,0 +1,8 @@
+## @ c1fe3bd6f (8f47703f5 code): resume A paused 11 s before its PID write, unsupervised wake B started after the grace
+Traceback (most recent call last):
+  File "<stdin>", line 12, in <module>
+  File "TESTS-RESULTS/2026-11-27+GH-1653/final-qa-r3-probe-wake.sh", line 58, in <module>
+    PROBE
+    
+AssertionError
+## disposition: reproduced; tracked as #1671 (atomic lock creation); pre-existing two-step lock protocol

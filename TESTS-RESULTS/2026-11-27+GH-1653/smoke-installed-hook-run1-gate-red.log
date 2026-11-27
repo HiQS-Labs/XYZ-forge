@@ -1,0 +1,72 @@
+githooks: INSTALLED — <scratch>/smoke/exec/.git/hooks/pre-push is the gate stub (executable)
+== main path: publish through the installed pre-push stub
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+  File "<scratch>/smoke/exec/utils/py/jog_run.py", line 1263, in publish_jog_receipt
+    _jog_publish_under_attempt(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        target, accounting_root or target, issue, branch,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+                             f"jog: publish {execution} approved execution receipts"))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if needs_commit else None)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<scratch>/smoke/exec/utils/py/jog_run.py", line 1350, in _jog_publish_under_attempt
+    _git(target, "push", "origin", f"HEAD:refs/heads/{branch}",
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         env={**os.environ, ATTEMPT_CONTEXT_ENV: json.dumps(context)})
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<scratch>/smoke/exec/utils/py/jog_run.py", line 1175, in _git
+    raise ContractError(f"git {' '.join(args[:3])} failed: {proc.stderr.decode(errors='replace').strip()}")
+jog_run.ContractError: git push origin HEAD:refs/heads/marathon/gh1653-smoke failed: pre-push: full validation RED (exit 1) after 917s — push REFUSED.
+
+  The failing checks are named in the output above.
+
+  Hosted CI may run after the push, but this local boundary is the earliest full signal and the
+  Ubuntu pull-request lane is advisory. Do not use downstream CI as a reason to ignore this red.
+
+  To push anyway (and you may have a good reason — a WIP branch, a known-red baseline):
+    git push --no-verify
+error: failed to push some refs to '<scratch>/smoke/remote.git'
+exit=1
+remote lane subject: fatal: ambiguous argument 'refs/heads/marathon/gh1653-smoke': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+live rows: 1  archived: []
+== adjacent path: same publication again (rerun/resume)
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+  File "<scratch>/smoke/exec/utils/py/jog_run.py", line 1263, in publish_jog_receipt
+    _jog_publish_under_attempt(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        target, accounting_root or target, issue, branch,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+                             f"jog: publish {execution} approved execution receipts"))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        if needs_commit else None)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<scratch>/smoke/exec/utils/py/jog_run.py", line 1350, in _jog_publish_under_attempt
+    _git(target, "push", "origin", f"HEAD:refs/heads/{branch}",
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         env={**os.environ, ATTEMPT_CONTEXT_ENV: json.dumps(context)})
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<scratch>/smoke/exec/utils/py/jog_run.py", line 1175, in _git
+    raise ContractError(f"git {' '.join(args[:3])} failed: {proc.stderr.decode(errors='replace').strip()}")
+jog_run.ContractError: git push origin HEAD:refs/heads/marathon/gh1653-smoke failed: pre-push: full validation RED (exit 1) after 1005s — push REFUSED.
+
+  The failing checks are named in the output above.
+
+  Hosted CI may run after the push, but this local boundary is the earliest full signal and the
+  Ubuntu pull-request lane is advisory. Do not use downstream CI as a reason to ignore this red.
+
+  To push anyway (and you may have a good reason — a WIP branch, a known-red baseline):
+    git push --no-verify
+error: failed to push some refs to '<scratch>/smoke/remote.git'
+exit=1
+live rows: 2  archived: []
+== control: unreserved task push from the same clone
+gate-attempt: REFUSED — task qualification has no attempt reservation; use gate_receipt.py attempt-start; use gate_receipt.py attempt-start
+error: failed to push some refs to '<scratch>/smoke/remote.git'
+push exit=1  remote has neg ref: no

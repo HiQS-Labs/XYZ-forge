@@ -1,0 +1,15 @@
+githooks: INSTALLED — <scratch>/smoke/exec/.git/hooks/pre-push is the gate stub (executable)
+== main path: publish through the installed pre-push stub
+published: TESTS-RESULTS/2026-11-27+GH-1653/jog/gh1653-smoke1
+exit=0
+remote lane subject: jog: publish gh1653-smoke1 approved execution receipts
+live rows: 0  archived: [('completed', '36b26d92')]
+== adjacent path: same publication again (rerun/resume)
+jog: GH-1653 receipt already published on marathon/gh1653-smoke; no attempt booked
+published: TESTS-RESULTS/2026-11-27+GH-1653/jog/gh1653-smoke1
+exit=0
+live rows: 0  archived: [('completed', '36b26d92')]
+== control: unreserved task push from the same clone
+gate-attempt: REFUSED — task qualification has no attempt reservation; use gate_receipt.py attempt-start; use gate_receipt.py attempt-start
+error: failed to push some refs to '<scratch>/smoke/remote.git'
+push exit=1  remote has neg ref: no

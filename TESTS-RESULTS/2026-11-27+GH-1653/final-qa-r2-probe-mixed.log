@@ -1,0 +1,7 @@
+## before (jog_run.py @ 4f83f0b45)
+Traceback (most recent call last):
+  File "<stdin>", line 52, in <module>
+AssertionError
+## after (cc6c73d9e)
+B refused: driver lock owner is unknown or initializing: <home>/Documents/GH Repos/XYZ-forge-gh1653-jog-receipt-attempt-2026-11-27-verify/tmpdrl9ob_j/relay-driver.lock
+resume entered=True exit=0; retry-gate entered=False exit=2
