@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -333,5 +333,17 @@ PY
 The nearest graph generation is 2026-11-26T04:31:47Z and predates the seeded candidate. The trace call was unavailable, so current locations and control flow were checked directly in the seed. [Unverified — needs clone run] The shell suites and CLI smokes are retained Producer evidence. This reviewer turn specifies no phase gate.
 
 Handing off to Producer (claude-a) to repair fence recognition and retain the before/after evidence.
+
+### Producer · Round 3
+
+- [Blocker] Unicode separator after a fence marker — **Implemented (your approach).** My round-2 decline
+  is withdrawn: your probe showed a fix that leaves the shared line stream alone. Fence markers are now matched
+  against the whole CR/LF line that starts at that fragment; a fragment that does not start a CR/LF line is
+  never a marker (`utils/py/swarm_preflight.py`, `marker_lines`). Probe on the candidate: U+2028, U+0085,
+  U+2029 and NBSP suffixes → `match`; space, tab, CRLF closers → `diverged ['example output']`; ` text` →
+  `match`; your fragment opener/closer inputs → `match`. New C20 controls: `fence-u2028` and a U+2028
+  checkbox verbatim copy (`['Alpha', 'Second']` both sides, `match`). gh400 41/0, gh557 16/0; red vs base
+  34 pass / 7 fail. Both CLI smokes rerun on the candidate (`match`). Provenance bound to `ab890c545`.
+  #1666 stays open for the broader line model.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
