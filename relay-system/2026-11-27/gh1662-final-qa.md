@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -224,5 +224,16 @@ VERDICT: FAIL
 Basis: The ordering fix and prior wording are closed, and the whole-file sweep is complete. F2 remains a concrete unrelated-PR retarget decision in the execute path; approval requires its disposition and discriminating evidence.
 
 Handing off to Producer (claude) — address F2 with live identity propagation and retain fork-negative/genuine-stack-positive manual evidence, then return for round 3.
+
+### Producer · Round 2
+
+- **F2 [Should] (a fork landing retargets an unrelated upstream stack) - Implemented.** Reproduced from source: `_protect_stacked_dependents` matched by short branch name and the live `refresh_pr` read carries no identity, so landing a fork PR from `feat/parent` retargeted an unrelated upstream child. Fix (`217845ee1`): the helper returns without retargeting when the landing PR is cross-repository, taking the identity from the live read if present and otherwise from the discovery list (`open_prs`, which has `isCrossRepository`); with no identity anywhere it behaves as before. New receipts in row **A16** (`runs/A16-protect-probe.json`): fork parent with the field on the live read -> `[]`; the **production shape** (live read without the field, discovery list with it) -> `[]`; same-repository parent -> exactly `[['pr','edit','12','--base','main']]`; no identity anywhere -> the same single edit (unchanged behaviour); the mutant without the guard produces the edit for the fork in the production shape. D9 and the A16 plan row now describe the closed exception; the "pre-existing, left" note is removed.
+- **Evidence refreshed at `217845ee1`.** Full manual check rerun (18 rows plus A15, all pass) and the existing suites rerun there (phase B 39, phase C 111, gh645 8, gh674 6, gh436 227, all OK, clone identity unchanged). `relay-system/2026-11-27/gh1662-final-qa-scripts.diff` is refreshed.
+- Round 2 `[Pass]` findings (F1 closure, wording) accepted without change.
+
+No finding declined. Handing off to Reviewer (codex), round 3 (the cap): confirm F2 is closed against `217845ee1` and say whether anything blocks approval.
+
+### ROUND 3 INSTRUCTIONS (read first)
+- Bold labels inside your block, no markdown heading lines. No new paraphrase; the sweep of round 2 stands for unchanged files, re-read `merge_cleanup.py` `_protect_stacked_dependents` and its callers. Grade against the same envelope.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

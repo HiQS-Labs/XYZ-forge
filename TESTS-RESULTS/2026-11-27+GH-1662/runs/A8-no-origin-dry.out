@@ -1,0 +1,78 @@
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: <FX>/primary
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+STANDALONE PREREQUISITES (--standalone: no XYZ overlay assumed)
+  [ok] Python >= 3.9: 3.9.6
+  [ok] git >= 2.38: git version 2.54.0 (Apple Git-157)
+  [ok] gh >= 2.18: gh version 2.99.0 (stand-in)
+  [UNMET] origin remote: the primary has none; landing and forecast clones need it
+  [ok] lsof (teardown scan): /usr/sbin/lsof
+  [info] gate hook (only a push needs it): no githooks/install.sh; standalone makes no push and any push from a clone stays refused
+
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: <FX>/primary
+  branch: main  (integration: main)
+  clean: yes
+  landing: NOT READY
+    - cannot compare 'main' against 'origin/main' — the landing target could not be resolved, so readiness is unknown (fetch the remote, or check that the branch and remote exist)
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (1 found)
+================================================================================
+
+Scanned roots: <FX>/home
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `primary` | standalone_clone | `main` | ✅ | 🔥 Active (9 in 10m) | 0 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+
+merge-cleanup: Preview of every open PR: a merging --execute lands only the PRs named with --prs (GH-1226).
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (17 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#101](https://github.com/acme/widgets/pull/101) | docs: guide | `feat/guide` | `main` | no | PASS | MERGEABLE | 1 |
+| 2 | [#102](https://github.com/acme/widgets/pull/102) | feat: api v2 | `feat/api-v2` | `main` | no | PASS | MERGEABLE | 2 |
+| 3 | [#103](https://github.com/acme/widgets/pull/103) | refactor: core | `feat/core-refactor` | `main` | no | PASS | MERGEABLE | 1 |
+| 4 | [#104](https://github.com/acme/widgets/pull/104) | feat: ui polish | `feat/ui-polish` | `main` | no | PASS | MERGEABLE | 1 |
+| 5 | [#105](https://github.com/acme/widgets/pull/105) | feat: hub rework (touches core, api, ui) | `feat/hub` | `main` | no | PASS | MERGEABLE | 3 |
+| 6 | [#108](https://github.com/acme/widgets/pull/108) | wip: settings ui | `wip/settings-ui` | `main` | yes | PASS | MERGEABLE | 1 |
+| 7 | [#109](https://github.com/acme/widgets/pull/109) | docs: changelog entry | `feat/changelog` | `main` | no | PASS | MERGEABLE | 1 |
+| 8 | [#106](https://github.com/acme/widgets/pull/106) | docs: faq | `feat/faq` | `main` | no | PASS | MERGEABLE | 1 |
+| 9 | [#107](https://github.com/acme/widgets/pull/107) | docs: faq extra (stacked on #106) | `feat/faq-extra` | `feat/faq` | no | PASS | MERGEABLE | 1 |
+| 10 | [#110](https://github.com/acme/widgets/pull/110) | fix: util | `feat/util-fix` | `main` | no | FAIL | MERGEABLE | 1 |
+| 11 | [#114](https://github.com/acme/widgets/pull/114) | chore: held PR | `chore/held` | `main` | no | PASS | MERGEABLE | 1 |
+| 12 | [#115](https://github.com/acme/widgets/pull/115) | feat: settings (branched before main mov | `feat/stale-settings` | `main` | no | PASS | CONFLICTING | 1 |
+| 13 | [#116](https://github.com/acme/widgets/pull/116) | feat: uses util | `feat/uses-util` | `main` | no | PASS | MERGEABLE | 1 |
+| 14 | [#117](https://github.com/acme/widgets/pull/117) | docs: another changelog entry | `feat/changelog-2` | `main` | no | PASS | MERGEABLE | 1 |
+| 15 | [#111](https://github.com/acme/widgets/pull/111) | docs: cycle a | `feat/cycle-a` | `main` | no | PASS | MERGEABLE | 1 |
+| 16 | [#112](https://github.com/acme/widgets/pull/112) | docs: cycle b | `feat/cycle-b` | `main` | no | PASS | MERGEABLE | 1 |
+| 17 | [#113](https://github.com/acme/widgets/pull/113) | docs: needs the cycle | `feat/needs-cycle` | `main` | no | PASS | MERGEABLE | 1 |
+
+merge-cleanup: WARNING — This sequence is NOT executable as things stand: the primary checkout cannot receive the landing (see PHASE 0). --execute would refuse.
+Ordering Notes:
+  - File collision on 1 file(s) between PR #102 and PR #103 — ordering #102 before #103
+  - File collision on 2 file(s) between PR #102 and PR #105 — ordering #102 before #105
+  - File collision on 1 file(s) between PR #103 and PR #105 — ordering #103 before #105
+  - File collision on 1 file(s) between PR #104 and PR #105 — ordering #104 before #105
+  - File collision on 1 file(s) between PR #108 and PR #115 — ordering #108 before #115
+  - File collision on 1 file(s) between PR #109 and PR #117 — ordering #109 before #117
+  - Cycle or unresolved dependency detected among PRs: [111, 112, 113]. Appending in numerical order.
+
+================================================================================
+LANDING PLAN DECISION (GH-1066)
+================================================================================
+
+Queue holds 17 PRs. GH-1066 requires an explicit decision under --execute:
+  --landing-plan direct|group --landing-reason "<justification>"
+  • direct: Sequential landing on development (best for small/independent PRs).
+  • group:  Combine candidates into a single integration branch to minimize gate churn.
+See skills/2-daily/merge-cleanup/SKILL.md for guidance.
+

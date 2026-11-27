@@ -1,0 +1,7 @@
+merge-cleanup: WARNING — PRE-FLIGHT: githooks/install.sh is missing in the primary, so every landing clone refuses (GH-1576); declare --standalone only for a repository without the XYZ overlay
+merge-cleanup: WARNING — PRE-FLIGHT: no RELEASES ledger (releases.sql with releases_app.py), so the pre-merge ledger gate refuses; --standalone skips it for a repository without the overlay
+merge-cleanup: ERROR — PR #101: pre-merge ledger gate RED — not merged:
+merge-cleanup: ERROR —   - ledger three-way read failed: releases.sql is missing at HEAD
+merge-cleanup: ERROR —   - releases check: exit 2: /Library/Developer/CommandLineTools/usr/bin/python3: can't open file '<TMP>/merge-cleanup-XXXX/pr-101-af133bb7-XXXX/repo/utils/py/releases_app.py': [Errno 2] No such file or directory
+merge-cleanup: ERROR —   - roadmap reconcile-state --dry-run: exit 2: /Library/Developer/CommandLineTools/usr/bin/python3: can't open file '<TMP>/merge-cleanup-XXXX/pr-101-af133bb7-XXXX/repo/utils/py/releases_app.py': [Errno 2] No such file or directory
+merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.

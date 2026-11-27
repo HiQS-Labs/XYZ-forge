@@ -273,7 +273,7 @@ index 11ff4e85c..388070afd 100644
 +        result["standalone"] = True
 +    return result
 diff --git a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
-index a81b9e285..7aaa11c87 100644
+index a81b9e285..d2c55df90 100644
 --- a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
 +++ b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
 @@ -31,6 +31,7 @@ from scan_clones import (
@@ -284,7 +284,21 @@ index a81b9e285..7aaa11c87 100644
      primary_safe_roots,
      scan_directories,
      inspect_checkout,
-@@ -802,7 +803,8 @@ def effective_sequence(open_prs: List[Dict[str, Any]], listed: Set[int]) -> List
+@@ -642,6 +643,13 @@ def _protect_stacked_dependents(info: Dict[str, Any], open_prs: List[Dict[str, A
+     """Retarget open stacked dependents before merging their base."""
+     pr_num = info["number"]
+     head = info.get("headRefName") or ""
++    # GH-1662: a fork's head branch is not a branch of this repository, so a fork PR is nobody's stacked parent
++    # (the sorter already says so). The live read carries no identity; the discovery list does.
++    cross = info.get("isCrossRepository")
++    if cross is None:
++        cross = next((p.get("isCrossRepository") for p in open_prs if p.get("number") == pr_num), None)
++    if cross:
++        return True
+     dependents = [p for p in open_prs
+                   if p.get("number") != pr_num and (p.get("baseRefName") or "") == head]
+     if not dependents:
+@@ -802,7 +810,8 @@ def effective_sequence(open_prs: List[Dict[str, Any]], listed: Set[int]) -> List
      return [p for p in all_ordered if int(p["number"]) not in deferred]
  
  
@@ -294,7 +308,7 @@ index a81b9e285..7aaa11c87 100644
      """GH-1452: the planning-time landing forecast for a dry run over 3+ PRs, in dependency order.
  
      This side owns the network and the clone: one disposable clone with no working tree (never the
-@@ -812,6 +814,7 @@ def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[D
+@@ -812,6 +821,7 @@ def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[D
      recommendation) and never blocks pinning."""
      nums = [int(p["number"]) for p in ordered]
      heads = {int(p["number"]): p["headRefOid"] for p in ordered}
@@ -302,7 +316,7 @@ index a81b9e285..7aaa11c87 100644
      # GH-1470: a PR that hard-depends on a set-aside hub cannot land in the clean-first pass
      deps = {int(p["number"]): {int(d) for d in (p.get("_hard_deps") or [])} for p in ordered}
      try:
-@@ -846,10 +849,10 @@ def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[D
+@@ -846,10 +856,10 @@ def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[D
                      consumed[n] = attempt_record.repair_count(attempt_record.load(rec_path)) if rec_path.exists() else 0
                  except attempt_record.RecordError as exc:
                      unknown[n] = f"attempt record unreadable: {str(exc)[:100]}"
@@ -315,7 +329,7 @@ index a81b9e285..7aaa11c87 100644
  
  
  def format_landing_forecast(fc: Dict[str, Any], integration: str) -> str:
-@@ -879,8 +882,12 @@ def format_landing_forecast(fc: Dict[str, Any], integration: str) -> str:
+@@ -879,8 +889,12 @@ def format_landing_forecast(fc: Dict[str, Any], integration: str) -> str:
          e = (fc.get("prs") or {}).get(str(n), {})
          if e.get("status") == "unknown":
              out.append(f"#{n}: unknown — {e.get('reason') or 'not simulated'}")
@@ -330,7 +344,7 @@ index a81b9e285..7aaa11c87 100644
      nums = lambda ns: ", ".join(f"#{n}" for n in ns) or "none"
      hubs = fc.get("hubs")
      if hubs:  # GH-1470: who holds the conflicts, and whether the rest really fold clean without them
-@@ -1098,7 +1105,7 @@ def gate_toolchain_fault_reason(clone: Path) -> str:
+@@ -1098,7 +1112,7 @@ def gate_toolchain_fault_reason(clone: Path) -> str:
  
  
  def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_branch: str,
@@ -339,7 +353,7 @@ index a81b9e285..7aaa11c87 100644
      """A disposable full clone at the PR head with `git merge origin/<branch>` attempted (E.6/B1).
  
      Returns {"clone": Path|None, "merge_rc": int|None, "error": str}. merge_rc 0 = clean."""
-@@ -1121,7 +1128,15 @@ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_br
+@@ -1121,7 +1135,15 @@ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_br
          run_git(clone, ["config", k, v])
      # GH-1576: this clone is made here, so wiring its pre-push gate is this tool's job; a repair
      # push from it must never run ungated.
@@ -356,7 +370,7 @@ index a81b9e285..7aaa11c87 100644
      if unwired:
          return {"clone": clone, "merge_rc": None, "error": f"landing clone gate wiring failed: {unwired}"}
      r = _retry_call(lambda: _net_git(clone, ["fetch", "--quiet", "origin", f"pull/{pr['number']}/head", integration_branch]),
-@@ -1475,6 +1490,104 @@ def preflight_warnings(primary_repo: Optional[Path] = None) -> List[str]:
+@@ -1475,6 +1497,104 @@ def preflight_warnings(primary_repo: Optional[Path] = None) -> List[str]:
      return out
  
  
@@ -461,7 +475,7 @@ index a81b9e285..7aaa11c87 100644
  def jog_primary_precondition(primary_repo: Path, listed: List[Dict[str, Any]]) -> Optional[str]:
      """GH-1470: read-only dry-run check of the Jog primary pin that the post-merge Jog step needs.
      Returns a warning when a listed PR maps to an open Jog row and the primary is not pinned (or
-@@ -2044,6 +2157,10 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+@@ -2044,6 +2164,10 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
      if track is not None:
          track["failed"] = failed
      pending = {pr["number"] for pr in ordered_prs}
@@ -472,7 +486,7 @@ index a81b9e285..7aaa11c87 100644
      try:
          for pr in ordered_prs:
              if track is not None:  # GH-1064: a stop from here on is this PR's, with these errors
-@@ -2107,8 +2224,14 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+@@ -2107,8 +2231,14 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
                  _note_external_state(p_num, info, batch, track)
                  continue
              if (info.get("baseRefName") or "") != branch:
@@ -489,7 +503,7 @@ index a81b9e285..7aaa11c87 100644
              info = _await_mergeable(p_num, info, primary_repo)
              if info.get("error"):  # a refresh inside the poll failed: same rules as the first read
                  if _transient(info["error"]):
-@@ -2135,7 +2258,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+@@ -2135,7 +2265,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
                  continue
  
              # Simulate this landing against the integration head fetched NOW.
@@ -498,7 +512,7 @@ index a81b9e285..7aaa11c87 100644
              if prep["error"]:
                  if _transient(prep["error"]):
                      log_err(f"PR #{p_num}: DEFERRED — network unavailable after {RETRY_ATTEMPTS} attempts: "
-@@ -2147,6 +2270,16 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+@@ -2147,6 +2277,16 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
                  return 2
              clone = prep["clone"]
  
@@ -515,7 +529,7 @@ index a81b9e285..7aaa11c87 100644
              if prep["merge_rc"] != 0:
                  log(f"PR #{p_num}: landing merge conflicts (GitHub said {mergeable}) — routing to B1")
                  # GH-623 --resume: the LIVE state above is authoritative — a PR whose last repair
-@@ -2283,7 +2416,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+@@ -2283,7 +2423,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
                  if info.get("error") or info.get("mergeable") != "MERGEABLE":
                      log_err(f"PR #{p_num}: after resolution the PR reads {info.get('mergeable') or info.get('error')} — stopping")
                      return 2
@@ -524,7 +538,7 @@ index a81b9e285..7aaa11c87 100644
                  if prep["error"] or prep["merge_rc"] != 0:
                      log_err(f"PR #{p_num}: the resolved head still does not merge cleanly — stopping ({prep['error'] or 'merge rc ' + str(prep['merge_rc'])})")
                      keep_workdir = True
-@@ -2292,16 +2425,19 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+@@ -2292,16 +2432,19 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
                  own_repair = b1["commit"]
  
              # E.6: the ledger gate on the simulated landing.
@@ -554,7 +568,7 @@ index a81b9e285..7aaa11c87 100644
  
              pinned = (getattr(args, "_pins", None) or {}).get(p_num)
              repinning = (not dry_run and own_repair is not None and pinned is not None
-@@ -2378,6 +2514,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+@@ -2378,6 +2521,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
  
              if dry_run:
                  log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy}`")
@@ -563,7 +577,7 @@ index a81b9e285..7aaa11c87 100644
                  continue
              live = refresh_pr_with_retry(p_num, primary_repo)
              if live.get("error"):
-@@ -2435,7 +2573,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+@@ -2435,7 +2580,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
                  log_err("PR is merged remotely but the primary did not advance — reconcile by hand.")
                  return 2
              is_intermediate = bool(pending)
@@ -574,7 +588,7 @@ index a81b9e285..7aaa11c87 100644
                      p_num, primary_repo, integration_branch=branch, dry_run=False,
                      pr_head=info.get("headRefOid"), is_intermediate=is_intermediate):
                  log_err(f"PR #{p_num}: post-merge reconciliation FAILED — stopping before the next PR")
-@@ -2668,6 +2808,10 @@ def main():
+@@ -2668,6 +2815,10 @@ def main():
      parser.add_argument("--no-auto-sweep", action="store_true", help="Do not automatically run the post-merge QA sweep at batch conclusion; halt with exit 4 (QA pending) instead (GH-1383)")
      parser.add_argument("--landing-plan", choices=["direct", "group"], default=None, help="Landing plan decision for queues of 3+ PRs: 'direct' sequential landing or 'group' candidate (GH-1066)")
      parser.add_argument("--landing-reason", default="", help="Non-empty justification for the chosen --landing-plan (GH-1066)")
@@ -585,7 +599,7 @@ index a81b9e285..7aaa11c87 100644
  
      args = parser.parse_args()
  
-@@ -2697,12 +2841,14 @@ def main():
+@@ -2697,12 +2848,14 @@ def main():
                  or args.root or args.prefix or args.exclude or args.prs or args.strategy or args.show_merge_policy
                  or args.scan_only or args.prs_only or args.teardown_only or args.reconcile_pr
                  or args.marker or args.allow_unready_primary or args.resume or args.backup_first or args.backup_root or args.record_sweep
@@ -601,7 +615,7 @@ index a81b9e285..7aaa11c87 100644
      args.prs = {n: sha for group in args.prs for n, sha in group}
      args._pins = None
      _MERGED_THIS_RUN.clear()
-@@ -2725,6 +2871,8 @@ def main():
+@@ -2725,6 +2878,8 @@ def main():
      if args.root:
          search_roots, sibling = [Path(r).expanduser().resolve() for r in args.root], None
          roots_line = "Scanned roots: " + ", ".join(str(r) for r in search_roots)
@@ -610,7 +624,7 @@ index a81b9e285..7aaa11c87 100644
      else:
          search_roots, sibling, roots_line = default_scan_roots(primary_repo)
      dry_run = not args.execute
-@@ -2733,6 +2881,30 @@ def main():
+@@ -2733,6 +2888,30 @@ def main():
      if dry_run:
          log("Running in SAFE DRY-RUN mode. Pass --execute to apply changes.")
  
@@ -641,7 +655,7 @@ index a81b9e285..7aaa11c87 100644
      # Upfront landing plan checkpoint for queues of 3+ PRs (GH-1066 / GH-1158 / Plan QA R1).
      # Refuse execution before ANY mutation (before prepare_primary_landing prunes REBASE_HEAD,
      # before scan_directories fetches refs/FETCH_HEAD, and before --marker comments or batch issue writes).
-@@ -2952,7 +3124,8 @@ def main():
+@@ -2952,7 +3131,8 @@ def main():
              listed_order = effective_sequence(prs, set(listed_found))
              if len(listed_order) >= 3:
                  warn_git_version_if_needed()
