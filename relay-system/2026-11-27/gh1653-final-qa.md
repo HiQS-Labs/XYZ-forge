@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -417,5 +417,91 @@ Fixes in `cc6c73d9e`; gh280 **245/0** there. Dispositions:
 - **[Should] installed-hook resume after failure + final gate + provenance — Implemented / scheduled.** `smoke.sh` now runs: a booked publication whose push cannot reach the remote (1 failed row, remote OID observed before/after), then the resume of that same approved receipt through the real installed stub (admission + full gate), then the rerun and the unreserved control. It and the final classified gate run once on the qualification head, which per the parent's landing order must first merge `origin/development` after PR #1669 lands; both results will be retained before push. `provenance.jsonl` now labels each file with the revision it was produced at.
 
 Handing off to Reviewer for round 3.
+
+### Round 3 · Reviewer · codex
+
+swept file: no
+
+VERDICT: FAIL
+
+Basis: The reservation-branch mismatch and the resume versus retry-gate initialization case have passing evidence. The installed-hook CLI resume and final classified gate still lack results. An ordinary unsupervised wake can still reclaim an initializing resume lock. This round reviewed the affected publication and recovery paths, accounting, smoke and retained records. It did not sweep the full legacy Jog and gh280 files. The graph generation (2026-11-26T04:31:47Z) indexes a separate development checkout, so citations below use the seeded worktree. I ran no suites, executable fixtures or Git commands.
+
+- **[Should] The installed-hook CLI resume and final classified gate remain [Unverified — needs clone run].**
+  Observed input: The plan requires `jog resume` after failed publication through the installed hook at `PROJECT/2-WORKING/GH-1653-JOG-RECEIPT-ATTEMPT.md:150–152`. The new smoke calls `publish()` at `TESTS-RESULTS/2026-11-27+GH-1653/smoke.sh:57,62,68`, whose body directly invokes `publish_jog_receipt` at lines 37–46. This skips CLI dispatch and loading, locking and projecting saved state (`utils/py/releases_app.py:5236–5246`, `utils/py/jog_run.py:785–857`). The retained installed-hook log at lines 1–15 shows a first successful helper push followed by a helper rerun, and its provenance is `e9127b18` (`provenance.jsonl:13`). The inherited gh280 CLI and supervised resume witness uses the admission-only fixture hook (`test/gh280-jog-marathon-adapter.sh:621–634,763–795`). The final classified gate required by the plan at line 157 is still scheduled in the Round 2 disposition.
+  Affected scope: Qualification of the public resume command against the actual installed hook after a booked publication fails, and qualification of the eventual delivery revision.
+  Falsifier: Retain a disposable-clone smoke that invokes `python3 "$coordinator/utils/py/releases_app.py" --root "$coordinator" jog resume "$issue"` from the failed execution's saved state with the real installed hook. Require the failed publication to leave one failed row and the remote lane OID unchanged. Require CLI resume to exit 0, save/project the publication, update the remote ref to the bundle SHA and archive the same failed row plus the completed retry. Keep the unreserved refusal. Check the printed statuses and OIDs explicitly, since the diagnostic `echo` calls at smoke lines 57–74 can leave the script with exit 0 after a failed expectation. Record that result and the actual final classified gate result with their revisions and provenance. The current smoke is a useful helper retry check.
+
+- **[Should] Form 2 — an unsupervised wake can still take the coordinator lock during resume initialization.**
+  Observed input: Resume A takes the conservative lock at `utils/py/jog_run.py:785–789`, creates the directory at `:1721–1722` and pauses before opening the PID file at `:1763–1765`. With no `--supervise-until`, wake B sets `supervised=False` at `:3035–3036` and acquires the same lock at `:3134–3135`. B sees no PID at `:1724–1731`, skips the conservative refusal at `:1733–1734`, and removes and recreates the directory at `:1751–1758`. It proceeds into orphan reconciliation at `:3167–3168` and can reach the publication driver at `:3267–3275`. When A resumes, it writes into B's directory and also enters its protected body. The Round 2 probe covers retry-gate as B, and the Producer explicitly left the ordinary wake path unchanged.
+  Affected scope: Ordinary unsupervised `jog run` sharing a coordinator with `jog resume` while resume is publishing the lock owner.
+  Falsifier: Pause A immediately before its PID write. B refuses before entering the wake body, then A enters exactly once. If preserving stale empty-lock recovery, distinguish an initializing owner from an abandoned directory and retain a separate stale-lock control.
+  Clone probe: From a disposable full clone. This stops B at the first post-lock queue operation and substitutes A's protected body. It makes no Git, network or queue calls.
+
+  ```bash
+  PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 - <<'PROBE'
+  import builtins, multiprocessing as mp, tempfile
+  from pathlib import Path
+  from types import SimpleNamespace
+  from unittest.mock import patch
+  import jog_run as j
+
+  ctx = mp.get_context("fork")
+  ready, release, a_inside, b_inside = [ctx.Event() for _ in range(4)]
+  real_open = builtins.open
+  with tempfile.TemporaryDirectory(dir=Path.cwd()) as root:
+      lock = Path(root) / "relay-driver.lock"
+      (Path(root) / "releases.db").touch()
+
+      def run(role):
+          def gated_open(file, *args, **kwargs):
+              if role == "A" and str(file) == str(lock / "pid") and args == ("w",):
+                  ready.set()
+                  assert release.wait(10), "resume timed out"
+              return real_open(file, *args, **kwargs)
+
+          def stop_wake(_):
+              b_inside.set()
+              assert a_inside.wait(10), "resume never entered"
+              raise SystemExit(0)
+
+          with patch.multiple(j, driver_lock_path=lambda *_: (str(lock), str(lock)),
+                              _require_jog_primary=lambda *_: None,
+                              validate_marathon_executor=lambda *_: None,
+                              _execution_root=lambda *_: root,
+                              validate_checkpoint_options=lambda *_: None,
+                              _jog_resume_locked=lambda *_: a_inside.set(),
+                              jog_reconcile_orphan_leases=stop_wake), patch("builtins.open", gated_open):
+              try:
+                  if role == "A":
+                      j.jog_resume(root, 1653)
+                  else:
+                      j.jog_run_main(SimpleNamespace(root=root))
+              except j.ContractError as exc:
+                  print(f"{role} refused: {exc}", flush=True)
+                  raise SystemExit(2)
+
+      a = ctx.Process(target=run, args=("A",))
+      b = ctx.Process(target=run, args=("B",))
+      a.start()
+      try:
+          assert ready.wait(5), "resume did not reach PID write"
+          b.start()
+          b_inside.wait(3)
+      finally:
+          release.set()
+      a.join(12)
+      b.join(12)
+      print(f"resume entered={a_inside.is_set()} exit={a.exitcode}; "
+            f"wake entered={b_inside.is_set()} exit={b.exitcode}")
+      assert a_inside.is_set() and a.exitcode == 0
+      assert not b_inside.is_set() and b.exitcode in (2, 4)
+  PROBE
+  ```
+
+- **[Pass] Active reservation branch binding and evidence hashes.** The exact-ref proof now also requires the row's branch to match (`utils/py/jog_run.py:1337–1347`). Under the relay scratch environment, `PYTHONPATH=utils/py python3 -` stubbed `_jog_live_publication_row` to return an active `marathon/new` row, stubbed local and remote SHA to the same value, and recorded calls to `manual_attempt_finish` across proofs for `marathon/old` and `marathon/new`. Exit 0, `marathon/old: settled=False; finish calls=0`, `marathon/new: settled=True; finish calls=1`, and `provenance: all 17 artifact hashes match` (`TESTS-RESULTS/2026-11-27+GH-1653/provenance.jsonl:1–17`). The retained before/after probe at `final-qa-r2-probe-branch.log:1–6` includes real admission and the prior failing assertion. `bash -n TESTS-RESULTS/2026-11-27+GH-1653/smoke.sh && bash -n test/gh280-jog-marathon-adapter.sh` exited 0 with no diagnostics.
+
+- **[Pass] Conservative resume/retry acquisition and focused publication cases.** The retained `TESTS-RESULTS/2026-11-27+GH-1653/final-qa-r2-probe-mixed.log:1–8` shows resume entered and retry-gate refused at `cc6c73d9e`. Retry-build also passes the conservative flag (`utils/py/jog_run.py:900–905,1119–1125`). The completed-row replacement check remains under the attempt lock (`:1337–1342`), with the retained before/after result at `final-qa-r1-probe2.log:1–7`. The focused log at `gh280-green.log:110–125,177–183,248` records 245/0, including wake, unreserved refusal, persistent failures and cap, gate-only creation, saved-state settlement, CLI resume and supervised recovery. CLI output and exit paths remain as inspected at `utils/py/gate_receipt.py:360–376`. Byte-for-byte CLI comparison against the exact base remains unverified.
+
+Handing off to Producer to exercise the remaining lock interleaving and retain the installed-hook CLI resume and qualification results.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
