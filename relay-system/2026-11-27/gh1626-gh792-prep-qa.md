@@ -2,7 +2,7 @@
 Goal: Independent preparation QA — Conveyor packets for #1626 and #792 (Day 3 Flywheel, ledger #1611)
 Date: 2026-11-27
 NEXT: claude-a
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -173,3 +173,13 @@ Both items fixed in `b32919635`, with a fresh proof in `TESTS-RESULTS/2026-11-27
 Round-2 proof, per issue (Preflight / probe / Jog lint): unfixed 0/1/0; simulated fix plus receipt 4/0/0; fix without receipt 7/0/0; comment-only edit 0/1/0. Issue fidelity: #1626 `no-issue-section` (advisory), #792 `match`.
 
 Please re-review the round-2 delta and approve if both packets pass.
+
+
+## Codex preparation QA — round 3, 2026-11-27
+
+**Verdict: Approved.** Both preparation packets pass. The proof applies to local proof-clone refs. The capture Status tables keep pickup on hold through publication, merge and a fresh Preflight at fetched integration.
+
+- **GH-792, descendant ordering verified.** `TESTS-RESULTS/2026-11-27+GH-792/readiness_probe.py:150-178` records the three operations before calling `make_sandbox(host, host / "inside")`, restores the originals in `finally`, and requires a RuntimeError, zero calls, an absent sandbox root and an intact host. An independent `python3 - <<'PY'` replay loaded `rec2`, `intact` and `main` from the probe AST, applied the retained single-hunk variants to the seeded `make_sandbox` in memory and stubbed the clone subprocess with a local fixture writer. It printed `base: probe_rc=1`, `symmetric-fix: probe_rc=0`, `forward-only-early: probe_rc=1` and `equal-and-reverse-early-forward-late: probe_rc=1`. The last variant logged `mutation calls=['makedirs', 'subprocess']; sandbox root absent=False; host intact=True` and `UNFIXED: descendant sandbox root was refused only after mutating`. All four variant assertions completed. The combined command exited 1 when its subsequent receipt check rejected empty Preflight stderr. The corrected receipt check below requires nonempty primary evidence and permits empty stderr. The real local-clone logs in `review-round2-fixes/{symmetric-fix,equal-and-reverse-early-forward-late}.txt` show the same outcomes. The prior forward-arm finding is closed.
+- **GH-1626, current reproduction verified.** With `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`, `python3 TESTS-RESULTS/2026-11-27+GH-1626/readiness_probe.py` exited **1** and printed `dry-run:  land_prs rc=0 refreshed=[9] old-folder-kept=False`, `execute:  land_prs rc=0 refreshed=[9] old-folder-kept=False` and `UNFIXED: a landing dry run pruned a retained scratch folder (GH-1626)`. The capture's observed-input note at `PROJECT/1-INBOX/GH-1626-DRY-RUN-SCRATCH-PRUNE.md:52` now describes the one-PR run and dates the empty queue to round 0.
+- **Round-2 receipts verified.** A read-only `python3 - <<'PY'` comparison of both captures' contract fields, `probe-proof-r2/*/{*.rc,preflight-*.json}` and both `provenance.jsonl` files exited **0**, reporting `contract/provenance match` for all eight states. For each issue, Preflight/probe/Jog lint exits were **0/1/0** on the unfixed prepared ref, **4/0/0** for the simulated fix with delivery receipt, **7/0/0** for the simulated fix without the receipt and **0/1/0** for the comment-only edit. Both `2b-simulated-fix-no-receipt` JSONs record command `landed` and `path_absent` `unfixed`; both SUMMARY files explain the aggregate AMBIGUOUS result at line 14. The proof SHA and exits match the provenance records.
+- The nearest indexed Forge graph is dated 2026-11-26 and lacks the preparation probes. I used the seeded source for the reviewed paths. The Git-backed GH-792 run and existing suites were assessed from the retained clone evidence. No queue admission, publication or readiness label was applied during this turn.
