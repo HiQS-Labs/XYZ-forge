@@ -147,6 +147,67 @@ the relay worktree. Set `STATUS: Approved` only if it is ready to publish.
    override stripped, origin before == after across the adjacent re-run (`smoke.log`, PASS).
    Plan deviation: thank you — accepted as recorded.
 
+### Reviewer (codex) — Round 2
+
+**Verdict: Changes requested.** The real-hook blocker is resolved for Forge's `development` branch. The confirmation-timeout recovery command still fails for the documented primary path.
+
+1. **[Pass] Installed-hook admission.** `merge_cleanup.py:1232–1247` verifies the parents and gated tree, puts the candidate on the local integration ref, checks hook wiring, and pushes that ref once with the original exact-base lease and `XYZ_SKIP_PREPUSH` stripped. This matches the administrative admission in `utils/py/gate_receipt.py:92–111`. The real installer replay uses both source ref forms (`TESTS-RESULTS/2026-11-27+GH-1656/real-hook-probe.sh:18–37`). The detached control returned `push_rc=1`, `published=no` with the missing-reservation diagnostic (`real-hook-detached.log:2–3`). The branch replay recorded `pre-push: full gate GREEN in 1438s — pushing.`, `push_rc=0`, and identical candidate and origin OIDs (`real-hook-branch.log:16–17`). The CLI smoke separately witnessed exact published parents and tree, zero `pr merge` calls for the rung, one hook invocation with the override unset, and an unchanged origin across the adjacent run (`smoke.log:19–30`). The accepted final-UNKNOWN deviation and the round-one R2–R4 conclusions still stand.
+
+2. **[Should] Make the printed recovery command runnable from the operator's shell.**
+
+   **Observed input:** `merge_cleanup.py:2529–2534` now names MERGED, the target, pin and merge commit and supplies `--execute`. It interpolates the primary path directly into shell text and starts with `merge_cleanup.py`. The skill's documented invocation uses `python3` and quotes the primary path (`skills/2-daily/merge-cleanup/SKILL.md:703`). The file lacks an executable bit in the seeded worktree. This read-only probe evaluated the seeded string expression and tokenized the result without calling the CLI.
+
+   ```sh
+   export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+   mkdir -p "$TMPDIR"
+   python3 -B - <<'PY'
+   import ast
+   import shlex
+   from pathlib import Path
+
+   source = Path("skills/2-daily/merge-cleanup/scripts/merge_cleanup.py")
+   tree = ast.parse(source.read_text())
+   expression, = [
+       node.value.orelse for node in ast.walk(tree)
+       if isinstance(node, ast.Assign)
+       and any(isinstance(target, ast.Name) and target.id == "nxt" for target in node.targets)
+       and isinstance(node.value, ast.IfExp)
+       and "--reconcile-pr" in ast.unparse(node.value)
+   ]
+   primary = "/Users/noelsaw/Documents/GH Repos/XYZ-forge"
+   text = eval(compile(ast.Expression(expression), str(source), "eval"), {
+       "p_num": 19, "branch": "development", "pinned": "a" * 40, "cand": "b" * 40, "primary_repo": primary
+   })
+   command = text.split(chr(96))[1]
+   argv = shlex.split(command)
+   actual = argv[argv.index("--primary") + 1]
+   print("command:", command)
+   print("parsed --primary:", actual)
+   print("expected --primary:", primary)
+   assert actual == primary, "recovery command splits the primary path"
+   PY
+   ```
+
+   Exit 1. Decisive output `parsed --primary: /Users/noelsaw/Documents/GH` and `expected --primary: /Users/noelsaw/Documents/GH Repos/XYZ-forge`, followed by `AssertionError: recovery command splits the primary path`.
+
+   **Affected scope:** Confirmation-timeout recovery after the rung has already published, including the command carried into the stopped batch row by `merge_cleanup.py:2054–2071`. Render actual argv with shell quoting and identify the Python interpreter and script path. Preserve the identity checks and the mismatch and unknown stop behavior.
+
+   **Falsifier:** With the documented space-containing primary path, the stop emits a command whose shell tokens include one complete primary path, the original integration branch, `--reconcile-pr 19` and `--execute`, and whose interpreter and script resolve from a foreign working directory. In the existing confirmation-withheld fixture, once exact MERGED appears, executing the recovery command reconciles the correct PR and retains the rung label. The current fixture ends at the stop (`test/gh534_phase_b_tests.py:955–978`), and the renderer control from round one covers label identity independently.
+
+**Evidence limits:** The Forge graph is from generation `2026-11-26T04:31:47Z` in a different checkout. Coverage and symbol lookup were followed by direct reads of the seeded code. The committed real-hook and updated CLI smoke receipts identify source `95f2d61db7de7d5264e3449eda65fd0c2fc10791` in `provenance.jsonl:5–7`. The probe proves the installed hook and branch-ref publication seam against a bare origin. No reviewer phase gate was specified or run.
+
+
+### Producer (claude-a), round 2 dispositions
+
+2. **[Should] Accepted.** The recovery command is now `shlex.join([sys.executable,
+   <resolved merge_cleanup.py>, "--primary", <primary>, "--integration-branch", <branch>,
+   "--reconcile-pr", N, "--execute"])`, so a primary path with spaces stays one token and the
+   interpreter/script resolve from any directory. The confirmation-withheld case now shlex-splits
+   the printed command and asserts the full `--primary`, `--reconcile-pr N`, `--execute` and an
+   existing script path. Focused class 13/13 green (`green-focused.log`). Executing recovery end to
+   end is the existing `--reconcile-pr` path, unchanged here; the rung label across that write is
+   covered by the renderer control (`merge_oid == rung_oid`).
+
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->

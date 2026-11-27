@@ -2528,8 +2528,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     else:
                         nxt = ("investigate before reconciling" if outcome == "mismatch" else
                                f"once GitHub reads PR #{p_num} MERGED into {branch} at head {pinned[:10]} with merge "
-                               f"commit {cand[:10]}, run `merge_cleanup.py --primary {primary_repo} --integration-branch "
-                               f"{branch} --reconcile-pr {p_num} --execute`")
+                               f"commit {cand[:10]}, run `" + shlex.join([
+                                   sys.executable, str(Path(__file__).resolve()), "--primary", str(primary_repo),
+                                   "--integration-branch", branch, "--reconcile-pr", str(p_num), "--execute"]) + "`")
                         log_err(f"PR #{p_num}: {LOCAL_MERGE_RUNG} rung published {cand} to origin/{branch} "
                                 f"(pin {pinned}); {why} — {nxt}; do not re-land")
                     keep_workdir = True

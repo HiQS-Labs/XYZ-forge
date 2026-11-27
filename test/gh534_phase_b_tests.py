@@ -972,6 +972,14 @@ class TestGh1656NonLedgerConflict(LedgerFixture):
                 self.assertEqual(self.git_origin("rev-parse", "origin/development^2"), pin, "the candidate was not published")
                 self.assertEqual(self.load()["prs"][str(b)]["state"], "OPEN", "the queue continued past an unconfirmed landing")
                 self.assertIn(word, self.err)
+                if "confirm_withheld" in knob:  # the printed recovery is a runnable, correctly quoted argv
+                    import shlex
+                    line = next(l for l in self.err.splitlines() if "--reconcile-pr" in l)
+                    argv = shlex.split(line.split("`")[1])
+                    self.assertEqual(Path(argv[argv.index("--primary") + 1]).resolve(), self.primary.resolve())
+                    self.assertEqual(argv[argv.index("--reconcile-pr") + 1], str(a))
+                    self.assertIn("--execute", argv)
+                    self.assertTrue(Path(argv[1]).is_file(), argv[1])
                 body = self.issue_body()
                 self.assertIn("stopped: ", body)
                 self.assertIn("local-merge rung published", body)
