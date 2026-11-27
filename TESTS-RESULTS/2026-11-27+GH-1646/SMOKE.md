@@ -49,8 +49,8 @@ found at target.ref`), not acceptance; see `preflight-fixed.txt`.
 ## Suites
 
 - `red-gh400-unfixed.txt`: final `test/gh400-acceptance-fidelity.sh` against the base parser —
-  32 pass, 7 fail (the 7 are GH-1646 cases; the other 6 C20 cases are regression guards that pass
+  34 pass, 7 fail (the 7 are GH-1646 cases; the other 8 C20 cases are regression guards that pass
   on both).
-- `green-gh400.txt`: 39 pass, 0 fail. `green-gh557.txt`: 16 pass, 0 fail.
+- `green-gh400.txt`: 41 pass, 0 fail. `green-gh557.txt`: 16 pass, 0 fail.
 
 Verdict: PASS.

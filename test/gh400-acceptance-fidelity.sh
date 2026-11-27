@@ -573,9 +573,12 @@ printf '## Acceptance\n- [ ] First\n\n```text\n~~~\n- example output\n```\n' >"$
 printf '## Acceptance\n- [ ] First\n\n````\n```\n- example output\n````\n' >"$D20/fence-long.md"
 printf '## Acceptance\n\n~~~text\n    ~~~\n- example output\n~~~\n\n- [ ] First\n' >"$D20/fence-indent.md"
 printf '## Acceptance\n- [ ] First\n\n~~~text\n~~~\302\240\n- example output\n~~~\n' >"$D20/fence-nbsp.md"
-for f in fence fence-tilde fence-long fence-indent fence-nbsp; do
+printf '## Acceptance\n- [ ] First\n\n~~~text\n~~~\342\200\250\n- example output\n~~~\n' >"$D20/fence-u2028.md"
+for f in fence fence-tilde fence-long fence-indent fence-nbsp fence-u2028; do
   c20 "fenced example text is not a criterion ($f)" "$D20/$f.md" "$D20/first.md" 'match|[]|[]'
 done
+printf '## Acceptance\n- [ ] Alpha\342\200\250beta\n- [ ] Second\n' >"$D20/u2028-checkbox.md"
+c20 "a U+2028 inside a checkbox criterion still matches its verbatim copy" "$D20/u2028-checkbox.md" "$D20/u2028-checkbox.md" 'match|[]|[]'
 printf '## Acceptance\n- [ ] First\n\n```inline code```\n\n- Second\n' >"$D20/inline.md"
 printf '## Acceptance\n- [ ] First\n- [ ] Second\n' >"$D20/two.md"
 c20 "an inline code span does not open a fence (full copy)" "$D20/inline.md" "$D20/two.md" 'match|[]|[]'
