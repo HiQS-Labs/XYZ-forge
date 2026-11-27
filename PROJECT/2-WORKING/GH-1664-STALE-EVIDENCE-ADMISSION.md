@@ -24,7 +24,7 @@ Parent: [#1476](https://github.com/HiQS-Labs/XYZ-forge/issues/1476) (admission p
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA rounds 1–4 (Codex) FAIL at the 4-round cap; every finding folded in (R1–R4). | Build (consult tie-break: agy GO, Codex NO-GO on case-insensitive paths; amendment folded in, orchestrator GO) in `utils/py/jog_run.py` beside `hold_refusal`. |
+| Built: `stale_evidence_refusal` + `_admission_captures` in `utils/py/jog_run.py` at both pre-lease points; G9–G13 in `test/gh280-jog-marathon-adapter.sh` (green 244/0; red at G9, G11, G13 on base `jog_run.py`); replay witness green, base red; smoke and icase manual check pass. Evidence: `TESTS-RESULTS/2026-11-27+GH-1664/`. | Final relay QA (Codex), full gate via push hook, ready PR (parent lands). |
 
 ## Acceptance
 
