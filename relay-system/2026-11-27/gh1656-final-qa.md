@@ -1,5 +1,5 @@
 # GH-1656 final QA — non-ledger GitHub conflict: local-merge rung or a precise stop
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 ## Context
@@ -207,6 +207,59 @@ the relay worktree. Set `STATUS: Approved` only if it is ready to publish.
    existing script path. Focused class 13/13 green (`green-focused.log`). Executing recovery end to
    end is the existing `--reconcile-pr` path, unchanged here; the rung label across that write is
    covered by the renderer control (`merge_oid == rung_oid`).
+
+### Reviewer (codex) — Round 3
+
+VERDICT: PASS
+Basis: The recovery command preserves the primary path and original target, and its interpreter and script resolve from a foreign working directory. The installed-hook blocker was cleared in round 2.
+
+**[Pass] Confirmation-timeout recovery command.** `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2529–2537` quotes the argument list with `shlex.join`, supplies an absolute script path and `sys.executable`, names the MERGED state and landing identity, and exits before the merge and reconciliation tail. The stop includes full candidate and pin OIDs. Mismatch still directs investigation. The fixture checks the parsed primary path, PR number, execute flag, and script path at `test/gh534_phase_b_tests.py:975–982`.
+
+The following read-only probe evaluated the seeded expression and invoked the printed interpreter and script with `--help` from scratch.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 -B - <<'PY'
+import ast
+import os
+import shlex
+import subprocess
+import sys
+from pathlib import Path
+
+source = Path("skills/2-daily/merge-cleanup/scripts/merge_cleanup.py").resolve()
+expression, = [
+    node.value for node in ast.walk(ast.parse(source.read_text()))
+    if isinstance(node, ast.Assign)
+    and any(isinstance(t, ast.Name) and t.id == "nxt" for t in node.targets)
+    and isinstance(node.value, ast.IfExp) and "--reconcile-pr" in ast.unparse(node.value)
+]
+evaluate = compile(ast.Expression(expression), str(source), "eval")
+primary = "/Users/noelsaw/Documents/GH Repos/XYZ-forge"
+branch = "development"
+context = dict(sys=sys, Path=Path, shlex=shlex, __file__=str(source),
+               outcome="unconfirmed", p_num=19, branch=branch, pinned="a"*40,
+               cand="b"*40, primary_repo=primary)
+message = eval(evaluate, context)
+argv = shlex.split(message.split(chr(96))[1])
+assert argv == [sys.executable, str(source), "--primary", primary,
+                "--integration-branch", branch, "--reconcile-pr", "19", "--execute"], argv
+assert "MERGED into development at head aaaaaaaaaa with merge commit bbbbbbbbbb" in message
+assert eval(evaluate, dict(context, outcome="mismatch")) == "investigate before reconciling"
+result = subprocess.run([*argv[:2], "--help"], cwd=os.environ["TMPDIR"],
+                        capture_output=True, text=True)
+assert result.returncode == 0 and "--reconcile-pr" in result.stdout, result.stderr
+print("argv:", argv)
+print(f"foreign-cwd CLI --help = {result.returncode}; identity and mismatch text passed")
+PY
+```
+
+Exit 0. Decisive output: the parsed argv contained `--primary`, `/Users/noelsaw/Documents/GH Repos/XYZ-forge` as one argument, `--integration-branch`, `development`, `--reconcile-pr`, `19`, and `--execute`; `foreign-cwd CLI --help = 0; identity and mismatch text passed`. Round 2's equivalent token check failed on the split primary path.
+
+`merge_cleanup.py:2980–3012` sends the confirmed PR through the existing reconciliation path and updates the unfinished batch with the returned merge OID. The update preserves the saved rung fields, and `batch_record.py:291–312,380–389` renders the label only for the exact recorded candidate. I traced this path in source. The probe stopped at CLI dispatch with `--help`.
+
+**Evidence limits.** The earlier R1–R4 and final-UNKNOWN adjudications stand. The retained real-hook receipt covers branch-ref publication at `95f2d61db7de7d5264e3449eda65fd0c2fc10791`. The focused log shows 13 tests passing, and the producer reports a rerun after the quoting fix. The seeded provenance still lists the earlier focused revision for that log. The read-only probe independently verifies the latest quoting change. The graph generation `2026-11-26T04:31:47Z` belongs to a different checkout and predates the change. Seeded source and receipts supplied the review evidence. No reviewer phase gate was specified or run.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
