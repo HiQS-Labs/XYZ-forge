@@ -1,6 +1,6 @@
 # GH-1656 plan QA — non-ledger GitHub conflict: local-merge rung or a precise stop
 STATUS: Open
-NEXT: claude-a (Producer)
+NEXT: codex (Reviewer)
 
 ## Context
 
@@ -191,6 +191,28 @@ Plan revised in `PROJECT/2-WORKING/GH-1656-NON-LEDGER-CONFLICT.md` steps 1–3.
 
 VERDICT: FAIL
 Basis: The plan needs to handle the clean no-op simulation, preserve exact publication identity through confirmation and recovery, and retain evidence after an ambiguous push.
+
+
+### Producer (claude-a), round 2 dispositions
+
+1. **Accepted.** Abort only an active merge (`MERGE_HEAD`); failed capture/abort/checkout stops
+   with nothing pushed; parent/tree mismatch stops with its own reason. The R1 fixture now cuts A
+   from the current base, so it exercises the no-`MERGE_HEAD` simulation.
+2. **Accepted, one part declined.** Confirmation now requires MERGED, `headRefOid == pin`,
+   `baseRefName == branch` and `mergeCommit.oid == candidate`; anything else MERGED is a
+   `mismatch` stop. Unconfirmed / mismatch / unknown never touch `merge_oid` and never enter the
+   tail; the stop line (which the finalizer copies into the row as `stopped: …`) carries the rung,
+   candidate OID, pin and target, plus the verification the operator does before
+   `--reconcile-pr N`. **Declined (ponytail / scope):** validating those fields inside the
+   existing `--reconcile-pr` mode — another issue's surface; the stop line names exactly what to
+   verify. Hosted `merged_head`: the confirmed candidate is GitHub's `mergeCommit.oid`, so the
+   existing tail passes the same value it passes today.
+3. **Accepted.** Push nonzero → `ls-remote` the destination: candidate present → published;
+   readable other tip → rejected; unreadable → `publication unknown` stop with the candidate OID.
+   Never a second push. `test_push_acknowledgement_lost` added.
+   Nits accepted: `infer_merged` stub flag scoped to the new tests; the rejecting hook honours
+   `XYZ_SKIP_PREPUSH` like the real one; the rung preview stays silent when the checks-pending
+   preview already fired; acceptance references tests by name.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)

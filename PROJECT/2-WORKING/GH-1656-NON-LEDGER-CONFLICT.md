@@ -29,7 +29,7 @@ goal: "A PR GitHub reports CONFLICTING never reaches `gh pr merge`: a clean loca
 
 | What was just completed | What's next |
 |---|---|
-| Plan revised after Codex plan QA round 1 (3 blockers accepted). | Codex plan QA round 2. |
+| Plan revised after Codex plan QA rounds 1–2 (6 blockers accepted, 2 parts declined). | Codex plan QA round 3. |
 
 ## Problem (observed)
 
@@ -108,18 +108,21 @@ R4. The batch issue names the rung used.
 1. **Red first.** In `test/gh534_phase_b_tests.py` (existing suite; no new file, no registry
    entry). Stub changes, each mirroring GitHub: `pr merge` refuses, with GitHub's message, a PR
    whose `force_mergeable` value is `CONFLICTING`; `view` infers MERGED for an OPEN PR **only from
-   real origin ancestry** (its head is reachable from `origin/<base>`), with the merge commit that
+   real origin ancestry** (its head is reachable from `origin/<base>`), enabled only by a
+   per-test `infer_merged` flag so existing false-success controls keep their meaning, with the merge commit that
    introduced it; a `confirm_lag` / `confirm_withheld` knob delays or withholds that inference so
    the confirmation paths are exercised. Tests run with `--strategy merge` (no capability probe).
    Add `TestGh1656NonLedgerConflict`:
    - `test_clean_conflicting_lands_through_rung` — two PRs (so a batch issue exists): PR A
-     non-ledger, forced `CONFLICTING`, clean; PR B ordinary. Expect the existing landed/QA-pending
+     non-ledger, forced `CONFLICTING`, clean, cut from the current base (so the simulation is
+     already up to date — no `MERGE_HEAD`); PR B ordinary. Expect the existing landed/QA-pending
      exit 4, both MERGED at their pins, origin/development has a merge commit with first parent =
      the gated base and second parent = A's pin, **no `pr merge` call for A**, the rendered batch
      issue body shows `merged (local-merge rung)` for A.
-   - `test_rejecting_hook_leaves_origin_unchanged` — a real rejecting `pre-push` hook dropped into
-     the landing clone (by wrapping `prepare_landing_clone`), and `XYZ_SKIP_PREPUSH=1` in the
-     caller env: the push is refused, origin/development is unchanged, rc 2.
+   - `test_rejecting_hook_leaves_origin_unchanged` — a real `pre-push` hook dropped into the
+     landing clone (by wrapping `prepare_landing_clone`) that honours `XYZ_SKIP_PREPUSH` like the
+     real one and otherwise rejects; `XYZ_SKIP_PREPUSH=1` in the caller env. Stripped override →
+     push refused, origin unchanged, rc 2 (an unstripped override would let it through: red).
    - `test_moved_base_refused` — origin/development advances (from another clone) between the
      final refresh and the push: the push is refused, origin keeps the intruder commit, rc 2.
    - `test_pr_closed_or_retargeted_before_push_stops` — final live read shows CLOSED (and, a
@@ -127,8 +130,12 @@ R4. The batch issue names the rung used.
    - `test_confirmation_lag_then_tail_once` — MERGED appears after N polls: the common tail runs
      once (one reconcile).
    - `test_confirmation_withheld_stops_without_reconcile` — MERGED never appears: rc 2, origin
-     carries the pushed commit, batch row records the pushed OID with status
-     `published (local-merge rung), GitHub has not confirmed`, no reconcile, no next landing.
+     carries the pushed commit, the batch row is `stopped: local-merge rung published <oid>…`
+     with no merge OID, no reconcile, no next landing. A second case returns MERGED with a
+     different merge commit: `mismatch` stop, same assertions.
+   - `test_push_acknowledgement_lost` — the one push call runs the real push, then returns rc
+     124: the run treats the candidate as published (reads origin), never pushes twice, and
+     lands through confirmation.
    - `test_clean_conflicting_under_squash_stops` — default squash policy: rc 2, `non-ledger
      conflict; local merge clean: …` message, no `pr merge` call, development unchanged, stacked
      dependents untouched.
@@ -147,20 +154,28 @@ R4. The batch issue names the rung used.
    pinned)`, operating on the landing clone the ledger gate just passed:
    - Capture the **gated tree** (`git write-tree` of the clean `--no-commit` index) and the
      **gated base** (`rev-parse origin/<branch>` in that clone) before touching it.
-   - `git merge --abort`; `checkout --detach <gated base>`; `git merge --no-ff --no-edit -m
+   - Abort only an active merge (`MERGE_HEAD` present — a pin that already contains the base
+     simulates as up to date with none); a failed capture, abort or checkout stops, nothing pushed.
+     Then `checkout --detach <gated base>`; `git merge --no-ff --no-edit -m
      "Merge pull request #N from <headRefName>" <pin>` (body names GH-1656 and the rung).
      Dirty → return its conflicted files (stop (b), "local merge dirty").
    - Verify before publishing: `HEAD^1 == gated base`, `HEAD^2 == pin`, `HEAD^{tree} == gated
-     tree`. Any mismatch → stop, nothing pushed (the commit must be exactly what was gated).
+     tree`. Any mismatch → stop with that reason, nothing pushed (the commit must be exactly what
+     was gated). Capture the candidate OID.
    - `gate_unwired_reason(clone)`; env with `XYZ_SKIP_PREPUSH` removed; then
      `git push --force-with-lease=refs/heads/<branch>:<gated base> origin HEAD:refs/heads/<branch>`
      via `_net_git(..., timeout=PUSH_GATE_TIMEOUT_S)`. The lease is the atomic compare-and-swap
      for "the base is still exactly the gated base"; because HEAD descends from that base, the
      update is always a fast-forward when the lease holds, so it never rewrites history. Never
      `--force` without a lease, never `--no-verify`. The clone's installed hook runs the gate.
-   - After the push: poll `refresh_pr_with_retry` (bounded by `MERGEABLE_POLL_*`) until MERGED.
-     MERGED at the pin → return `("merged", oid)`. MERGED at another head (`_off_pin`) or no
-     confirmation → return `("unconfirmed", pushed_oid)`.
+   - Push nonzero (rejection, or rc 124 timeout with a possibly lost acknowledgement): read the
+     destination with `ls-remote`. Candidate present → treat as published; a readable other tip →
+     rejected, nothing landed; unreadable → stop as `publication unknown` naming the candidate
+     OID. Never a second push.
+   - After a publication: poll `refresh_pr_with_retry` (bounded by `MERGEABLE_POLL_*`) until
+     MERGED. Confirmed only when MERGED, `headRefOid == pin`, `baseRefName == branch` and
+     `mergeCommit.oid == candidate` → `("merged", candidate)`. MERGED with any other head, base
+     or merge commit → `("mismatch", …)`; no MERGED → `("unconfirmed", candidate)`.
 3. **Wire it** at the existing merge call. On the final live refresh (which already checks
    draft/hold/head/pin), add: `state == OPEN` and `baseRefName == branch`, else stop. Route on
    the live `mergeable`: `MERGEABLE` → unchanged `execute_pr_merge`; `CONFLICTING` → the rung
@@ -169,13 +184,18 @@ R4. The batch issue names the rung used.
    `_protect_stacked_dependents`, so a stop never edits dependent PRs; anything else → stop
    "GitHub has not decided". Rung `merged` → the existing tail (`_MERGED_THIS_RUN`,
    `_record_merge_outcome(..., rung="local-merge")`, fast-forward, reconcile, emit, writes).
-   Rung `unconfirmed` → record the pushed OID with the unconfirmed status, log `published
-   <oid> to origin/<branch>; GitHub has not confirmed PR #N MERGED — re-run merge-cleanup
-   --reconcile-pr N once it does; do not re-land`, exit 2 (no reconcile, no next PR). Rung
+   Rung `unconfirmed` / `mismatch` / `publication unknown` → nothing in `merge_oid`, no
+   reconcile, no next PR, exit 2; the stop line (which the Phase 5 finalizer copies into the
+   batch row as `stopped: …`) names the rung, the candidate OID, the pin and the target, e.g.
+   `local-merge rung published <oid> to origin/<branch> (pin <sha>); GitHub has not confirmed
+   PR #N MERGED — once it reads MERGED with that merge commit and head, run --reconcile-pr N;
+   do not re-land`. Mismatch says `investigate before reconciling`. Validating these fields
+   inside `--reconcile-pr` is out of scope (the operator verifies against the named OIDs). Rung
    failure before the push → exit 2, clone kept. The dry-run branch prints
    `[DRY RUN] PR #N: GitHub reports CONFLICTING but the local merge is clean — --execute would
    land it through the local-merge rung (GH-1656)` (or the squash stop) instead of "Would
-   merge", after the existing checks-pending preview.
+   merge", only when the existing checks-pending preview did not already report that it would
+   not merge yet.
 4. **Dirty message (R2):** on the existing B1 handoff, when GitHub said CONFLICTING and the
    conflict set holds a non-ledger path, also log
    `PR #N: non-ledger conflict; local merge dirty: <files>`. The handoff itself is unchanged.
@@ -195,20 +215,23 @@ R4. The batch issue names the rung used.
 
 ## Acceptance (falsifiable)
 
-- An unfixed candidate reaches `gh pr merge` on a forced-CONFLICTING clean PR → the stub refuses →
-  test 1 fails red. After the fix the stub log has no `pr merge` entry and origin carries the
-  local merge commit with the pin as second parent.
-- Test 3 proves the rung never lands under a non-merge policy.
-- Test 2 proves the dirty case stops before `gh pr merge` with the files named.
-- Test 4 proves the dry run no longer says "Would merge" for CONFLICTING; test 5 pins UNKNOWN.
+- R1: `test_clean_conflicting_lands_through_rung` fails on base (the stub refuses `pr merge`); on
+  the candidate origin carries a merge commit with parents (gated base, pin) and the gated tree,
+  with no `pr merge` call for that PR. Publication-safety controls: rejecting hook, moved base,
+  closed/retargeted PR, lost acknowledgement, confirmation lag/withheld/mismatch.
+- R2: `test_clean_conflicting_under_squash_stops` (red on base) and
+  `test_dirty_non_ledger_conflict_message` (red on base: message missing).
+- R3: `test_dry_run_conflicting_clean_previews_rung` (red on base: prints `Would merge`);
+  `test_dry_run_unknown_never_previews_merge` (green control).
+- R4: the rendered batch issue body in the R1 test shows `merged (local-merge rung)`.
 
 ## Risks
 
 - **GitHub's CONFLICTING is right and git's merge is wrong** (e.g. a rename git resolves
   differently). The landed tree is exactly what the pre-push gate qualified, and the merge
   commit is ordinary `git merge` output — the same thing the operator did by hand in #1654.
-- **Direct push to `development` refused** by branch protection: the push fails, the run stops
-  with the push error, nothing landed. Same exposure as `commit_and_push_phase5_writes`.
+- **Direct push to `development` refused** by branch protection: the push fails, origin is read
+  back to confirm nothing landed, the run stops with the push error. Same exposure as `commit_and_push_phase5_writes`.
 - **GitHub slow to mark MERGED:** bounded poll; the landing is still witnessed by the push itself.
 
 ## Rating (PRS, 2026-11-27)
