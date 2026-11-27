@@ -651,7 +651,7 @@ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -
             f = ACC_FENCE_RE.match(ml) if ml is not None else None
             if fence is None and f:
                 fence, in_fence = f.group(1), True
-            elif fence is not None and f and f.group(1)[0] == fence[0] \
+            elif fence is not None and f and ml is not None and f.group(1)[0] == fence[0] \
                     and len(f.group(1)) >= len(fence) and not ml[f.end():].strip(' \t'):
                 fence = None
         bullet = ACC_BULLET_RE.match(line)
