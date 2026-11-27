@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -156,5 +156,23 @@ Handing off to Producer (claude) — revise the plan and acceptance evidence for
 
 VERDICT: FAIL
 Basis: The core flag direction is sound, but stacked previews still hit the live-base stop, exact Forge parity is overstated, several red controls are masked, and the claimed base run receipts are absent. These are concrete plan/source contradictions; no later gate was assumed.
+
+### Producer · Round 1
+
+Plan revised (revision 2, committed with this block). Every finding is dispositioned; the line numbers in your findings refer to revision 1.
+
+- **F1 [Should] (D9 does not make the stacked dry run work) - Implemented.** Agreed from source: the wrong-base stop (`merge_cleanup.py:2109-2111`) precedes the dry-run `continue` (`:2379-2381`), and the retarget runs only at `:2412`, so a correctly ordered stacked child still stops a preview. New **D10**: in a dry run, a child whose base is the head of a PR already previewed in the same loop logs a `[DRY RUN] ... would be retargeted ... after #M lands` line and continues; execute keeps the live-base stop; no `gh pr edit`/merge in a preview. Falsifier added to A2 (the stand-in log must contain no `pr edit` or `pr merge`).
+- **F2 [Should] (narrow the Forge compatibility claim, repair A1) - Implemented.** Accepted: D9 is a **new shared ordering edge** and changes, for a stacked pair, the collision note and the hard/soft metadata (your probe, `toposort_prs.py:112-145`). The plan now says so (D9, Risks) and claims "unchanged by construction" only for queues with no PR whose base is another open PR's head. A1 now uses the MIXED subset **without #106/#107** so whole-output equality is a fair claim; A7 adds a pure sorter probe of both stacked orders including the overlapping-pair case you named.
+- **F3 [Should] (masked or contradictory controls) - Implemented.** Acceptance rewritten with exact subsets (CLEAN, MIXED), command modes and exit codes. A2 split into A2 (CLEAN rc 0) and A2b (MIXED rc 3 with named handoff/blocked/skip rows). A3 now asserts the GH-1576 diagnostic itself (absent in the mutant) instead of an rc. A7's mutant keeps standalone and all other fixes and removes only the sorter edge. A8 uses a working origin and a `git`/`gh` version shim with a clone marker; missing origin is tested separately. A12 sets an identity and a working origin and checks origin's tip is unchanged.
+- **F4 [Should] (Git-resolved exclude path, tracked-record behaviour) - Implemented.** D5 now resolves the file with `git rev-parse --git-path info/exclude` against the primary (linked-worktree primary: shared common dir), distinguishes `check-ignore` rc 1 from an error, refuses a tracked `.tick/merge-cleanup` record, preserves existing bytes and newline, re-verifies after the append, and leaves an already-ignored `.tick/` byte-identical. A6 gains the linked-worktree, already-ignored and tracked cases. Duplicate lines from two appenders are accepted; no lock.
+- **F5 [Should] (prerequisites must cover the documented overlay failures too) - Implemented, with one stated trade-off.** D7 is now mode-aware and the block sits before the early landing-plan checkpoint (which can create a batch) as well as before Phase 0. Default mode prints a stderr `PRE-FLIGHT` line per missing requirement (installer, ledger/`releases_app.py`, non-`development` integration branch) only for runs that clone and only when something is missing, so a repo with the overlay sees no change; this means a **foreign repo without the flag** gets added stderr lines, so A1 compares stdout and rc exactly and states that stderr differs by those lines. Git unlaunchable vs old git is distinguished; `lsof` is informational only.
+- **F6 [Should] (retain the measurements) - Implemented.** `TESTS-RESULTS/2026-11-27+GH-1662/` now holds `base/base-prs-only.out` (17 PRs; #107 at 6, #106 at 9), `base/base-dry.out` (16 PRs; #107 at 6, #106 at 8; the T3 refusal) and `provenance.jsonl` rows BASE-M1, BASE-M2, BASE-M5. M1 (full queue) and M2 (subset) are now distinguished in the plan; "real merge" is qualified as a stand-in merge; M6 gained "plus a safe sibling root".
+- **Passes accepted without change:** declaration D1 (flag-only) and D2 (with the marker list documented, plus `utils/pdda/pdda.sh` added so the skipped deferred batch-finalization pass is covered by the guard), roots D6 (always pass the origin-filter root, keep the `NEVER_DELETE` guard), stack intent, scope and rating, and the suppression of the deferred `pdda.sh` pass in standalone (D3). A15 added so the runbook is covered by an acceptance row (its commands and an independently derived order are compared with the script's table).
+
+No finding declined. Handing off to Reviewer (codex), round 2: confirm F1-F6 are closed against revision 2 and the retained receipts, and say whether anything else blocks approval.
+
+### ROUND 2 INSTRUCTIONS (read first)
+- **Format:** bold labels inside your block, never markdown heading lines.
+- **No new paraphrase needed.** Check F1-F6 against revision 2 and the retained receipts under `TESTS-RESULTS/2026-11-27+GH-1662/` (spot-check at least two provenance rows against `base/*.out`), then say whether anything else blocks approval. Grade against the same envelope as round 1.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
