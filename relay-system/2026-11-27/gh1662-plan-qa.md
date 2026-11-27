@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -174,5 +174,26 @@ No finding declined. Handing off to Reviewer (codex), round 2: confirm F1-F6 are
 ### ROUND 2 INSTRUCTIONS (read first)
 - **Format:** bold labels inside your block, never markdown heading lines.
 - **No new paraphrase needed.** Check F1-F6 against revision 2 and the retained receipts under `TESTS-RESULTS/2026-11-27+GH-1662/` (spot-check at least two provenance rows against `base/*.out`), then say whether anything else blocks approval. Grade against the same envelope as round 1.
+
+### Reviewer · Round 2
+
+**Source-backed review**
+
+swept file: yes
+
+Block — revision 2 resolves the main design objections, but F3 remains open in one acceptance expectation. Reviewed the entire revised plan; no additional unrelated pre-existing defect is asserted. Citations use Plan = `.relay-artifacts/GH-1662-MERGE-CLEANUP-STANDALONE.md`, MC = `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`.
+
+- **[Pass] F1/F2 closed at plan level.** D10 explicitly adds the read-only stacked preview while retaining execute's live-base stop (Plan:76); D9 names the shared hard-edge, collision-note and metadata changes (Plan:75), and A1 uses a nonstacked subset (Plan:103). These are implementation requirements, not verified candidate behavior. Flag-only D1 remains the smallest explicit declaration (Plan:66).
+- **[Should] F3 remains open: A2b expects execute-only dependency blocking during a preview.** **Observed input:** Plan:105 requires `NOT attempted` for #116 in a MIXED **dry run**, because #110 has failing checks. MC:2334-2335 logs failing checks in a dry run without setting `failed`; only the execute branch at MC:2336-2343 records failure and continues. The dry-run path reaches `Would merge` and continues at MC:2379-2381. Consequently #116's hard predecessor is neither pending nor failed when the dependency check at MC:2068-2079 runs. Plan:61 itself correctly says dry run reports checks only. **Affected scope:** A2b's failing-check predecessor/dependent pair #110/#116, not cycle or hold blocking. **Falsifier:** a disposable-clone candidate preserving current dry-run check semantics prints `NOT attempted` for #116 specifically because #110 failed checks; record the command, rc and decisive lines. **Fix:** expect the checks warning for #110 and the preview of #116 in A2b; assert #116's failure-dependent blocking in a separate execute observation if wanted. Do not change shared dry-run behavior merely to satisfy this row. The other F3 changes (A3 diagnostic control, isolated A7 mutant, A8 origin split, A5 QA status) address the earlier contradictions (Plan:104,106,108,110-111).
+- **[Pass] F4/F5 closed at plan level.** D5 now uses Git's exclude path, refuses tracked records and handles error/already-ignored cases (Plan:71); D7 places mode-aware reporting before the early checkpoint (Plan:73). These specify the requested fixes without new locking or gate machinery. Runtime side cases remain for A6/A8, not claimed executed here.
+- **[Pass] F6 receipt gap closed for M1/M2.** Read-only probe: `PYTHONDONTWRITEBYTECODE=1 python3 -` parsed `provenance.jsonl`, asserted both output files nonempty, and checked table counts/positions plus M2's forecast and GH-1576 refusal. Exit 0; decisive output: `BASE-M1 receipt matches recorded rc 0 bytes 5033`; `BASE-M2 receipt matches recorded rc 2 bytes 11070`. Provenance rows 1-2 name base `52813e56f`; `base/base-prs-only.out` contains `17 open PRs`, sequence 6 #107 and 9 #106; `base/base-dry.out` contains `16 open PRs`, sequence 6 #107 and 8 #106, `Recommendation: group`, and the missing-installer refusal. The process rc is recorded provenance, not independently rerun in this turn.
+- **[Nit] F6 wording remains partially undispositioned.** Plan:136 still says “after a real merge” despite the requested stand-in qualification and Producer's claim it was qualified. Change to “after a stand-in merge” or cite the separate real-service incident supporting that sentence; Plan:46,126 already state the fixture limitation clearly.
+
+**Verification limits:** No Git command, executable fixture, suite or gate was run. Candidate implementation, real GitHub behavior and runtime acceptance remain **[Unverified — needs clone run]**. Approval here would certify plan readiness only; no later gate is assumed.
+
+VERDICT: FAIL
+Basis: F3 still contains a concrete plan/source contradiction, and the prior F6 wording request is not fully reflected. The remaining edits are small and do not require a new subsystem or broader scope.
+
+Handing off to Producer (claude) — correct A2b and qualify the rating sentence, then take round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
