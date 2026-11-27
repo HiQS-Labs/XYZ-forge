@@ -228,4 +228,14 @@ swept file: yes
 VERDICT: FAIL
 Basis: Round 3's attempt-count and future-artifact blockers are resolved. The whole-plan sweep found a pre-existing difference between the two Jog verbs that makes the proposed inbox recovery fail after spending an attempt. The plan also overstates what branch base Preflight establishes and omits G13's distinct red oracle. The suite and replay remain [Unverified — needs clone run]. Round 4 exhausts the review cap. Producer claude-a should take the escalated handoff and correct the recovery handoff and verification plan before implementation.
 
+### Producer · Round 4 (claude-a) — cap reached
+
+Dispositions (plan revised; tagged R4):
+- **B1 inbox recovery via retry-build — Implemented as a scoped recovery verb.** Verified that `jog_run.py:1114–1127` does not promote, while the run loop does (`:3091–3103`), and that Preflight `--gh-issue` only reads `2-WORKING` (`swarm_preflight.py:1433–1446`). The documented and witnessed stale-refusal recovery is now `jog retry N` + `jog run`. `retry-build` re-admits only a capture that is already in `2-WORKING`; that limit is pre-existing and applies to every retry-build, so it is out of scope (not changed).
+- **S1 compared-ref claim — Implemented (wording).** The claim is narrowed to "the evidence matches the ref Preflight judged ready". The plan no longer says it is the commit Marathon branches from (`marathon_drive.py:3365–3367,3421–3434`).
+- **S2 G13 red oracle — Implemented.** On base, G13 expects lease spent (count 1), an execution record, and `preflight-refused (exit 6)` with no worker call, so its assertions fail on base.
+- **Nit status table — Implemented.** The frontmatter status and the table now record the cap state.
+
+The review cap (4/4) is exhausted without Approved. Per the operator's instruction, the tie-break is a `/consult` (Codex + agy) on the amended plan. The relay closes as Escalated; the consult result is recorded in the capture and the closeout.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -2,7 +2,7 @@
 gh_issue: 1664
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1664
 title: "GH-1664: Jog refuses a prepared packet whose cited evidence changed (OL-10 stale-evidence admission)"
-status: "Captured; plan awaiting relay plan QA"
+status: "Captured; plan QA at cap (4 rounds), consult tie-break pending"
 created: 2026-11-27
 updated: 2026-11-27
 doc_type: bug
@@ -24,7 +24,7 @@ Parent: [#1476](https://github.com/HiQS-Labs/XYZ-forge/issues/1476) (admission p
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA rounds 1–2 (Codex) FAIL; every finding accepted and folded in (marked R1/R2 below). | Plan QA round 3, then build in `utils/py/jog_run.py` beside `hold_refusal`. |
+| Plan QA rounds 1–4 (Codex) FAIL at the 4-round cap; every finding folded in (R1–R4). | Consult tie-break at the cap, then build in `utils/py/jog_run.py` beside `hold_refusal`. |
 
 ## Acceptance
 
@@ -132,9 +132,18 @@ plan was written. The operator gets a precise reason and the row survives untouc
    recovery. `retry-build` reads the supplied clone before the lease without aligning it
    (`jog_run.py:1114`), so a clone still holding the A-stamped capture refuses again, with the same
    named reason. Then `jog retry N` followed by `jog run`, or `jog retry-build N`, re-admits the
-   **same row**: no `jog add`, no new row, no reset. **(R3 S1) Ref precondition:** the check
-   compares against exactly the ref Preflight evaluates, which is the commit the builder will branch
-   from. For a local-branch `target.ref` such as `development` on a hand-supplied target, a fetch
+   **same row**: no `jog add`, no new row, no reset. **(R4 B1) Recovery verb:** the documented and
+   witnessed recovery is `jog retry N` followed by `jog run`. Only the run loop promotes a
+   `1-INBOX` capture before Preflight (`jog_run.py:3091–3103`). `jog retry-build N` calls
+   `run_marathon_phase` without promotion (`jog_run.py:1114–1127`), and Preflight `--gh-issue`
+   searches only `2-WORKING` (`swarm_preflight.py:1433–1446`). So `retry-build` re-admits a refreshed
+   packet only when its capture is already in `2-WORKING`. That limit is pre-existing, applies to
+   every retry-build, and is not changed here; Conveyor and the Jog skill name `jog retry` + `jog run`
+   as the stale-refusal recovery. **(R3 S1, R4 S1) Ref precondition:** the check compares against
+   exactly the commit Preflight's probes evaluate (`target.ref` after the same fetch). It does not
+   pin the commit Marathon later branches from: Marathon creates or switches the lane from the
+   execution clone's checkout (`marathon_drive.py:3365–3367, 3421–3434`). The claim is limited to
+   "the evidence matches the ref Preflight judged ready". For a local-branch `target.ref` such as `development` on a hand-supplied target, a fetch
    moves only `origin/development`. So the operator must bring the local branch current (a
    supervised run does this through `_jog_align_target`) before admission. Otherwise both the check
    and Preflight judge the stale local commit, and a cited change that exists only upstream goes
@@ -195,7 +204,11 @@ plan was written. The operator gets a precise reason and the row survives untouc
   - Existing G4 and later sections (no `prepared_commit`) must stay green. That is the "admits as
     before" regression.
   - **Red:** run the edited suite with `utils/py/jog_run.py` reverted to base. G9, G11 and G12 must
-    fail, because the row dispatches. This proves the base run reaches the worker. **Green:** run it
+    fail, because the row is leased and dispatches. This proves the base run reaches the worker.
+    **(R4 S2)** G13 has its own red oracle: on base, the lease is spent (`attempt_count` 1) and an
+    execution record is written, then Preflight reports BLOCKED (exit 6) on the failed fetch and Jog
+    parks with `preflight-refused (exit 6)`, with no worker call. G13's count, reason and no-execution
+    assertions must therefore fail on base. **Green:** run it
     with the change. Both runs happen in a disposable full clone, with outputs under
     `TESTS-RESULTS/2026-11-27+GH-1664/` and `provenance.jsonl`.
 - **Disposable replay / Run A stale witness (R2 S3):** the archived Day 1 control is **not** edited.
