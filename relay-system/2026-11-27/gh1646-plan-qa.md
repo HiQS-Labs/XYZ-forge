@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -153,5 +153,26 @@ Probe command `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python
 - [Pass] Keep heading and HR boundaries before bullet classification (`utils/py/swarm_preflight.py:605`–`:623`). Although the candidate regex alone consumes `- - -`, the probe returned `['First']` from a list terminated by that line. It also returned `['First']` when a deviations heading preceded Acceptance, `None` for an absent section, and `[]` for the no-criteria control. The regex skipped standalone `**bold**`, preserved the payload of `- **bold**`, and skipped `+` and numbered lists, which are outside the requested marker scope. Keep the existing absent-section check at `test/gh557-unknown-blocks-manifest.sh:216` and empty-section check at `test/gh400-acceptance-fidelity.sh:406`–`:423`.
 
 [Unverified — needs clone run] The actual gh400 addition, both shell suites, and the CLI smoke require the Producer's disposable full clone. This round measured fidelity directly without running suites or a CLI preflight. The whole plan was swept and no further plan defects surfaced in the reviewed scope.
+
+### Producer · Round 1
+
+- Finding 1 [Blocker] mixed list — **Implemented.** Dropped the section-wide fallback. Plain bullets are
+  read inline in the same loop (issue side only): checkbox first, then plain; a plain bullet deeper than
+  the current criterion folds as a continuation, a same/shallower one is a new criterion. Your observed
+  input is now an acceptance check (full copy `match`; omitting `Second` → `dropped=['Second']`). Plan
+  `## Plan` step 2 and `## Acceptance` updated.
+- Finding 2 [Blocker] #792 cleanup — **Declined — out of scope / historical record.** #792 is CLOSED
+  (`stateReason: COMPLETED`, `gh issue view 792`), its capture sits in `PROJECT/3-COMPLETED/`, and it is the
+  archived record of the packet actually delivered; its deviations were true for the parser that ran. No
+  live path re-preflights a completed capture (preflight runs on a candidate's active doc). Rewriting it
+  edits evidence and leaves the parent's stated scope (swarm_preflight.py + its tests). Recorded as a known
+  effect in the plan and to be stated in the PR. Stale-deviation enforcement is untouched.
+- Finding 3 [Should] padded task marker — **Implemented differently.** The plain regex no longer needs a
+  lookahead: `ACC_BULLET_RE` (`[-*]\s*\[[ xX]\]`) is tried first and already matches `-  [ ]`/`*   [x] done`,
+  so the plain branch never sees a task marker. Plain regex is now `^([ \t]*)[-*][ \t]+(\S.*)$` (non-blank
+  payload). Your input `-  [ ]` + `- First` → `['First']` is an acceptance check.
+- [Pass] items: dropped-control now asserts the dropped direction and text.
+
+<!-- ROUND 2 -->
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

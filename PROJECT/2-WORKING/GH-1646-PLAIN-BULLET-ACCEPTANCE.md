@@ -43,24 +43,37 @@ Batch: item 2 of #1657.
 
 ## Plan (smallest change in the existing parser)
 
-1. Add `ACC_PLAIN_BULLET_RE = ^([ \t]*)[-*]\s+(?!\[[ xX]\])(.*)$` next to `ACC_BULLET_RE`.
-2. `extract_acceptance_criteria(text, plain_bullets=False)`: run the existing loop unchanged. Only
-   when `plain_bullets` is true **and** the section yielded no checkbox criterion, rerun the loop
-   reading plain bullets. In that fallback a bullet indented deeper than the current criterion is a
-   continuation (folded into it, as the doc side folds the same nested line), not a new criterion.
+1. Add `ACC_PLAIN_BULLET_RE = ^([ \t]*)[-*][ \t]+(\S.*)$` next to `ACC_BULLET_RE` (non-blank
+   payload required, so `- ` alone is never a criterion).
+2. `extract_acceptance_criteria(text, plain_bullets=False)`: inside the existing loop, after the
+   checkbox match fails and only when `plain_bullets` is true, try the plain regex. A plain bullet
+   is a new criterion unless it is indented deeper than the current criterion; then it is a
+   continuation (folded into the parent, exactly as the doc side folds the same nested line).
+   Checkbox lines still match `ACC_BULLET_RE` first, including `-  [ ]` with extra spacing (an empty
+   one is dropped by the existing blank filter), so the plain branch never sees a task marker.
 3. `check_acceptance_fidelity` passes `plain_bullets=True` for the issue body only.
 
-Preserved by construction: checkbox sections (any checkbox present → old path, byte-identical);
-deviations heading skip; HR and heading termination (checked before bullets); `None` (no section)
-vs `[]` (section with no bullets); doc side unchanged, so a doc cannot dodge the gate with plain
-bullets and the packet/fidelity views of the doc stay in agreement.
+Mixed sections (plan QA r1): `- [ ] First` / `  - detail` / `- Second` yields `First - detail` and
+`Second`, so a full checkbox copy matches and a copy that omits `Second` diverges with
+`dropped=['Second']`.
+
+Preserved by construction: checkbox-only issues without plain siblings (same output); deviations
+heading skip; HR and heading termination (checked before bullets); `None` (no section) vs `[]`
+(section with no bullets); doc side unchanged (`plain_bullets` defaults to False), so a doc cannot
+dodge the gate with plain bullets and the packet/fidelity views of the doc stay in agreement.
+
+Archived #792 capture (plan QA r1): `PROJECT/3-COMPLETED/GH-792-...md` declares three `[added]`
+deviations as the old workaround. After this fix a re-run of preflight on it would read `diverged`
+(stale deviations). Not edited here: #792 is closed (COMPLETED), the doc is an archived record of
+the packet that was actually delivered, and preflight does not re-run completed captures. Recorded
+as a known effect in the PR.
 
 Why issue-side only: the doc's criteria are what the packet inlines (`collect_inline_checklist`,
 checkbox-only). Accepting plain bullets on the doc side would let fidelity read `match` while the
 packet inlines nothing.
 
-Why fallback, not "checkbox optional everywhere": a checkbox issue with plain nested sub-bullets
-would otherwise split each sub-bullet into its own criterion and diverge from a verbatim copy.
+Why the indent rule: without it a checkbox issue with plain nested sub-bullets would split each
+sub-bullet into its own criterion and diverge from a verbatim copy, which folds them.
 
 ## Preflight bet check
 
@@ -75,8 +88,11 @@ would otherwise split each sub-bullet into its own criterion and diverge from a 
 - [ ] `test/gh400-acceptance-fidelity.sh` gains one case: an issue with plain `- ` bullets under
       `## Acceptance` and a doc copying them verbatim as `- [ ]` reads `match`. Red on the unfixed
       parser (`diverged`), green after.
-- [ ] The same case's negative control: a doc that drops one of those plain-bullet criteria still
-      reads `diverged`.
+- [ ] The same case's negative control: a doc that drops one of those plain-bullet criteria reads
+      `diverged` with that criterion in `dropped` (not merely as an addition).
+- [ ] Mixed control: an issue with `- [ ] First`, nested `  - detail`, plain sibling `- Second`
+      matches a full checkbox copy and diverges with `dropped=['Second']` when `Second` is omitted.
+- [ ] Whitespace control: `-  [ ]` (empty, padded task) plus `- First` yields only `First`.
 - [ ] All existing cases in `test/gh400-acceptance-fidelity.sh` and
       `test/gh557-unknown-blocks-manifest.sh` still pass.
 - [ ] Smoke: `swarm-preflight.sh` dry run against the #792 issue body shape (main path) and a
