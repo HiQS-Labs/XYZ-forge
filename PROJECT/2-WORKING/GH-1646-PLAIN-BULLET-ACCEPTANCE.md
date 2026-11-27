@@ -26,7 +26,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon on development `52813e56f`; plan written. | Plan QA (Codex relay), then implement + gh400 case. |
+| Implemented and verified: plan QA and final QA each ran 4 Codex rounds and were Consult-Adjudicated APPROVE at the cap; gh400 41/0, gh557 16/0, python layer 21 passed, mypy clean. | Ready PR; lands through merge-cleanup. Follow-ups #1665, #1666. |
 
 Batch: item 2 of #1657.
 

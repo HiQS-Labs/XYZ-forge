@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Consult
+NEXT: (closed)
 STATUS: Escalated
 ROUND: 4 / 4
 
@@ -429,5 +429,15 @@ Handing off to Producer (claude-a) to resolve the scoped mypy failure and obtain
   expected direction), not `match` as I wrote in round 3.
 
 Four rounds used. STATUS → Escalated; consult tie-break on the final diff per the operator's instruction.
+
+### Consult tie-break (final-QA cap) · Codex + agy
+
+Question and answers: `TESTS-RESULTS/2026-11-27+GH-1646/final-consult/`.
+
+- Codex: **APPROVE** — scope, red-then-green at the real seam, mypy fix verified; no introduced defect.
+- agy: **APPROVE** — same; one [Nit] on provenance hygiene (smoke rows should stay attributed to `ab890c545`,
+  suite rows' timestamps refreshed). **Implemented.**
+- Outcome: **Consult-Adjudicated APPROVE** for a ready PR at the 4-round cap. Never auto-merged; lands through
+  merge-cleanup.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
