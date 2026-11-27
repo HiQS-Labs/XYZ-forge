@@ -1,6 +1,6 @@
 # GH-1656 plan QA — non-ledger GitHub conflict: local-merge rung or a precise stop
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: claude-a (Producer)
 
 ## Context
 
@@ -213,6 +213,53 @@ Basis: The plan needs to handle the clean no-op simulation, preserve exact publi
    Nits accepted: `infer_merged` stub flag scoped to the new tests; the rejecting hook honours
    `XYZ_SKIP_PREPUSH` like the real one; the rung preview stays silent when the checks-pending
    preview already fired; acceptance references tests by name.
+
+### Codex reviewer, round 3
+
+**What this proposes.** When the final GitHub read reports CONFLICTING, the merge strategy can publish a base-first merge of the pinned commit through the existing hook. The plan verifies the gated tree and both parents, leases the exact base, and requires matching GitHub confirmation before entering the common tail.
+
+**How the existing system works, per this document.** Recon steps 1–5 describe an initial mergeability wait, local simulation, ledger gate and final eligibility checks. A dirty non-ledger conflict hands off at B1. A clean conflict can reach the GitHub merge command or the generic dry-run preview.
+
+**Scope limits.** The frontmatter preserves the ledger-only repair budget and merge history policy. Step 3 uses the existing recovery command after the operator checks the reported publication identity.
+
+**Verdict:** Changes requested. The revised no-op merge handling and exact GitHub confirmation address the core of round 2. Pass the confirmed OID to the common reconcile tail, retain the rung across recovery, and keep ambiguity when ref readback cannot establish rejection.  [Unverified — no citation]
+
+1. **[Blocker] Pass the confirmed merge OID to reconciliation.**
+
+   **Observed input:** The round-2 disposition says the current tail passes GitHub's confirmed candidate. Plan step 3 (`GH-1656-NON-LEDGER-CONFLICT.md:185–186`) reuses that tail. In the seeded source, `merge_cleanup.py:2420` records `merged_oid`, then `2427–2440` fast-forwards to the current integration tip and calls `run_post_merge_reconcile` without `merged_head`. The fallback at `1598–1606` uses the resulting primary HEAD. The hosted matcher at `1292,1320–1324` accepts that SHA or the PR head. The supported recovery entry point already passes the exact merge OID at `2861–2869`.
+
+   **Affected scope:** Confirmed local landings with hosted reconciliation enabled. An integration tip that advances during confirmation can make the common tail miss the candidate's workflow or accept a later commit's receipt. Pass the confirmed `merged_oid` as `merged_head` through the existing call. Keep the common fast-forward and reconciliation path.
+
+   **Falsifier:** With a confirmed candidate C and a later origin tip D, hosted lookup receives C and the pin even after the primary fast-forwards to D. It cannot accept a workflow for D as confirmation of C.
+
+   **Clone probe:** `python3 test/gh534_phase_b_tests.py TestGh1656NonLedgerConflict.test_confirmation_lag_then_tail_once` after extending that planned case. Advance bare origin once from C during the confirmation delay. In the same fixture intercept `wait_for_hosted_reconcile`, enable `MERGE_CLEANUP_USE_HOSTED=1`, and assert it receives C and the pin exactly once, while primary HEAD is D. [Unverified — needs clone run]
+
+2. **[Blocker] Keep the rung visible after a delayed landing is recovered.**
+
+   **Observed input:** Plan step 3 (`GH-1656-NON-LEDGER-CONFLICT.md:185–193`) stores the rung as a field on immediate confirmation only. For a published commit awaiting GitHub, the rung and OID exist solely in the stopped status copied by `merge_cleanup.py:1979–1996`. The prescribed recovery calls `batch_record.set_outcome(status="merged", merge_oid=…, reconcile="ok")` and syncs the issue (`merge_cleanup.py:2874–2885`). That write replaces the stopped status (`batch_record.py:291–307`), and the renderer takes the current outcome (`375–381`). The plan's proposed optional field is absent on this path, so the recovered issue row loses the rung required by R4.
+
+   **Affected scope:** Confirmed-after-timeout landings. Keep the rung and its candidate identity as durable outcome data distinct from `merge_oid`. An exact OID match can carry the rung into the recovered issue row, including via rendering alone. An unrelated merged OID must carry no attribution to the rung. The operator can still verify pin and target using the existing recovery command (`--reconcile-pr N --execute`, with the same integration branch).
+
+   **Falsifier:** After a real push with confirmation withheld, the intermediate issue shows the pending publication with no merge OID. After GitHub confirms the same pin, target and commit, recovery renders `merged (local-merge rung)`. A different merge OID never receives that label.
+
+   **Clone probe:** `python3 test/gh534_phase_b_tests.py TestGh1656NonLedgerConflict.test_confirmation_withheld_stops_without_reconcile` after extending its withheld scenario. Capture the intermediate issue body, enable exact confirmation, then invoke the fixture's recovery path with `--reconcile-pr N --execute` and inspect the final issue body. Exercise the renderer with a different merge OID as the attribution control. [Unverified — needs clone run]
+
+3. **[Should] Treat a different readable ref as inconclusive after an ambiguous push.**
+
+   **Observed input:** `merge_cleanup.py:226–234` maps a network timeout to rc 124. Plan step 2 (`GH-1656-NON-LEDGER-CONFLICT.md:165–178`) leases B, pushes candidate C, then treats any other readable destination tip as proof that C never landed. If the push published C and lost its acknowledgement, a subsequent fast-forward to D before readback yields a different tip containing C. A ref equality check establishes its current tip only. This is the remaining ambiguous-publication case from round 2. [Unverified — needs clone run]
+
+   **Affected scope:** Diagnostic and recovery after an ambiguous result, with another writer on the integration branch. The smallest fix is to reserve “rejected” for affirmative rejection evidence and keep the candidate OID in the existing “publication unknown” stop for an inconclusive read. A bounded ancestry check can promote a descendant readback to confirmation if already available. Keep one push attempt.
+
+   **Falsifier:** The push publishes C, the destination then advances to descendant D and the caller receives rc 124. Readback at D enters exact confirmation or reports publication unknown with C. It never asserts nothing landed or retries the push.
+
+   **Clone probe:** `python3 test/gh534_phase_b_tests.py TestGh1656NonLedgerConflict.test_push_acknowledgement_lost` after adding a subcase to that planned test. In the fixture's one push wrapper, let the real push publish C, commit and push its child D from a separate temporary clone, and then return rc 124 to the landing loop. Assert bare origin is D, C is an ancestor of D, and the loop calls the rung push once. Keep the existing definite-lease-rejection control.
+
+**Remaining assessment.** The clean simulation passes the ledger gate and checks wait before the existing merge call (`merge_cleanup.py:2294–2345,2379–2418`). B1 already stops the affected dirty PR and leaves the rest of the queue eligible (`ledger_merge.py:565–582`, `merge_cleanup.py:2206–2219`). Persistent UNKNOWN stops before the preview (`1902–1916,2112–2128`). The planned R1 and clean R2 reds reach the forced-CONFLICTING stub refusal. Dirty R2 fails on the missing message. R3 fails on the generic conflict preview, with stuck UNKNOWN green on base. R4 checks the rendered batch issue from the two-PR path. The bare-origin parents and tree plus delayed and withheld GitHub stub reads keep the publication and confirmation assertions independent. For the moved-base control, use an intervening tip reachable through the candidate's pinned parent so plain fast-forward publication would succeed and the lease is what the test proves. The plan otherwise preserves the merge-only policy, stack handling, checks, ledger gate and hook. The ordinary direct-push transport has precedent at `1690–1702`. The base lease covers base movement, and the immutable pin covers exactly which content can land. A PR-state change after the final refresh can prevent attribution even with the correct content published. Accept that limit for this local CLI and retain the named recovery evidence. The current incident had the paired CONFLICTING/DIRTY signal. No separate DIRTY-only behavior was demonstrated.
+
+**Evidence limits.** Verify-tier source review. The nearest graph generation is 2026-11-26T04:31:47Z, with older code offsets and the plan missing there. Symbol and snippet lookups succeeded. The trace call was denied by the tool, so direct reads of the seeded source established the paths above. Runtime red controls and the reviewer phase gate did not run. No reviewer gate command was specified.
+
+VERDICT: FAIL
+Basis: The plan can reconcile against the wrong hosted commit, lose the rung on confirmed recovery, and misclassify an ambiguous push after the destination advances.  [Unverified — no citation]
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
