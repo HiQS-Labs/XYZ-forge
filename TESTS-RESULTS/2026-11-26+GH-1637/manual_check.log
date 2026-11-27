@@ -1,0 +1,70 @@
+== S1 both NON-BLOCKING -> Consult-Adjudicated (cap 3, reviewer finding open, builder rebuttal last)
+  PASS: S1 exit 0
+  PASS: S1 STATUS is Consult-Adjudicated (not Approved)
+  PASS: S1 token closed
+   record: Consult-Adjudicated {'agy': 'NON-BLOCKING', 'codex': 'NON-BLOCKING'} candidate bad31bf066e4
+  PASS: S1 attestation record loads with adjudication provenance
+   refusal: merge refused: consult-adjudicated lane (not a reviewer approval) awaits the operator's merge (GH-1637)
+  PASS: S1 jog merge boundary refuses the record before any merge call
+    Approved -> merge refused: could not read PR #1 head (none of the git remotes configured for this repository point to a known GitHub host. To tell gh about a new GitHub host, please use `gh auth login`)
+    Closed -> merge refused: could not read PR #1 head (none of the git remotes configured for this repository point to a known GitHub host. To tell gh about a new GitHub host, please use `gh auth login`)
+    Consult-Adjudicated -> merge refused: consult-adjudicated lane (not a reviewer approval) awaits the operator's merge (GH-1637)
+  PASS: S1 Approved/Closed records still reach the candidate checks (no consult-adjudicated refusal); adjudicated returns first
+  PASS: S1 consult block with both verdicts is in the committed transcript
+  PASS: S1 exactly one consult
+== S2 REAL at cap 3, reviewer next: builder is dispatched before any reviewer can approve
+  PASS: S2 repaired head then approved (exit 0, Approved)
+   consult judged 4913c9ae0033 -> reviewer attested repaired cd7efd9dc6f0
+  PASS: S2 the approval attests a CHANGED repair head, not the head the consult judged
+  PASS: S2 order bld rev bld | consult | bld rev
+  PASS: S2 no second consult
+== S2b REAL at cap 2 (reviewer just finished; builder next)
+  PASS: S2b order bld rev | consult | bld rev, approved on the repaired head
+== S2e REAL, builder hands back WITHOUT repairing, reviewer tries to approve: refused (repair-missing), no Approved attestation
+  PASS: S2e unchanged candidate cannot be approved after a REAL verdict
+== S2c REAL then the repaired lane still fails: second cap escalates, no second consult
+  PASS: S2c repair reviewer records progress yet the lane ends after exactly the two repair turns (order 'bld rev bld bld rev', one consult)
+== S2d REAL at the new default cap 9 (builder-first alternation, reviewer next at the cap)
+   consult judged c24ca4e923a6 -> reviewer attested repaired f4deb908dae7
+  PASS: S2d the approval attests a CHANGED repair head
+  PASS: S2d cap 9: 9 turns, consult, builder repair, reviewer approves the repaired SHA
+== S2f REAL, no repair, reviewer writes CLOSED instead of Approved: refused too (repair-missing)
+  PASS: S2f an unchanged candidate cannot be Closed after a REAL verdict
+== S3 SAFETY -> hold
+  PASS: S3 consult-hold, STATUS still Open
+== S3b a valid SAFETY veto stands when the peer advisor fails -> consult-hold (not inconclusive)
+  PASS: S3b SAFETY + failed peer = consult-hold
+== S4 one advisor fails -> consult-inconclusive (a lone NON-BLOCKING never adjudicates)
+  PASS: S4 hold
+== S5 duplicate final verdict / token only in quoted text -> consult-inconclusive
+  PASS: S5 duplicate verdict holds
+  PASS: S5 quoted-only token holds
+  PASS: S5 WITHDRAWN verdict does not adjudicate
+  PASS: S5 FENCED verdict does not adjudicate
+  PASS: S5 UNCLOSED verdict does not adjudicate
+  PASS: S5 FENCE43 verdict does not adjudicate
+  PASS: S5 MALFORMED verdict does not adjudicate
+== S6 red focused driver gate after two NON-BLOCKING: STATUS restored, token still open, no attestation
+  PASS: S6 refused: Open, token open, no attestation
+== S7 refused token close (tick done fails): STATUS restored, token handed back, no attestation
+  PASS: S7 token-close-failed: Open, token open, no attestation
+  PASS: S7 reason named
+== S7b a refused handoff release after the driver claimed the token: token handed back, STATUS Open
+  PASS: S7b claim rolled back: token open, handoff-to rev, STATUS Open
+== S7c a refused REVIEWER claim after the builder-to-reviewer transfer (cap 2: builder holds the handoff): original handoff restored
+  PASS: S7c refused reviewer claim: token open, handoff-to bld (restored), STATUS Open, no attestation
+== S8 receipt-write failure AFTER done: no attestation, token spent (existing spent-token case; marathon.sh --retry mints a fresh token)
+  PASS: S8 attest-publish-failed, token done, no ready terminal
+== S9 a reviewer TURN that writes Consult-Adjudicated itself is reverted as forged
+  PASS: S9 forged terminal reverted (exit 4)
+== S10 transcript-only candidate (builder commits no deliverable): hold before any consult
+  PASS: S10 holds, consult never ran
+== S10b the candidate patch cannot be captured (git diff fails after the name-only check passed): hold before any advisor is dispatched
+  PASS: S10b patch capture failure holds: no advisor dispatched, STATUS Open, no attestation
+== S11 default-off: same lane without --consult-at-cap keeps cap-stalled, no consult
+  PASS: S11 cap-stalled, zero consults
+== S12 dirty target: advisors read the pinned candidate, not the working tree
+  PASS: S12 both advisors saw MARKER=RED UNTRACKED=absent (working tree has GREEN + untracked.txt)
+  PASS: S12 advisor HEAD equals the attested candidate bb1cea377e43
+
+RESULT: 40 passed, 0 failed

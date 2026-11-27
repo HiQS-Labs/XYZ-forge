@@ -25,7 +25,11 @@ import tempfile
 
 SCHEMA = "relay-drive/attest@1"
 TRAILER_HEAD = "### Attestation · relay-drive"
-TERMINAL = ("Approved", "Closed")
+# GH-1637: ADJUDICATED is written only by relay-drive itself, after a Codex+agy consult judged the
+# reviewer's open findings non-blocking at the round cap. It is a terminal (the lane goes on to its
+# real gate) but it is never an approval: jog's merge boundary and express refuse it.
+ADJUDICATED = "Consult-Adjudicated"
+TERMINAL = ("Approved", "Closed", ADJUDICATED)
 # Paths a commit may touch between the reviewed revision and a merge candidate without
 # invalidating the review: the transcript tree, plus the relay file itself when it is tracked
 # inside the target repo.
@@ -343,6 +347,11 @@ def trailer_text(record):
         # (e.g. test_verified.py) cannot be rewritten as uncited reviewer claims.
         cmd = json.dumps(record['gate_cmd']) if record.get("gate_cmd_format") == "json" else record['gate_cmd']
         cfg_line += f"driver-gate: exit {record.get('gate_exit')} — {cmd}\n"
+    # GH-1637: provenance of a consult-adjudicated terminal, bound into the trailer like gate_cmd.
+    adj = record.get("adjudication")
+    if adj:
+        bound = {k: adj.get(k) for k in ("by", "advisors", "candidate")}   # answers/excerpts live in the record
+        cfg_line += f"adjudication: {json.dumps(bound, sort_keys=True)}\n"
     return (f"\n{TRAILER_HEAD} — {record['attested_at']}\n"
             f"task: {record['task']}\n"
             f"reviewer: {record['reviewer']}\n"
@@ -422,6 +431,8 @@ def _load(task, *, expected_reviewer, relay_file, target_repo, path=None, any_re
         return None, "attestation record field gate_run is not one of " + "/".join(GATE_RUN_VALUES)
     if "gate_cmd_format" in rec and rec["gate_cmd_format"] != "json":
         return None, "attestation gate command format is not json"
+    if rec["status"] == ADJUDICATED and not isinstance(rec.get("adjudication"), dict):
+        return None, "attestation status is consult-adjudicated but carries no adjudication provenance"
     if rec["task"] != task:
         return None, f"attestation record is for task {rec['task']}, not {task}"
     if relay_file is None:
