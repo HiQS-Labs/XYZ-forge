@@ -90,8 +90,11 @@ Day 2 (#1610) needed the same. Recurrence: 3+ distinct lanes in the last 14 days
    **Settle a pending archive first (R3-B2):** at the start of every publication *and* in `_jog_resume_locked`
    when `committed_receipt` is already saved, if the live last row of `GH-<n>-jog-publish` is a `manual`
    `completed` row (its archive failed after the completed write), Jog archives it with the existing
-   `rtl.archive_lane_attempts(path)` (same bytes renamed into `attempt-history`, no booking, no push). An `active`
-   row left by a finish error after a successful push stays a consumed attempt (superseded by the next booking).
+   `rtl.archive_lane_attempts(path)` (same bytes renamed into `attempt-history`, no booking, no push). If instead the
+   live last row is a `manual` **`active`** row of this key (finish failed before the completed write), the same settle
+   step applies the exact-bundle/exact-ref proof below (committed bundle at HEAD, live ref == HEAD) and, when it
+   holds, finishes that same row `completed` through `manual_attempt_finish` and archives it — no booking, no push
+   (R4-B1). Without the proof (remote still at the prior SHA) the active row stays consumed.
    **Already-published recovery (R1-B1 / R2-B2 / R3-B1), no second booking:** the shortcut applies only when the bundle
    was already committed before this call (all four evidence files at HEAD byte-identical, nothing to commit,
    HEAD != the approved `head_sha`). Jog then reads the exact live ref with `git ls-remote origin refs/heads/<lane>`
@@ -130,6 +133,9 @@ Day 2 (#1610) needed the same. Recurrence: 3+ distinct lanes in the last 14 days
      refuses `budget exhausted`, both live rows and the remote ref unchanged; (c) after a successful publication,
      move the archived file back to the live path as a `completed` row (archive failed after the completed write, with
      `committed_receipt` saved) — `jog resume` archives that same row id with no booking and the bare ref unchanged.
+     (d) as (c) but the live row is the `active` row (finish failed before the completed write; bundle already on
+     the bare remote), with and without `committed_receipt`: `jog resume` completes and archives the same row id at
+     cap, no booking, no push, bare ref unchanged.
    - K2 additionally asserts the bare remote lacks the K2 lane ref before the retry (first publish creates it).
    - Lock (R1-S5/R2-S4): the Round 1 two-resume clone probe, run against the implementation in a disposable clone
      (patching the binding the publication helper calls), expects B exit 4 and exactly one additional row; recorded
