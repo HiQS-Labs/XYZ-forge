@@ -3,7 +3,7 @@
 **Preparation evidence, pending publication.** Prepared 2026-11-27 by Conveyor (preparation only:
 no implementation, no `jog add`, no queue admission, no readiness label). Readiness still needs this
 PR's review, merge to `development`, and the exact-ref preflight recheck at the integration ref
-(Conveyor step 6). Every command, head and exit below is in `provenance.jsonl`.
+(Conveyor step 6). Every command, head and exit below is in `provenance.jsonl`, with the arm's construction (`build`), working directory (`$P` prep clone, `$PROOF`, `$SCRATCH`) and full command, so each arm can be replayed from the retained patches.
 
 - **Prepared commit (`origin/development`):** `6142128d9c433d6b12972c6cd9a6f864f0ed9da2`
 - **Preparation clone:** fresh full clone of `origin/development`. **Proof clone** for the READY check: a separate fresh full clone at the same commit. **Scratch clone** for the probe matrix and consumer arms: a third disposable clone, reset to the prepared commit between arms.
@@ -44,15 +44,24 @@ The fix probes are inline commands so they evaluate at the prepared commit itsel
 `probe-gh1666.py`, `probe-gh1423.py`, `probe-gh1638.sh`; the exact JSON strings:
 `probe-gh*.cmd.json` (`consumer-validation.txt` confirms each capture's probe equals its proved copy).
 
-Standalone probe exits (0 = fixed):
+Standalone probe exits (0 = fixed; `matrix.txt`):
 
 | Arm | #1666 | #1423 | #1638 |
 |---|---|---|---|
 | base (`6142128d9c43`) | 1 | 1 | 1 |
-| simulated fix (`sim-gh<N>.patch`) | 0 | 0 | 0 |
+| simulated fix (`sim-gh<N>.patch`) | 0 | 0 | 1: source only, package not regenerated |
+| simulated fix + `make-pkg.sh` (`sim-gh1638-with-pkg.patch`) | — | — | 0 |
 | fake fix (`fake-gh<N>.patch`) | 1 (issue side only) | 1 (`return True` before committing) | 1 (skip directory entries) |
-| second fake | 1 (`fake2-gh1666-two-reader.patch`: deviations reader left on `splitlines()`) | — | — |
+| second fake | 1 (`fake2-…-two-reader`: deviations reader left on `splitlines()`) | — | 1 (`fake2-…-overlay`: contents-only `cp -R src/.`, keeps a host-deleted child) |
+| third fake | 1 (`fake3-…-mask-three`: masks only U+0085/U+2028/U+2029) | — | — |
 | #1423 with hostile inherited `GIT_DIR=/nonexistent` | — | base 1, simulated 0 | — |
+
+#1666's probe covers every non-CR/LF separator Python `splitlines()` breaks on (U+000B, U+000C,
+U+001C-U+001E, U+0085, U+2028, U+2029). #1638's probe also requires a host-deleted child to be
+absent, an ordinary file entry to seed, a failed directory copy to fail the begin, and the
+packaged `relay-pkg.tar.gz` member to equal the live library. `pkg-freshness-arms.txt`: on the
+source-only arm `bash test/relay-pkg-freshness.sh` exits 1 (drift: `relay-turn-lib.sh`); after
+`make-pkg.sh` it exits 0.
 
 Consumer arms (real Preflight, `--dry-run`, simulated fix committed on the scratch clone's
 `development`):

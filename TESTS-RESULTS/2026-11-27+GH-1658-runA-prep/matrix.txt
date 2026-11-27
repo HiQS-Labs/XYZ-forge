@@ -1,14 +1,17 @@
-# standalone probe matrix; scratch clone at 6142128d9c433d6b12972c6cd9a6f864f0ed9da2; rc 0 = fixed, nonzero = unfixed
-GH-1666 base rc=1 AssertionError: ('0x85', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])
-GH-1666 sim rc=0 
-GH-1666 fake rc=1 AssertionError: ('0x85', ['Alpha beta', 'Gamma'], ['Alpha', 'Gamma'])
-GH-1666 fake2 rc=1 AssertionError: ('0x85', 'deviations reader', {'dropped': [], 'added': [('beta', 'R')], 'changed': [], 'malformed': ["[added] entry has no '
+# standalone probe matrix: $SCRATCH reset to 6142128d9c433d6b12972c6cd9a6f864f0ed9da2, then 'git apply <arm>.patch'; rc 0 = fixed, nonzero = unfixed
+GH-1666 base rc=1 AssertionError: ('0xb', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])
+GH-1666 sim-gh1666 rc=0 
+GH-1666 fake-gh1666 rc=1 AssertionError: ('0xb', ['Alpha beta', 'Gamma'], ['Alpha', 'Gamma'])
+GH-1666 fake2-gh1666-two-reader rc=1 AssertionError: ('0xb', 'deviations reader', {'dropped': [], 'added': [('beta', 'R')], 'changed': [], 'malformed': ["[added] entry has no '— reason: …': - [adde
+GH-1666 fake3-gh1666-mask-three rc=1 AssertionError: ('0xb', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])
 GH-1423 base rc=1 AssertionError: tracked relay file under a gitignored dir: commit landed but reported failure
-GH-1423 sim rc=0 
-GH-1423 fake rc=1 AssertionError: fixture: the attest commit did not land
-GH-1638 base rc=1 seed did not carry the current content
-GH-1638 sim rc=0 
-GH-1638 fake rc=1 seed did not carry the current content
-# #1423 isolation: hostile inherited GIT_DIR=/nonexistent
+GH-1423 sim-gh1423 rc=0 
+GH-1423 fake-gh1423 rc=1 AssertionError: fixture: the attest commit did not land
+GH-1638 base rc=1 failed directory copy reported a successful seed (rc=0)
+GH-1638 sim-gh1638 rc=1 cp: <tmp>: Permission denied
+GH-1638 sim-gh1638-with-pkg rc=0 cp: <tmp>: Permission denied
+GH-1638 fake-gh1638 rc=1 failed directory copy reported a successful seed (rc=0)
+GH-1638 fake2-gh1638-overlay rc=1 cp: <tmp>: Permission denied
+# #1423 isolation: same, with a hostile inherited GIT_DIR=/nonexistent
 GH-1423 base GIT_DIR=/nonexistent rc=1
-GH-1423 sim GIT_DIR=/nonexistent rc=0
+GH-1423 sim-gh1423 GIT_DIR=/nonexistent rc=0

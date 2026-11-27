@@ -1,6 +1,7 @@
 import sys; sys.path.insert(0, "utils/py")
 import swarm_preflight as s
-for cp in (0x85, 0x2028, 0x2029):
+# Every separator Python str.splitlines() breaks on besides CR/LF; Markdown keeps them as line content.
+for cp in (0x0B, 0x0C, 0x1C, 0x1D, 0x1E, 0x85, 0x2028, 0x2029):
     L = chr(cp)
     t = "## Acceptance\n\n- [ ] Alpha" + L + "beta\n- [ ] Gamma\n"
     i = s.extract_acceptance_criteria(t, plain_bullets=True)

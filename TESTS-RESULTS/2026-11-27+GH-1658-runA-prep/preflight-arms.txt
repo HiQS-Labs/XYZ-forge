@@ -1,11 +1,11 @@
-# preflight --dry-run against the proof clone (development at 6142128d9c433d6b12972c6cd9a6f864f0ed9da2): the READY check
-GH-1666 base rc=0
-GH-1423 base rc=0
-GH-1638 base rc=0
-# consumer arms in the scratch clone: simulated fix committed on local development, with and without the delivery receipt
-GH-1666 fixed+receipt head=17e01599148a rc=4 17e01599148a ['landed', 'landed']
-GH-1666 fixed-no-receipt head=96355e227caa rc=7 96355e227caa ['landed', 'unfixed']
-GH-1423 fixed+receipt head=0ed0b1fd0a6b rc=4 0ed0b1fd0a6b ['landed', 'landed']
-GH-1423 fixed-no-receipt head=4b898eccb82e rc=7 4b898eccb82e ['landed', 'unfixed']
-GH-1638 fixed+receipt head=3870c28eb6d0 rc=4 3870c28eb6d0 ['landed', 'landed']
-GH-1638 fixed-no-receipt head=0ec449a5d693 rc=7 0ec449a5d693 ['landed', 'unfixed']
+# READY check: preflight --dry-run against $PROOF (development at 6142128d9c433d6b12972c6cd9a6f864f0ed9da2)
+GH-1666 base rc=0 6142128d9c433d6b12972c6cd9a6f864f0ed9da2 ['unfixed', 'unfixed']
+GH-1423 base rc=0 6142128d9c433d6b12972c6cd9a6f864f0ed9da2 ['unfixed', 'unfixed']
+GH-1638 base rc=0 6142128d9c433d6b12972c6cd9a6f864f0ed9da2 ['unfixed', 'unfixed']
+# consumer arms: $SCRATCH reset to 6142128d9c433d6b12972c6cd9a6f864f0ed9da2, git apply <fix patch>, optional receipt TESTS-RESULTS/2026-11-27+GH-<N>/delivery.md, commit on local development, then preflight --dry-run --target-root $SCRATCH
+GH-1666 fixed+receipt head=103cd0daf7c0 rc=4 103cd0daf7c0 ['landed', 'landed']
+GH-1666 fixed-no-receipt head=df9021dd70bb rc=7 df9021dd70bb ['landed', 'unfixed']
+GH-1423 fixed+receipt head=32fc1cb68ea7 rc=4 32fc1cb68ea7 ['landed', 'landed']
+GH-1423 fixed-no-receipt head=6394c289af2e rc=7 6394c289af2e ['landed', 'unfixed']
+GH-1638 fixed+receipt head=37d6467b1eaf rc=4 37d6467b1eaf ['landed', 'landed']
+GH-1638 fixed-no-receipt head=36b5a5402dec rc=7 36b5a5402dec ['landed', 'unfixed']

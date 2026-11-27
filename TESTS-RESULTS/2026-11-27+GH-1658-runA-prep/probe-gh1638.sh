@@ -1,25 +1,49 @@
 set -u
-L="$PWD/relay-automation/relay-turn-lib.sh"
+SRC="$PWD"
+L="$SRC/relay-automation/relay-turn-lib.sh"
+PKG="$SRC/skills/1-hourly/relay-automation/relay-pkg.tar.gz"
 for v in $(env | sed -n 's/^\(GIT_[A-Za-z_]*\)=.*/\1/p'); do unset "$v"; done
 export GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
 T="$(mktemp -d "${TMPDIR:-/tmp}/gh1638-probe.XXXXXX")" || exit 2
-R="$T/repo"; mkdir -p "$R/seeded/sub" && cd "$R" || exit 2
-git init -q && git config user.name probe && git config user.email probe && git config commit.gpgsign false
-echo v1 > seeded/f.txt; echo s1 > seeded/sub/g.txt; git add -A && git commit -qm init || exit 2
-echo v2 > seeded/f.txt
-export TMPDIR="$T"
-rc=1
-(
-  source "$L" >/dev/null 2>&1 || exit 3
-  RTL_ROOT="$R"; RTL_ALLOW=("seeded")
+st=0
+fail() { echo "$*" >&2; st=1; }
+# Packaged copy must match the live library (make-pkg.sh regenerated).
+mkdir -p "$T/pkg" && tar xzf "$PKG" -C "$T/pkg" relay-automation/relay-turn-lib.sh 2>/dev/null \
+  && cmp -s "$T/pkg/relay-automation/relay-turn-lib.sh" "$L" || fail "relay-pkg.tar.gz does not carry the live relay-turn-lib.sh"
+mkrepo() {  # <dir>: repo with seeded/{f.txt,retired.txt,sub/g.txt} and plain.txt committed
+  mkdir -p "$1/seeded/sub" && cd "$1" || exit 2
+  git init -q && git config user.name probe && git config user.email probe && git config commit.gpgsign false
+  echo v1 > seeded/f.txt; echo r1 > seeded/retired.txt; echo s1 > seeded/sub/g.txt; echo p1 > plain.txt
+  git add -A && git commit -qm init || exit 2
+}
+# Arm 1: an existing directory entry and an ordinary file entry.
+R="$T/repo"; mkrepo "$R"
+echo v2 > seeded/f.txt; rm seeded/retired.txt; echo p2 > plain.txt
+out="$(cd "$R" && TMPDIR="$T" bash -c '
+  source "$1" >/dev/null 2>&1 || exit 3
+  RTL_ROOT="$2"; RTL_ALLOW=("seeded" "plain.txt")
   wt="$(rtl_worktree_begin)" || exit 4
-  [ -d "$wt" ] || exit 4
-  st=0
-  [ -z "$(find "$wt/seeded" -mindepth 1 -maxdepth 2 -name seeded)" ] || { echo "nested copy: $(find "$wt/seeded" -mindepth 1 -maxdepth 2 -name seeded)" >&2; st=1; }
-  [ "$(cat "$wt/seeded/f.txt")" = v2 ] || { echo "seed did not carry the current content" >&2; st=1; }
-  [ "$(cat "$wt/seeded/sub/g.txt")" = s1 ] || { echo "seed lost a nested file" >&2; st=1; }
+  echo "$wt"' _ "$L" "$R")" || fail "rtl_worktree_begin failed on a readable tree (rc=$?)"
+wt="$(printf '%s\n' "$out" | tail -1)"
+if [ -n "$wt" ] && [ -d "$wt" ]; then
+  [ -z "$(find "$wt/seeded" -mindepth 1 -maxdepth 2 -name seeded)" ] || fail "nested copy under $wt/seeded"
+  [ "$(cat "$wt/seeded/f.txt" 2>/dev/null)" = v2 ] || fail "seed did not carry the current content"
+  [ "$(cat "$wt/seeded/sub/g.txt" 2>/dev/null)" = s1 ] || fail "seed lost a nested file"
+  [ ! -e "$wt/seeded/retired.txt" ] || fail "file deleted on the host survives in the seeded directory"
+  [ "$(cat "$wt/plain.txt" 2>/dev/null)" = p2 ] || fail "ordinary file entry not seeded"
   git -C "$R" worktree remove --force "$wt" >/dev/null 2>&1
-  exit $st
-); rc=$?
+fi
+# Arm 2: a directory copy that fails must not report a successful seed.
+R2="$T/repo2"; mkrepo "$R2"
+echo v2 > seeded/f.txt; chmod 000 seeded/f.txt
+out2="$(cd "$R2" && TMPDIR="$T" bash -c '
+  source "$1" >/dev/null 2>&1 || exit 3
+  RTL_ROOT="$2"; RTL_ALLOW=("seeded")
+  wt="$(rtl_worktree_begin)" || exit 9
+  echo "$wt"' _ "$L" "$R2")"; rc2=$?
+[ "$rc2" -eq 9 ] || fail "failed directory copy reported a successful seed (rc=$rc2)"
+chmod 644 "$R2/seeded/f.txt" 2>/dev/null
+w2="$(printf '%s\n' "$out2" | tail -1)"; [ -n "$w2" ] && [ -d "$w2" ] && git -C "$R2" worktree remove --force "$w2" >/dev/null 2>&1
+git -C "$R2" worktree prune >/dev/null 2>&1
 cd / && rm -rf "$T"
-exit $rc
+exit $st

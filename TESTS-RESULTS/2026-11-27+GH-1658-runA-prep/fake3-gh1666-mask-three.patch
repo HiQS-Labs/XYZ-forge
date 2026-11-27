@@ -1,0 +1,55 @@
+diff --git a/utils/py/swarm_preflight.py b/utils/py/swarm_preflight.py
+index 5816d47aa..fb1f638c6 100644
+--- a/utils/py/swarm_preflight.py
++++ b/utils/py/swarm_preflight.py
+@@ -591,6 +591,11 @@ def normalize_criterion(text: str | None) -> str:
+     """
+     return re.sub(r'\s+', ' ', (text or "")).strip()
+ 
++def _splitlines_keep_unicode(text):
++    """Fake (review round 2): mask only U+0085/U+2028/U+2029, keep Python's other breaks."""
++    m = text.replace('\x85', '\ue100').replace('\u2028', '\ue101').replace('\u2029', '\ue102')
++    return [l.replace('\ue100', '\x85').replace('\ue101', '\u2028').replace('\ue102', '\u2029') for l in m.splitlines()]
++
+ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -> list[str] | None:
+     """Criteria under the first Acceptance heading, or None when the document has no such section.
+ 
+@@ -612,7 +617,7 @@ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -
+     """
+     if not text:
+         return None
+-    lines = text.splitlines()
++    lines = _splitlines_keep_unicode(text)
+     start: int | None = None
+     level: int | None = None
+     for i, line in enumerate(lines):
+@@ -631,10 +636,7 @@ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -
+     # left as is (#1666), and a fragment that does not start a Markdown line is never a marker.
+     marker_lines: list[str | None] = []
+     if plain_bullets:
+-        physical, at_start = iter(re.split(r'\r\n|\r|\n', text)), True
+-        for frag in text.splitlines(keepends=True):
+-            marker_lines.append(next(physical) if at_start else None)
+-            at_start = frag.endswith(('\r', '\n'))
++        marker_lines = list(lines)
+ 
+     criteria: list[str] = []
+     indents: list[int] = []
+@@ -686,7 +688,7 @@ def extract_declared_deviations(text: str | None) -> dict[str, Any]:
+     out: dict[str, Any] = {"dropped": [], "added": [], "changed": [], "malformed": []}
+     if not text:
+         return out
+-    lines = text.splitlines()
++    lines = _splitlines_keep_unicode(text)
+     start: int | None = None
+     level: int | None = None
+     for i, line in enumerate(lines):
+@@ -840,7 +842,7 @@ def collect_inline_checklist(
+     """
+     if not text:
+         return [], "whole-document", 0
+-    lines = text.splitlines()
++    lines = _splitlines_keep_unicode(text)
+ 
+     start, end, mode = 0, len(lines), "whole-document"
+     for i, line in enumerate(lines):

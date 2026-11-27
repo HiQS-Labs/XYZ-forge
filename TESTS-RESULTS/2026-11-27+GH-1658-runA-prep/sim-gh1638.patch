@@ -1,12 +1,30 @@
 diff --git a/relay-automation/relay-turn-lib.sh b/relay-automation/relay-turn-lib.sh
-index ec24bd75b..f0b0aea99 100644
+index ec24bd75b..a7b27b2a8 100644
 --- a/relay-automation/relay-turn-lib.sh
 +++ b/relay-automation/relay-turn-lib.sh
-@@ -781,6 +781,7 @@ rtl_worktree_begin() {
+@@ -781,7 +781,24 @@ rtl_worktree_begin() {
      fi
      if [[ -e "$RTL_ROOT/$a" ]]; then
        mkdir -p "$wt/$(dirname "$a")"
-+      rm -rf "$wt/$a"
-       cp -R "$RTL_ROOT/$a" "$wt/$a"
+-      cp -R "$RTL_ROOT/$a" "$wt/$a"
++      if [[ -d "$RTL_ROOT/$a" && ! -L "$RTL_ROOT/$a" ]]; then
++        # GH-1638: mirror an existing directory in place; `cp -R src dst` into an existing dst nests it.
++        if [[ -e "$wt/$a" || -L "$wt/$a" ]]; then
++          local _wtp _dst
++          _wtp="$(cd "$wt" && pwd -P)"; _dst="$(cd "$wt/$(dirname "$a")" && pwd -P)/$(basename "$a")"
++          case "$_dst" in
++            "$_wtp"/?*) rm -rf "$_dst" ;;
++            *) rtl_trace "rtl_worktree_begin: REFUSE seed $a resolves outside the worktree"
++               git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null 2>&1; rm -rf "$wt"; return 1 ;;
++          esac
++        fi
++        if ! cp -R "$RTL_ROOT/$a" "$wt/$a"; then
++          rtl_trace "rtl_worktree_begin: SEED FAILED $a"
++          git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null 2>&1; rm -rf "$wt"; return 1
++        fi
++      else
++        cp -R "$RTL_ROOT/$a" "$wt/$a"
++      fi
        rtl_trace "rtl_worktree_begin: SEED $a"
      else
+       rm -rf "$wt/$a"                  # allowlisted path ALREADY deleted in the host tree → mirror the

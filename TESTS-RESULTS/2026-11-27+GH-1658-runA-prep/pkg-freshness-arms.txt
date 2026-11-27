@@ -1,0 +1,12 @@
+# scratch clone at 6142128d9c43 + sim-gh1638.patch (source only)
+$ bash test/relay-pkg-freshness.sh
+  PASS: relay-pkg.tar.gz present
+  drift: relay-automation/relay-turn-lib.sh
+  PASS: tarball exposes 18 packaged paths
+  FAIL: relay-pkg.tar.gz is stale — run skills/1-hourly/relay-automation/make-pkg.sh
+exit=1
+$ bash skills/1-hourly/relay-automation/make-pkg.sh && bash test/relay-pkg-freshness.sh
+  PASS: tarball exposes 18 packaged paths
+  PASS: every packaged file matches its live source
+  relay-pkg-freshness: 3 pass, 0 fail
+exit=0
