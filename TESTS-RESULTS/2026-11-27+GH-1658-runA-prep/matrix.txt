@@ -1,0 +1,10 @@
+# probe matrix, base = origin/development 6142128d9c43 (scratch clone 6142128d9); rc 0 = fixed, nonzero = unfixed
+base GH-1590 rc=1 AssertionError: backticked foreign lead admitted a later #N
+base GH-1666 rc=1 AssertionError: ('0x85', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])
+base GH-1423 rc=1 AssertionError: tracked relay file under a gitignored dir: commit landed but reported failure
+simulated-fix GH-1590 rc=0 
+simulated-fix GH-1666 rc=0 
+simulated-fix GH-1423 rc=0 
+fake-fix GH-1590 rc=1 AssertionError: backticked local lead control
+fake-fix GH-1666 rc=1 AssertionError: ('0x85', ['Alpha beta', 'Gamma'], ['Alpha', 'Gamma'])
+fake-fix GH-1423 rc=1 AssertionError: fixture: the attest commit did not land

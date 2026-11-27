@@ -1,0 +1,37 @@
+diff --git a/skills/1-hourly/kickstart/scripts/build_queue.py b/skills/1-hourly/kickstart/scripts/build_queue.py
+index fe69fe25d..ceeee4ab7 100755
+--- a/skills/1-hourly/kickstart/scripts/build_queue.py
++++ b/skills/1-hourly/kickstart/scripts/build_queue.py
+@@ -262,6 +262,7 @@ def parse_daily_goals_refs(body: str, slug: str, self_num: int) -> list[int]:
+     reference: later `#N` on the line are references, not items. Without one, every `#N` outside a checked line
+     is admitted as before. Foreign-repo references (other/repo#123) are consumed atomically, never as #123.
+     """
++    return []
+     clean = _sanitize_body(body or "")
+     lines = clean.splitlines()
+     tasklist = any(CHECKBOX.match(line) for line in lines)
+diff --git a/utils/py/relay_drive.py b/utils/py/relay_drive.py
+index 3e6fd4d82..4e9886735 100644
+--- a/utils/py/relay_drive.py
++++ b/utils/py/relay_drive.py
+@@ -835,6 +835,7 @@ def main():
+         if ls.returncode != 0:
+             eprint("relay-drive: relay file is untracked/gitignored — attestation trailer kept on disk only, commit skipped")
+             return True
++        return True
+         add = subprocess.run(["git", "-C", trepo, "add", "--", os.path.abspath(relay_file)], capture_output=True, text=True)
+         cm = subprocess.run(["git", "-C", trepo, "commit", "-q", "-m", msg, "--", os.path.abspath(relay_file)], capture_output=True, text=True)
+         if add.returncode != 0 or cm.returncode != 0:
+diff --git a/utils/py/swarm_preflight.py b/utils/py/swarm_preflight.py
+index 5816d47aa..985813bb4 100644
+--- a/utils/py/swarm_preflight.py
++++ b/utils/py/swarm_preflight.py
+@@ -612,7 +612,7 @@ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -
+     """
+     if not text:
+         return None
+-    lines = text.splitlines()
++    lines = re.split(r'\r\n|\r|\n', text) if plain_bullets else text.splitlines()
+     start: int | None = None
+     level: int | None = None
+     for i, line in enumerate(lines):

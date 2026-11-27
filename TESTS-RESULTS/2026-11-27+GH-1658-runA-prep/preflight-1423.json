@@ -1,0 +1,194 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-27T21:46:00Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1423-relay-attest-gitignored"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/flywheel-runA-prep/PROJECT/1-INBOX/GH-1423-RELAY-ATTEST-GITIGNORED.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/flywheel-runA-proof",
+    "branch": "development",
+    "commit": "6142128d9c433d6b12972c6cd9a6f864f0ed9da2",
+    "suggested_branch": "marathon/gh-1423-relay-attest-gitignored-2026-11-27",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash test/gh505-relay-attest.sh",
+    "round_cap": 9,
+    "fix_probes": [
+      {
+        "type": "command",
+        "cmd": "env PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'\nimport ast, os, shutil, subprocess, tempfile, textwrap\nsrc = open(\"utils/py/relay_drive.py\", encoding=\"utf-8\").read()\nfn = [n for n in ast.walk(ast.parse(src)) if isinstance(n, ast.FunctionDef) and n.name == \"commit_relay_file\"]\nassert len(fn) == 1, \"commit_relay_file not found exactly once\"\nd = tempfile.mkdtemp(prefix=\"gh1423-probe-\")\ntry:\n    g = lambda *a: subprocess.run([\"git\", \"-C\", d, *a], capture_output=True, text=True)\n    g(\"init\", \"-q\")\n    for k, v in ((\"user.name\", \"probe\"), (\"user.email\", \"probe\"), (\"commit.gpgsign\", \"false\"),\n                 (\"core.hooksPath\", os.path.join(d, \".git\", \"hooks\"))):\n        g(\"config\", k, v)\n    with open(os.path.join(d, \".gitignore\"), \"w\") as fh: fh.write(\"relay-system/\\n\")\n    os.makedirs(os.path.join(d, \"relay-system\")); rf = os.path.join(d, \"relay-system\", \"t.md\")\n    with open(rf, \"w\") as fh: fh.write(\"a\\n\")\n    g(\"add\", \".gitignore\"); g(\"add\", \"-f\", \"relay-system/t.md\")\n    assert g(\"commit\", \"-qm\", \"init\").returncode == 0, \"fixture commit failed\"\n    with open(rf, \"a\") as fh: fh.write(\"b\\n\")\n    ns = {\"subprocess\": subprocess, \"os\": os, \"relay_file\": rf, \"transcript_repo\": lambda: d,\n          \"eprint\": lambda *a, **k: None}\n    exec(textwrap.dedent(ast.get_source_segment(src, fn[0])), ns)\n    ok = ns[\"commit_relay_file\"](\"m1\")\n    landed = g(\"rev-list\", \"--count\", \"HEAD\").stdout.strip() == \"2\"\n    assert landed, \"fixture: the attest commit did not land\"\n    assert ok is True, \"tracked relay file under a gitignored dir: commit landed but reported failure\"\n    os.remove(os.path.join(d, \".gitignore\")); g(\"commit\", \"-qam\", \"drop ignore rule\")\n    with open(rf, \"a\") as fh: fh.write(\"n\\n\")\n    assert ns[\"commit_relay_file\"](\"m-plain\") is True, \"repo without the ignore rule must still attest\"\n    assert not g(\"status\", \"--porcelain\", \"--\", \"relay-system\").stdout, \"plain-repo commit did not land\"\n    hook = os.path.join(d, \".git\", \"hooks\", \"pre-commit\")\n    with open(hook, \"w\") as fh: fh.write(\"#!/bin/sh\\nexit 1\\n\")\n    os.chmod(hook, 0o755)\n    with open(rf, \"a\") as fh: fh.write(\"c\\n\")\n    assert ns[\"commit_relay_file\"](\"m2\") is False, \"a real commit failure must still report False\"\nfinally:\n    shutil.rmtree(d, ignore_errors=True)\nPY",
+        "expect_nonzero": true
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-27+GH-1423/delivery.md"
+      }
+    ],
+    "artifacts": [
+      "utils/py/relay_drive.py",
+      "TESTS-RESULTS/2026-11-27+GH-1423/delivery.md"
+    ],
+    "artifacts_new": [
+      "TESTS-RESULTS/2026-11-27+GH-1423/delivery.md"
+    ],
+    "remediation": {
+      "source": "issue#1423",
+      "criteria": "commit_relay_file returns True when the file-scoped commit of a tracked relay file under a gitignored directory lands, still True in a repo without the ignore rule, and False when the commit genuinely fails. Change relay_drive.py only (commit_relay_file), keeping it callable with subprocess, os, relay_file, transcript_repo and eprint in scope. Record the manual repro (red exit 4 with the git add stderr, green after the fix, genuine-failure control) in TESTS-RESULTS/2026-11-27+GH-1423/delivery.md. No new suite, no suite edits."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/development",
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "6142128d9c433d6b12972c6cd9a6f864f0ed9da2",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "command",
+        "path": null,
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-27+GH-1423/delivery.md",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1423 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "match",
+      "cause": null,
+      "detail": "3/3 criteria copied verbatim from issue #1423",
+      "issue": "1423",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "gaps": [],
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1423 (https://github.com/HiQS-Labs/XYZ-forge/issues/1423)",
+      "issue": "1423",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1423",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 3,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "utils/py/relay_drive.py",
+      "TESTS-RESULTS/2026-11-27+GH-1423/delivery.md",
+      "test/gh115-round-cap.sh",
+      "test/gh204-sed-portability.sh",
+      "test/gh273-marathon-root-audit-python-shape.sh",
+      "test/gh331-cost-summary.sh",
+      "test/gh370-progress-telemetry.sh",
+      "test/gh371-interrupt-snapshot.sh",
+      "test/gh372-escalation-log-tail.sh",
+      "test/gh376-relay-drive-lock-parity.sh",
+      "test/gh441-gate-env-contract.sh",
+      "test/gh505-relay-attest.sh",
+      "test/marathon-root-audit.sh",
+      "test/synthetic/gh101-relay-programmatic-stress.sh",
+      "test/synthetic/gh129-relay-tick-root.sh",
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "utils/py/relay_drive.py",
+      "TESTS-RESULTS/2026-11-27+GH-1423/delivery.md",
+      "test/gh115-round-cap.sh",
+      "test/gh204-sed-portability.sh",
+      "test/gh273-marathon-root-audit-python-shape.sh",
+      "test/gh331-cost-summary.sh",
+      "test/gh370-progress-telemetry.sh",
+      "test/gh371-interrupt-snapshot.sh",
+      "test/gh372-escalation-log-tail.sh",
+      "test/gh376-relay-drive-lock-parity.sh",
+      "test/gh441-gate-env-contract.sh",
+      "test/gh505-relay-attest.sh",
+      "test/marathon-root-audit.sh",
+      "test/synthetic/gh101-relay-programmatic-stress.sh",
+      "test/synthetic/gh129-relay-tick-root.sh",
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh115-round-cap.sh",
+      "test/gh204-sed-portability.sh",
+      "test/gh273-marathon-root-audit-python-shape.sh",
+      "test/gh331-cost-summary.sh",
+      "test/gh370-progress-telemetry.sh",
+      "test/gh371-interrupt-snapshot.sh",
+      "test/gh372-escalation-log-tail.sh",
+      "test/gh376-relay-drive-lock-parity.sh",
+      "test/gh441-gate-env-contract.sh",
+      "test/gh505-relay-attest.sh",
+      "test/marathon-root-audit.sh",
+      "test/synthetic/gh101-relay-programmatic-stress.sh",
+      "test/synthetic/gh129-relay-tick-root.sh"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "fs_touching_tests": [
+      "test/gh115-round-cap.sh",
+      "test/gh204-sed-portability.sh",
+      "test/gh273-marathon-root-audit-python-shape.sh",
+      "test/gh331-cost-summary.sh",
+      "test/gh370-progress-telemetry.sh",
+      "test/gh371-interrupt-snapshot.sh",
+      "test/gh372-escalation-log-tail.sh",
+      "test/gh376-relay-drive-lock-parity.sh",
+      "test/gh441-gate-env-contract.sh",
+      "test/gh505-relay-attest.sh",
+      "test/marathon-root-audit.sh",
+      "test/synthetic/gh101-relay-programmatic-stress.sh",
+      "test/synthetic/gh129-relay-tick-root.sh",
+      "test/_setup.sh",
+      "test/lib/fixture-guard.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

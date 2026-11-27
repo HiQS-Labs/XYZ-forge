@@ -1,0 +1,4 @@
+1480 captures ['1-INBOX/GH-1480-MERGE-CLEANUP-DECOMPOSE.md'] | hold_refusal: hold: capture body HELD: marker | stale: None
+1590 captures ['1-INBOX/GH-1590-DAILY-GOALS-BACKTICKED-FOREIGN-LEAD.md'] | hold_refusal: None | stale: None
+1666 captures ['1-INBOX/GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md'] | hold_refusal: None | stale: None
+1423 captures ['1-INBOX/GH-1423-RELAY-ATTEST-GITIGNORED.md'] | hold_refusal: None | stale: None

@@ -1,0 +1,144 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-27T21:45:49Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1590-daily-goals-backticked-foreign-lead"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/flywheel-runA-prep/PROJECT/1-INBOX/GH-1590-DAILY-GOALS-BACKTICKED-FOREIGN-LEAD.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/flywheel-runA-proof",
+    "branch": "development",
+    "commit": "6142128d9c433d6b12972c6cd9a6f864f0ed9da2",
+    "suggested_branch": "marathon/gh-1590-daily-goals-backticked-foreign-lead-2026-11-27",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash test/gh280-jog-marathon-adapter.sh",
+    "round_cap": 9,
+    "fix_probes": [
+      {
+        "type": "command",
+        "cmd": "env PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'\nimport importlib.util as u\nsp = u.spec_from_file_location(\"bq\", \"skills/1-hourly/kickstart/scripts/build_queue.py\")\nm = u.module_from_spec(sp); sp.loader.exec_module(m)\nf, S, B = m.parse_daily_goals_refs, \"HiQS-Labs/XYZ-forge\", chr(96)\nassert f(\"- [ ] \" + B + \"other/repo#9\" + B + \" then #10\\n\", S, 1) == [], \"backticked foreign lead admitted a later #N\"\nassert f(\"- [ ] other/repo#9 then #10\\n\", S, 1) == [], \"plain foreign lead control\"\nassert f(\"- [ ] \" + B + \"#12\" + B + \" then #10\\n\", S, 1) == [12], \"backticked local lead control\"\nassert f(\"- [ ] #11 then #10\\n\", S, 1) == [11], \"local lead control\"\nassert f(\"Do #14 and \" + B + \"other/repo#9\" + B + \" #15\\n\", S, 1) == [14, 15], \"no-task-list path changed\"\nPY",
+        "expect_nonzero": true
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-27+GH-1590/delivery.md"
+      }
+    ],
+    "artifacts": [
+      "skills/1-hourly/kickstart/scripts/build_queue.py",
+      "TESTS-RESULTS/2026-11-27+GH-1590/delivery.md"
+    ],
+    "artifacts_new": [
+      "TESTS-RESULTS/2026-11-27+GH-1590/delivery.md"
+    ],
+    "remediation": {
+      "source": "issue#1590",
+      "criteria": "parse_daily_goals_refs admits nothing from a checklist line whose first reference is a backticked foreign reference; local, plain-foreign and no-task-list results are unchanged. Change build_queue.py only (parse_daily_goals_refs); leave _sanitize_body and hold detection as they are. Record the probe's before/after output in TESTS-RESULTS/2026-11-27+GH-1590/delivery.md. No new suite, no suite edits."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/development",
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "6142128d9c433d6b12972c6cd9a6f864f0ed9da2",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "command",
+        "path": null,
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-27+GH-1590/delivery.md",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1590 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "unknown",
+      "cause": "no-issue-section",
+      "detail": "issue #1590 has no '## Acceptance' section \u2014 nothing to copy from",
+      "issue": "1590",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "gaps": [
+      "issue #1590 has no '## Acceptance' section, so the capture doc's criteria are unverified against it"
+    ],
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1590 (https://github.com/HiQS-Labs/XYZ-forge/issues/1590)",
+      "issue": "1590",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1590",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 3,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "skills/1-hourly/kickstart/scripts/build_queue.py",
+      "TESTS-RESULTS/2026-11-27+GH-1590/delivery.md",
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/_setup.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "skills/1-hourly/kickstart/scripts/build_queue.py",
+      "TESTS-RESULTS/2026-11-27+GH-1590/delivery.md",
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/_setup.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh280-jog-marathon-adapter.sh"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh"
+    ],
+    "fs_touching_tests": [
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/_setup.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

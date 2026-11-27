@@ -1,0 +1,71 @@
+diff --git a/skills/1-hourly/kickstart/scripts/build_queue.py b/skills/1-hourly/kickstart/scripts/build_queue.py
+index fe69fe25d..95f90a803 100755
+--- a/skills/1-hourly/kickstart/scripts/build_queue.py
++++ b/skills/1-hourly/kickstart/scripts/build_queue.py
+@@ -262,7 +262,7 @@ def parse_daily_goals_refs(body: str, slug: str, self_num: int) -> list[int]:
+     reference: later `#N` on the line are references, not items. Without one, every `#N` outside a checked line
+     is admitted as before. Foreign-repo references (other/repo#123) are consumed atomically, never as #123.
+     """
+-    clean = _sanitize_body(body or "")
++    clean = INLINE_BACKTICK.sub(lambda m: m.group(0)[1:-1] if ATOMIC_REF.fullmatch(m.group(0)[1:-1]) else "", REF_BACKTICK.sub(r"\1", FENCED_CODE.sub("", body or "")))
+     lines = clean.splitlines()
+     tasklist = any(CHECKBOX.match(line) for line in lines)
+     seen: set[int] = set()
+diff --git a/utils/py/relay_drive.py b/utils/py/relay_drive.py
+index 3e6fd4d82..c18b55c25 100644
+--- a/utils/py/relay_drive.py
++++ b/utils/py/relay_drive.py
+@@ -837,8 +837,8 @@ def main():
+             return True
+         add = subprocess.run(["git", "-C", trepo, "add", "--", os.path.abspath(relay_file)], capture_output=True, text=True)
+         cm = subprocess.run(["git", "-C", trepo, "commit", "-q", "-m", msg, "--", os.path.abspath(relay_file)], capture_output=True, text=True)
+-        if add.returncode != 0 or cm.returncode != 0:
+-            eprint(f"relay-drive: commit of relay file FAILED: {(add.stderr or cm.stderr).strip()}")
++        if cm.returncode != 0:
++            eprint(f"relay-drive: commit of relay file FAILED: {(cm.stderr or add.stderr).strip()}")
+             return False
+         return True
+ 
+diff --git a/utils/py/swarm_preflight.py b/utils/py/swarm_preflight.py
+index 5816d47aa..369ed6cf5 100644
+--- a/utils/py/swarm_preflight.py
++++ b/utils/py/swarm_preflight.py
+@@ -612,7 +612,7 @@ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -
+     """
+     if not text:
+         return None
+-    lines = text.splitlines()
++    lines = re.split(r'\r\n|\r|\n', text)
+     start: int | None = None
+     level: int | None = None
+     for i, line in enumerate(lines):
+@@ -631,10 +631,7 @@ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -
+     # left as is (#1666), and a fragment that does not start a Markdown line is never a marker.
+     marker_lines: list[str | None] = []
+     if plain_bullets:
+-        physical, at_start = iter(re.split(r'\r\n|\r|\n', text)), True
+-        for frag in text.splitlines(keepends=True):
+-            marker_lines.append(next(physical) if at_start else None)
+-            at_start = frag.endswith(('\r', '\n'))
++        marker_lines = list(lines)
+ 
+     criteria: list[str] = []
+     indents: list[int] = []
+@@ -686,7 +683,7 @@ def extract_declared_deviations(text: str | None) -> dict[str, Any]:
+     out: dict[str, Any] = {"dropped": [], "added": [], "changed": [], "malformed": []}
+     if not text:
+         return out
+-    lines = text.splitlines()
++    lines = re.split(r'\r\n|\r|\n', text)
+     start: int | None = None
+     level: int | None = None
+     for i, line in enumerate(lines):
+@@ -840,7 +837,7 @@ def collect_inline_checklist(
+     """
+     if not text:
+         return [], "whole-document", 0
+-    lines = text.splitlines()
++    lines = re.split(r'\r\n|\r|\n', text)
+ 
+     start, end, mode = 0, len(lines), "whole-document"
+     for i, line in enumerate(lines):
