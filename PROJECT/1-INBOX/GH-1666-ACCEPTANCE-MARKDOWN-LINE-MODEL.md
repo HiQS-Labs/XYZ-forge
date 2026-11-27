@@ -104,3 +104,7 @@ The operator's brief asked for capture, contract, preflight and one independent 
 ```
 
 The probe is an inline manual check, not a suite: it exits 0 only when the fixed behavior and all controls hold, and `expect_nonzero: true` makes any crash read as unfixed. It is inline so it evaluates at `prepared_commit` itself. A readable copy (`probe-gh1666.py`) and its red/green outputs are in `TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/`.
+
+## Merge evidence
+
+- PR #1675 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -309,3 +309,7 @@ distinct stale-dispatch incident was found in the last 14 days versus the prior 
 ## Merge evidence
 
 - PR #1669 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1675 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

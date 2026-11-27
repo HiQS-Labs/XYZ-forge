@@ -305,3 +305,7 @@ little more work than Phase 1 but within the same cheapness band. Appeal 50 neut
 ## Merge evidence
 
 - PR #1490 merged 2026-11-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1675 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

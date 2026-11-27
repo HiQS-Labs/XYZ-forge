@@ -152,3 +152,7 @@ The probe is an inline manual check, not a suite: it writes only to its own temp
 ## Merge evidence
 
 - PR #1424 merged 2026-11-12 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1675 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

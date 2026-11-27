@@ -47,3 +47,7 @@ goal: >
 ## Rating rationale
 
 `rated 70/65/50/40` (sum 225): the issue's own rating proposal, written through `roadmap pickup` on 2026-11-27; `ratings_provisional` stays true until the operator confirms. Effort 40: a substantial multi-checkpoint refactor.
+
+## Merge evidence
+
+- PR #1675 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
