@@ -2,7 +2,7 @@
 gh_issue: 1666
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1666
 title: "swarm_preflight: acceptance readers split lines like Markdown (CR/LF only)"
-status: "Prepared 2026-11-27 (1-INBOX, not enqueued, not started)"
+status: Active
 created: 2026-11-27
 updated: 2026-11-27
 owner: Conveyor preparation (Flywheel Run A queue; ledger #1658)
