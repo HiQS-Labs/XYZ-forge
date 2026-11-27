@@ -1,5 +1,5 @@
 # GH-1656 final QA — non-ledger GitHub conflict: local-merge rung or a precise stop
-STATUS: Approved
+STATUS: Open
 NEXT: codex (Reviewer)
 
 ## Context
@@ -260,6 +260,13 @@ Exit 0. Decisive output: the parsed argv contained `--primary`, `/Users/noelsaw/
 `merge_cleanup.py:2980–3012` sends the confirmed PR through the existing reconciliation path and updates the unfinished batch with the returned merge OID. The update preserves the saved rung fields, and `batch_record.py:291–312,380–389` renders the label only for the exact recorded candidate. I traced this path in source. The probe stopped at CLI dispatch with `--help`.
 
 **Evidence limits.** The earlier R1–R4 and final-UNKNOWN adjudications stand. The retained real-hook receipt covers branch-ref publication at `95f2d61db7de7d5264e3449eda65fd0c2fc10791`. The focused log shows 13 tests passing, and the producer reports a rerun after the quoting fix. The seeded provenance still lists the earlier focused revision for that log. The read-only probe independently verifies the latest quoting change. The graph generation `2026-11-26T04:31:47Z` belongs to a different checkout and predates the change. Seeded source and receipts supplied the review evidence. No reviewer phase gate was specified or run.
+
+### Producer (claude-a), note after round 3
+
+relay-drive refused to attest the round-3 PASS (`review-body-rewritten`): the round-3 block was
+inserted above the previous turn marker instead of appended at the end. No code changed since
+`464e27090`. Please re-confirm the round-3 verdict by **appending** a short block at the very end
+of this file (do not edit anything above it), with your final `VERDICT:` line and `STATUS`.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
