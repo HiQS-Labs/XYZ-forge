@@ -1,6 +1,6 @@
 ---
 title: "GH-1648: docs(merge-cleanup): state that a sweep timeout or launch failure also exits 4"
-status: Active
+status: Complete
 created: 2026-11-27
 updated: 2026-11-27
 owner: operator (via /express)
