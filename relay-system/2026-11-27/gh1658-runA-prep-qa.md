@@ -1,7 +1,7 @@
 ---
 Goal: Independent preparation QA — Conveyor packets for Flywheel Run A (ledger #1658): #1590, #1666, #1423 ready; #1480 held
 Date: 2026-11-27
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ---
 
@@ -262,3 +262,51 @@ Both findings accepted and fixed. This is round 4 of 4.
 
 Re-run: READY preflight exit 0 for all three at `6142128d9c43`; consumer arms 4/7 for each; admission checks unchanged (#1480 held, others None); parser/linter read-back matches.
 
+### Round 4 · Reviewer · codex
+
+VERDICT: FAIL
+
+#1666 and #1423 pass preparation review. #1480 is correctly held on #1475. #1590 remains withdrawn. #1638 still has a containment blocker. This is the last configured review round.
+
+1. **[Blocker] #1638's directory-seed failure path can write outside the worktree and bypass Git's teardown refusal.**
+   - Observed input: `relay-automation/relay-turn-lib.sh:782-784` creates the destination parent before copying. `TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/sim-gh1638.patch:7-22` retains that `mkdir -p` ahead of the new physical-parent check. With a real host directory and a checkout parent symlink pointing outside the worktree, the branch creates the missing parent directory outside the worktree before refusing. The patch also runs `rm -rf "$wt"` at `:16,22,27,32` even if `git worktree remove --force` fails. That can erase the checkout while leaving it registered. `WORKTREE-SAFETY.md:59-79` requires Git-managed removal. The capture at `PROJECT/1-INBOX/GH-1638-RELAY-SEED-DIR-NESTING.md:55` promises a bounded destination and removal on failure. The existing controls cover an ordinary mirror, a failed copy and a refused destination deletion (`probe-gh1638.sh:19-61`). They leave this path untested.
+   - Affected scope: the #1638 directory-only plan, simulated green arm and failure handling. Prove the destination's existing ancestry is inside the worktree before creating missing parents. Use Git-managed teardown for the linked worktree and make a teardown refusal visible. Preserve the file-seed behavior and the existing mirror and package controls.
+   - Falsifier: a directory entry with an escaping checkout parent fails without returning a worktree path or creating any outside directory. A controlled Git teardown refusal yields an observable failure with no raw worktree deletion. The ordinary mirror, package, and existing failure controls still pass with the corrected simulated fix.
+   - Narrow replay run as `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -`. The interpreter exited 0. The branch exited 1 with empty stdout and printed `REFUSE seed parent/new/seeded resolves outside the worktree` followed by `mock raw removal called for -rf`. The scratch fixture reported `outside new directory=True`. Both Git and raw removal were stubbed.
+
+     ```python
+     from pathlib import Path
+     from tempfile import TemporaryDirectory
+     from subprocess import run
+
+     d = Path('TESTS-RESULTS/2026-11-27+GH-1658-runA-prep')
+     patch = (d/'sim-gh1638.patch').read_text().splitlines()
+     block = '\n'.join(line[1:] for line in patch[6:37] if not line.startswith('-'))
+     with TemporaryDirectory(prefix='gh1638-parent-') as temp:
+         host, wt, outside = (Path(temp) / key for key in ('host', 'wt', 'outside'))
+         (host/'parent'/'new'/'seeded').mkdir(parents=True)
+         wt.mkdir()
+         outside.mkdir()
+         (wt/'parent').symlink_to(outside, target_is_directory=True)
+         proc = run(['bash', '-c', """
+     RTL_ROOT="$1"; wt="$2"; a=parent/new/seeded
+     git() { echo "mock worktree remove refused" >&2; return 1; }
+     rm() { echo "mock raw removal called for $1" >&2; return 0; }
+     rtl_trace() { printf '%s\n' "$*" >&2; }
+     seed() {
+     """ + block + """
+     fi
+     }
+     seed
+     """, '_', str(host), str(wt)], capture_output=True, text=True)
+         print(f'branch rc={proc.returncode}; stdout={proc.stdout!r}; '
+               f'stderr={proc.stderr.strip()!r}; outside new directory={(outside/"new").is_dir()}')
+         assert proc.returncode == 1 and not proc.stdout and (outside/'new').is_dir()
+         assert 'mock raw removal called' in proc.stderr
+     ```
+
+#### Verified preparation evidence
+
+- The Round 3 unchecked destination-removal finding is resolved for the ordinary directory path. `sim-gh1638.patch:24-33` checks both the removal result and the path's absence before copying. The readable probe requires an existing returned path and tests a refused destination removal (`probe-gh1638.sh:26-35,49-61`). The retained packaged green arm exits 0 and the unchecked-removal fake exits 1 (`matrix.txt:12,15`).
+- The Round 3 provenance finding is resolved for replay. I passed each decoded admission command from `provenance.jsonl:26-29` to `bash -n` and checked the numeric input in the embedded Python. Each syntax check returned 0. The fixed arms include the patch path rooted at the preparation clone and create the delivery directory before writing the receipt (`:20-25`). Those retained executions report exits 4 and 7 for each item. The check of the records did not execute the live admission lookups or rebuild the clone arms.
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 -` using `swarm_preflight.extract_contract`, `jog_run.contract_probes_from_doc`, and direct reads of the retained JSON and probe copies exited 0. Each ready contract returned two labels with no lint error, the exact proved probe, cap 9, the full prepared pin, and a retained base exit 0 with consumer exits 4/7. The standalone `python3 TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/probe-gh1666.py`, with bytecode disabled and workspace scratch as `TMPDIR`, exited 1 at the expected baseline assertion `('0xb', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])`. The retained #1480 receipt records `hold: capture body HELD: marker` and its capture has no build contract. No Git fixture or gate was run in this turn.
