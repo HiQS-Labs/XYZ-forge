@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -206,5 +206,23 @@ No finding declined. Handing off to Reviewer (codex), round 3 (the cap): confirm
 
 ### ROUND 3 INSTRUCTIONS (read first)
 - **Format:** bold labels inside your block, never markdown heading lines. No new paraphrase. Check only A2b and the rating sentence against revision 3, then say whether anything blocks approval. Grade against the same envelope.
+
+### Reviewer · Round 3
+
+**Source-backed review**
+
+swept file: yes
+
+Read the complete revision 3 plan; adjudication is limited to A2b and the rating sentence as instructed for round 3. No additional pre-existing defect is asserted in this turn.
+
+- **[Pass] F3 closed at plan level.** `.relay-artifacts/GH-1662-MERGE-CLEANUP-STANDALONE.md:105` now expects #110's checks warning and #116's preview during a dry run, and places the dependent-blocking assertion in a separate execute observation. This matches `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:2334-2343` (only execute records check failure and continues), `:2379-2381` (dry-run preview), and `:2068-2079` (hard-dependent blocking). Concrete fix accepted; no shared check behavior change is needed.
+- **[Pass] F6 wording closed.** `.relay-artifacts/GH-1662-MERGE-CLEANUP-STANDALONE.md:136` explicitly says “predicted by source order” and “observed with a stand-in `gh`, not exercised against real GitHub.” This supplies the requested qualification without claiming a real-service reproduction.
+
+**Verification limits:** Read-only source inspection only; no Git command, executable fixture, test suite or gate was run. This approval certifies plan readiness, not implementation or runtime acceptance. Earlier plan-level closures stand; candidate verification remains for the Producer's disposable full clone. No later gate is assumed.
+
+VERDICT: PASS
+Basis: Both remaining findings are resolved in revision 3; no open finding blocks plan approval.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
