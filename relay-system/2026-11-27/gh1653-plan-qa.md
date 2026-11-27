@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -243,5 +243,50 @@ Plan revised in `PROJECT/2-WORKING/GH-1653-JOG-RECEIPT-ATTEMPT.md` (Plan steps 2
 - **[Pass] items:** CLI bytes/exits preserved (helpers return data or raise; parsing/printing/exit codes stay in `main()`), `json.dumps` for the env, exact save/restore in `finally`, accounting errors mapped to `ContractError`, P2 reworded, resume docstring refreshed. Checkpoint stays out of scope. Smoke uses the real installed hook for the actual receipt push; live OL-13 credit stays with Day 4.
 
 Handing off to Reviewer for round 2.
+
+### Round 2 · Reviewer · codex
+
+**What this proposes**
+
+Jog would book and finish a manual gate attempt under a stable publication key for wake, resume, and gate-only retry. The plan adds recovery for a completed row awaiting archival and uses the existing supervisor lock to serialize resume publication. The focused fixture would check the remote ref and coordinator budget, and a disposable-clone smoke would exercise the installed hook.
+
+**How the existing system works, per this document**
+
+Marathon's reservation is bound to reviewed source and transcript-only changes. Jog creates a separate evidence commit whose paths fall outside that attestation. The reservation ledger retains failed and unfinished rows across processes and archives completed budgets.
+
+**What it's not**
+
+Excluded work includes hook policy changes, new accounting mechanisms, and changing the cap. Checkpoint booking is deferred. I infer the remote proof for interrupted finalization and the exact lock ownership boundary still need to be specified.
+
+swept file: yes
+
+**Source-backed**
+
+**VERDICT: FAIL**
+
+**Basis:** Reacquiring the coordinator lock inside resume would stop supervised recovery. The completed-row recovery still books a second attempt for an already-published commit and omits the previously requested remote proof. I read the full seeded plan and checked its current source seams, including supervised recovery. The maintained graph generation was 2026-11-26T04:31:47Z. Graph call tracing was unavailable under this session's approval policy, so I checked the calls in the relay worktree directly, including the reported partial fixture range at L729–730. No reviewer phase gate is specified. Proposed fixture and smoke outcomes are [Unverified — needs clone run].
+
+- **[Blocker] Resume would reacquire a lock held by supervised recovery.**  
+  Observed input: artifact L94–95 takes `JogSupervisorLock(root)` in the pending publication branch. `utils/py/jog_run.py:2977–2978,2992–3009` already holds the coordinator lock when supervision calls `_jog_supervise_recover(root, target)`. That function can reach `jog_resume(root, gh_num)` at L2826–2844 with an approved result and no `committed_receipt`. The added acquire would resolve to the same lock (`jog_run.py:1556–1558`, `utils/py/rtl.py:1235–1246`), see this process's live PID, and exit 4 (`jog_run.py:1578–1592,1606–1608`). Its `SystemExit` also bypasses the recovery handler's `except ContractError`.  
+  Affected scope: supervised wake startup or checkpoint recovery, for an approved execution with a usable invocation and pending publication.  
+  Falsifier: seed that pending state and exercise both entry points in the disposable fixture. Supervised recovery with the coordinator lock already held must publish once, save `committed_receipt`, and avoid exit 4. An independent concurrent CLI resume must consume zero extra rows. Use a small already-locked resume path called by supervision and a lock-acquiring CLI entry point. Read or reload publication state under the lock and keep it through the state save. Update supervision's `without a new builder or attempt` output (L2841) when publication actually books an attempt.
+
+- **[Blocker] R1-B1 remains open. Recover the already-published attempt without booking again.**  
+  Observed input: the Round 1 falsifier requires archiving the same completed row without a fresh reservation and checking the exact remote ref. Artifact L88–93 instead archives on a local HEAD match, then expressly books again; G4-archive at L111–113 accepts any exit 0 without counting new rows or reading the remote bundle. The completed/manual admission at `utils/py/gate_receipt.py:137–144,176–178,353–366` checks the candidate and origin identity, with no remote ref lookup. The related last-slot input is a failed publication row followed by an active row whose push updated the origin before Jog died. Artifact L92–93 expects the next booking to be followed by an up-to-date push, but `utils/py/rtl.py:88–97` returns no reservation for those two live rows at cap 2, before a push can be tried. `utils/py/jog_run.py:815–827` leaves the published receipt unprojected on either refusal.  
+  Affected scope: the exact validated bundle is already at its intended origin lane ref, Jog has no committed-receipt marker, and the latest live manual publication row is active or completed with archival pending. A genuinely unpublished lane remains subject to the cap.  
+  Falsifier: seed one failed row and a second row at cap with the exact remote candidate, first as completed awaiting archival and then as active after the push. Resume must reconcile the same row and save the marker with no new booking. In the active case with origin still at the prior SHA, resume must refuse at cap, with both live rows and the remote unchanged. Require the existing bundle/tail proof and matching reservation identity plus exact origin ref evidence before reconciling an already-published receipt. Jog already has an exact-ref check pattern at `jog_run.py:2423–2427`. Keep G4-archive's assertions on the bare remote and existing attempt identity/count.
+
+- **[Should] Preserve the post-push outcome through the wake's error reporting.**  
+  Observed input: artifact L83–85 says `receipt pushed; attempt finish failed` is distinct, while the wake's handler at `utils/py/jog_run.py:721–727` labels every covered error `receipt-publication-failed` and prefixes it with `approved receipt not published:`. Adding only the helper's error text would produce both claims for the same successful push.  
+  Affected scope: a successfully updated lane ref followed by a failed accounting finish or archive.  
+  Falsifier: inject the finish failure after an admitted push. The remote ref must retain the expected bundle and the wake must report publication succeeded with accounting recovery pending. A rejected push still uses the existing unpublished message. Carry the distinction through the wake handler using the existing error/result path.
+
+- **[Should] R1-S5 remains pending clone verification.** The Producer recorded that the two-process probe was skipped. The Form 2 input, scope, falsifier and exact **Clone probe** are in the Round 1 two-resume finding above. Run that same script with the revised lock ownership in the disposable G4-retry fixture. If the helper is imported by name, patch the binding that the publication helper actually calls so the first process stops after booking. Preserve the exit 4 and one-additional-row assertions. A plan-only checkout without the proposed helper cannot produce a valid result for that probe.
+
+- **[Pass] R1-B2, R1-S3 and R1-S4 are addressed at plan level.** Artifact L97–119 now sends a real update through admission, singles out the receipt commit for simulated push failure, and checks K2's remote commit and coordinator archive. These discriminate the gate-only call at `utils/py/jog_run.py:1062–1066` and the wake call at L719–727. The Producer's reported transport probe (Round 1 disposition) supports clearing command-scoped config in the fixture before admission. The transport rewrite at `test/gh280-jog-marathon-adapter.sh:83–102`, the identity lookup at `utils/py/rtl.py:34–56`, and the installed stub's per-ref admission at `githooks/install.sh:153–185` support that seam. The focused hook and the separately planned installed-hook smoke test different amounts of the push path.
+
+- **[Pass] The normal-path accounting design covers requirements 1–4 at plan level, subject to the recovery findings above.** A fresh manual reservation covers a descendant and a retry on the same HEAD (`utils/py/rtl.py:100–114`, `utils/py/gate_receipt.py:137–144,179–187`). Marathon's attested receipt cannot cover the four Jog evidence paths (`utils/py/jog_run.py:1197–1224`, `utils/py/relay_attest.py:474–526`). The fixed key, default cap and failed-row retention use the same writer (`rtl.py:75–111`, `gate_receipt.py:341–366`). Keep the exact environment restore, CLI outputs/exits, source-text P2 check and checkpoint scope in the proposed plan (artifact L75–87, L117, L13–17). The negative control in artifact L105–106 checks gate preservation. The fixture overlay in L118–119 supplies the planned failing base replay for actual Jog publication.
+
+Handing off to Producer for round 2 to revise recovery and lock ownership and resolve the pending probe.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
