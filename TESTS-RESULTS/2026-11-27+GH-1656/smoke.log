@@ -1,0 +1,30 @@
+
+===== main path, dry run: rc=0 :: merge_cleanup.py $TMPDIR/gh534b.rcjfpe5q/primary --root $TMPDIR/gh534b.rcjfpe5q/no-roots --strategy merge --prs 1
+merge-cleanup: PR #1: pre-merge ledger gate green on d0f1aa0904 + origin/development
+merge-cleanup: PR #1: required checks: no required checks
+merge-cleanup: [DRY RUN] PR #1: GitHub reports CONFLICTING but the local merge is clean — --execute would land it through the local-merge rung (GH-1656)
+merge-cleanup: WARNING — PRE-FLIGHT: 15.6 GB free under $TMPDIR (below 20 GB); landing and check clones may fill the disk
+merge-cleanup: WARNING — PRE-FLIGHT: another merge_cleanup.py --execute is running (pid 38432, 40194); run one landing batch per machine
+merge-cleanup: WARNING — PRE-FLIGHT: no required status checks are reported for this repository's PRs; the script will not wait for CI
+
+===== main path, --execute: rc=0 :: merge_cleanup.py $TMPDIR/gh534b.rcjfpe5q/primary --root $TMPDIR/gh534b.rcjfpe5q/no-roots --strategy merge --prs 1 --execute
+merge-cleanup: PR #1: pre-merge ledger gate green on d0f1aa0904 + origin/development
+merge-cleanup: PR #1: required checks: no required checks
+merge-cleanup: PR #1: local-merge rung published 53ca022fe1 to origin/development; waiting for GitHub to confirm
+merge-cleanup: ✅ PR #1 is MERGED as 53ca022fe1 through the local-merge rung (GH-1656)
+merge-cleanup: Running post-merge reconciliation for PR #1 in $TMPDIR/gh534b.rcjfpe5q/primary...
+merge-cleanup: PR #1: already published at origin/development; no push needed
+merge-cleanup: ✅ PR #1 committed; primary is clean at origin/development
+
+PR #1 state=MERGED mergeCommit=53ca022fe1c52f001857da6d1171235291728f7a
+pr merge calls for #1: []
+parents: ['c87ad9b14c88d2d36a9c709776b35312b5518f34', 'd0f1aa09041b56dee53875f7c9ebfa96cf84876c'] expected: ['c87ad9b14c88d2d36a9c709776b35312b5518f34', 'd0f1aa09041b56dee53875f7c9ebfa96cf84876c']
+tree: 819b97cf7a0600826e0e94be0182306669d01756 gated: 819b97cf7a0600826e0e94be0182306669d01756
+origin/development: 53ca022fe1c52f001857da6d1171235291728f7a
+pre-push hook runs: ['pre-push ran XYZ_SKIP_PREPUSH=unset']
+
+===== adjacent path, dry run re-run on the landed state: rc=0 :: merge_cleanup.py $TMPDIR/gh534b.rcjfpe5q/primary --root $TMPDIR/gh534b.rcjfpe5q/no-roots --strategy merge
+
+origin before/after the re-run: 53ca022fe1c52f001857da6d1171235291728f7a 53ca022fe1c52f001857da6d1171235291728f7a
+
+SMOKE VERDICT: PASS
