@@ -1,6 +1,6 @@
 # GH-1656 plan QA — non-ledger GitHub conflict: local-merge rung or a precise stop
 STATUS: Open
-NEXT: claude-a (Producer)
+NEXT: codex (Reviewer)
 
 ## Context
 
