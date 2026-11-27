@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -230,6 +230,108 @@ Handing off to Producer (claude-a) to fix the Markdown line-boundary case and re
   [#1666](https://github.com/HiQS-Labs/XYZ-forge/issues/1666) with both inputs as its acceptance.
   Real-world exposure for GH-1646 requires a Unicode line separator directly after a fence marker inside an
   issue's Acceptance section.
-- All round-1 findings stay closed per your round-2 [Pass] lines. No code change this round.
+- All round-1 findings stay closed per your round-2 [Unverified — no citation] lines. No code change this round.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: The round 2 false drop still reproduces on the seeded candidate. The Producer's checkbox example supports preserving the shared splitting behavior. The probe below fixes fence recognition in memory while preserving that exact checkbox example at the real fidelity seam. GH-1666 can track broader line handling.
+
+- [Blocker] Keep the round 2 finding open. Recognize issue fence markers only at CR/LF-delimited line starts and validate them against the complete marker line. Keep the existing fragments for heading, checkbox and continuation parsing. Retain the failing-before and passing-after control in the existing C20 evidence.
+  - Observed input: On the seeded candidate, a line of three tildes followed by U+2028 inside a tilde fence still exposes the following plain example bullet. The real check returns `diverged`, `dropped=['example output']`, `added=[]`. U+0085 and U+2029 give the same result. `utils/py/swarm_preflight.py:615,632–645` strips the Unicode separator before marker recognition. The issue-only plain path at `:646–653,1011` adds the example to the issue criteria. The drop at `:1029` can trigger the ready refusal at `:1793–1797`. The plan requires a valid closer at `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:54–59`. A non-marker prefix followed on the same CR/LF-delimited line by U+2028 and a tilde run also produces a false marker in the probe.
+  - Affected scope: Issue-side fence recognition around characters that `splitlines()` consumes within CR/LF-delimited lines. The new fence state only controls whether the plain bullet branch runs.
+  - Falsifier: The exact three Unicode-suffix cases return `match|[]|[]`, and valid space, tab and CRLF closers still return `diverged` with `example output` dropped. The Producer's `Alpha\u2028beta` checkbox copy still yields `['Alpha', 'Second']` and matches. The in-memory probe achieves all three without changing the legacy line stream or either downstream reader.
+
+- [Pass] The earlier green findings stand. C20 exercises the actual fidelity seam and asserts the dropped direction (`test/gh400-acceptance-fidelity.sh:514–529,553–562,581–582`). The base parser loses the plain and mixed criteria (`TESTS-RESULTS/2026-11-27+GH-1646/red-gh400-unfixed.txt:30–33`, exit 1 in provenance line 1). Retained gh400 and gh557 results are 39/0 and 16/0 (provenance lines 2–3), with the #792 and nested smoke receipts in `SMOKE.md:12–18,35–47`. The 65/55/50/85 rating remains consistent with the stated readiness impact, workaround and low implementation effort (`PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:124–129`).
+- [Pass] The change still uses the existing fidelity path and adds no writer. Capture extraction and packet inlining remain checkbox-only (`utils/py/swarm_preflight.py:1011–1012,1780–1786`). The prior full-file sweep and follow-up found no further pre-existing acceptance-fidelity defects beyond the separate deviation splitter GH-1665 and the plan's documented in-fence heading/rule limitation.
+
+The command below exited 0. The seeded extractor and the temporary in-memory variant produced:
+
+```text
+'\u2028' ('diverged', ['example output'], []) => ('match', [], [])
+'\x85' ('diverged', ['example output'], []) => ('match', [], [])
+'\u2029' ('diverged', ['example output'], []) => ('match', [], [])
+checkbox control: ['Alpha', 'Second'] ['Alpha', 'Second'] match in both
+fragment opener ('match', [], []) => ('diverged', ['Second'], [])
+fragment closer ('diverged', ['Second'], []) => ('match', [], [])
+```
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+PYTHONPATH=utils/py python3 - <<'PY'
+import inspect
+import os
+import re
+from pathlib import Path
+import swarm_preflight as sp
+
+original = sp.extract_acceptance_criteria
+env = vars(sp).copy()
+src = inspect.getsource(original)
+src = src.replace(
+    '    start: int | None = None',
+    '    physical = {}\n'
+    '    if plain_bullets:\n'
+    '        offset = 0\n'
+    '        for index, fragment in enumerate(text.splitlines(keepends=True)):\n'
+    '            if offset == 0 or text[offset - 1] in "\\r\\n":\n'
+    '                physical[index] = offset\n'
+    '            offset += len(fragment)\n'
+    '    start: int | None = None',
+)
+src = src.replace('for line in lines[start:]:', 'for idx, line in enumerate(lines[start:], start):')
+src = src.replace(
+    'if plain_bullets:\n            f = ACC_FENCE_RE.match(line)',
+    'if idx in physical:\n'
+    '            marker_line = physical_line.match(text, physical[idx]).group(0)\n'
+    '            f = ACC_FENCE_RE.match(marker_line)',
+).replace('not line[f.end():]', 'not marker_line[f.end():]')
+env['physical_line'] = re.compile(r'[^\r\n]*')
+assert 'if idx in physical:' in src and 'not marker_line[f.end():]' in src
+exec(src, env)
+scoped = env['extract_acceptance_criteria']
+assert scoped is not original
+
+p = Path(os.environ['TMPDIR']) / 'gh1646-round3-capture.md'
+first = '## Acceptance\n- [ ] First\n'
+def run(parser, issue, capture):
+    sp.extract_acceptance_criteria = parser
+    p.write_text(capture, encoding='utf-8')
+    r = sp.check_acceptance_fidelity(str(p), 1646, '.', issue_details={'body': issue})
+    return r['status'], r['dropped'], r['added']
+
+for suffix in ('\u2028', '\u0085', '\u2029', '\u00a0', ' ', '\t', '\r', ' text'):
+    issue = first + '\n~~~text\n~~~' + suffix + '\n- example output\n~~~\n'
+    before, after = (run(parser, issue, first) for parser in (original, scoped))
+    valid = suffix in (' ', '\t', '\r')
+    assert after == (('diverged', ['example output'], []) if valid else ('match', [], []))
+    if suffix in ('\u2028', '\u0085', '\u2029'):
+        assert before == ('diverged', ['example output'], [])
+    assert original(issue) == scoped(issue) == ['First']
+    print(ascii(suffix), before, '=>', after)
+
+legacy = '## Acceptance\n- [ ] Alpha\u2028beta\n- [ ] Second\n'
+assert original(legacy) == scoped(legacy, plain_bullets=True) == ['Alpha', 'Second']
+assert run(original, legacy, legacy) == run(scoped, legacy, legacy) == ('match', [], [])
+print('checkbox control:', original(legacy), scoped(legacy, plain_bullets=True), 'match in both')
+
+for label, text in (
+    ('fragment opener', 'prefix\u2028~~~text\n- Second\n'),
+    ('fragment closer', '~~~text\nprefix\u2028~~~\n- Second\n~~~\n'),
+    ('backtick on same physical line', chr(96)*3 + 'code\u2028' + chr(96)*3 + '\n- Second\n'),
+):
+    before, after = (run(parser, first + '\n' + text, first) for parser in (original, scoped))
+    assert after == (('match', [], []) if label == 'fragment closer' else ('diverged', ['Second'], []))
+    print(label, before, '=>', after)
+PY
+```
+
+The nearest graph generation is 2026-11-26T04:31:47Z and predates the seeded candidate. The trace call was unavailable, so current locations and control flow were checked directly in the seed. [Unverified — needs clone run] The shell suites and CLI smokes are retained Producer evidence. This reviewer turn specifies no phase gate.
+
+Handing off to Producer (claude-a) to repair fence recognition and retain the before/after evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
