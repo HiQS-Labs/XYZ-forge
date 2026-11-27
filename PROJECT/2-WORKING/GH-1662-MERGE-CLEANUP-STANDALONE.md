@@ -34,7 +34,7 @@ goal: "On a repository with no XYZ-forge overlay, `merge_cleanup.py --standalone
 
 | What was just completed | What's next |
 |---|---|
-| Recon at base `52813e56f` on a 17-PR foreign-repo fixture (measured below, receipts under `TESTS-RESULTS/2026-11-27+GH-1662/`). Plan QA round 1 (FAIL, six Should findings) answered in revision 2. | Plan QA round 2, then implementation, verification, final QA, ready PR. Merge is the operator's. |
+| Plan approved by Codex on round 3 (round 1 FAIL six Should; round 2 FAIL one Should; both answered). Implemented; manual check A1-A15 recorded under `TESTS-RESULTS/2026-11-27+GH-1662/`; existing suites run in a disposable clone. | Final Codex QA, qualification gate and push from a disposable clone, ready PR. Merge is the operator's. |
 
 ## Contract (binding: the "Contract decision" comment on #1661)
 
@@ -71,7 +71,7 @@ Fixture: a bare origin and a primary clone of a small repo ("acme/widgets", inte
 - **D6. Scan roots:** under `--standalone` and no `--root`, only the primary's parent folder is scanned, always through the existing origin filter (the GH-722 sibling filter, even when that folder is also a default root), and only if `sibling_root()` allows it (its `NEVER_DELETE` guard is kept); the four fixed roots are not scanned. An explicit `--root` is the operator's choice and is not origin-filtered, exactly as in Forge mode, so a clean clone of another repo under a root the operator names (and under a fixed safe root) stays removable as today; nothing becomes removable that Forge mode would not remove. `--prefix` is a name substring, not an origin constraint (documented).
 - **D7. Prerequisites are reported before any clone, in both modes.** One block printed after the run-mode log and **before the early landing-plan checkpoint** (which can create a batch) and before Phase 0, so before the forecast clone and every landing clone. *Standalone:* Python >= 3.9, git launchable (an old git, below 2.38, is distinguished from one that cannot run), gh launchable and >= 2.18, an `origin` remote, `lsof` and the gate-hook status (informational: standalone makes no push). `--execute` refuses (rc 2) on an unlaunchable git or gh, a Python below 3.9, or no origin; an old git or gh version only withholds the forecast or warns, as today. *Default mode, only when a modes-that-clone run (`--prs` or `--execute`) finds one missing:* a stderr `PRE-FLIGHT` line per missing requirement (no `githooks/install.sh` in the primary: landing clones refuse unless `--standalone` is declared; no ledger/`releases_app.py`: the pre-merge ledger gate refuses; an integration branch other than `development`: post-merge `wave_reconcile` is development-only). Report-only, existing later guards untouched, silent for a repo that has the overlay.
 - **D8. Forecast under `--standalone`:** `ledger_repair_paths` is empty, so every conflicting path is "needs review", the B1 line reads as a hand-off count, and one blind-spot line says so (fixes M4). The forecast dict carries `standalone: true`.
-- **D9. Stacked bases are hard edges** in `toposort_prs.py` (fixes M3): a PR whose `baseRefName` is another open PR's `headRefName` waits for it and is "NOT attempted" if it did not land. This is a **new shared ordering edge**, accepted as the existing intent of `_protect_stacked_dependents` (parent first, retarget the child). Effects on a stacked pair, in every mode: the order changes only if the child preceded its parent; an overlapping pair gets a hard edge instead of a soft collision edge, so its "File collision" note disappears and `_hard_deps`/`_soft_deps` change (`toposort_prs.py:112-145`); a listed child whose parent is unlisted is deferred in Phase 4 (exit 3, named) instead of refused at `:3069-3079`. Queues with no PR whose base is another open PR's head are unchanged **by construction** (the edge set is empty). No warning line is added.
+- **D9. Stacked bases are hard edges** in `toposort_prs.py` (fixes M3): a PR whose `baseRefName` is another open PR's `headRefName` waits for it and is "NOT attempted" if it did not land. This is a **new shared ordering edge**, accepted as the existing intent of `_protect_stacked_dependents` (parent first, retarget the child). Effects on a stacked pair, in every mode: the order changes only if the child preceded its parent; an overlapping pair gets a hard edge instead of a soft collision edge, so its "File collision" note disappears and `_hard_deps`/`_soft_deps` change (`toposort_prs.py:112-145`); a listed child whose parent is unlisted is deferred in Phase 4 (exit 3, named) instead of refused at `:3069-3079`; the log order of `not in --prs` lines for an unlisted stacked pair follows the new order. Queues with no PR whose base is another open PR's head are unchanged **by construction** (the edge set is empty). No warning line is added.
 - **D10. A stacked child previews in a dry run.** In `_land_prs_loop`, when `info.baseRefName != branch` and this is a dry run and that base is the head of a PR already previewed earlier in this loop (so it would have landed and retargeted the child), the loop logs `[DRY RUN] PR #N targets #M's branch; it would be retargeted to <branch> after #M lands` and continues the preview; **execute keeps the live-base stop** (by then the parent has landed and `_protect_stacked_dependents` has retargeted the child, so a mismatch means something is wrong), and a child whose parent was skipped never reaches the check (D9 blocks it). No `gh pr edit` or merge is issued in the preview. Shared by both modes (a dry run of a correctly ordered stack now previews instead of stopping).
 
 ## Smallest affected surface and the writers extended
@@ -100,7 +100,7 @@ Exact subsets (fixture, integration branch `main`, fresh HOME, stand-in `gh`; ea
 
 | ID | Check | An unchanged or wrong candidate fails because | Expected |
 |---|---|---|---|
-| A1 | **Forge regression.** Base vs candidate, **no flag**, fixture without installer, dry run, subset `--prs` MIXED minus #106,#107 (no stack) | the guard must not be loosened and Forge output must not move | rc 2 at both; stdout identical after path normalisation; stderr differs only by the D7 default-mode `PRE-FLIGHT` lines |
+| A1 | **Forge regression.** Base vs candidate, **no flag**, fixture without installer built `--no-stack` (#107 targets `main`, so no PR is stacked), dry run, `--prs` MIXED. (First attempt, with the stack present and #106/#107 merely unlisted: stdout differed in the order of the `not in --prs; not sequenced` log lines of the unlisted stacked pair, which D9 reorders; recorded, hence the `--no-stack` fixture.) | the guard must not be loosened and Forge output must not move | rc 2 at both; stdout identical after path normalisation; stderr differs only by the D7 default-mode `PRE-FLIGHT` lines |
 | A2 | Candidate `--standalone`, CLEAN dry run (python 3.9.6, then 3.13) | T3, the stacked stop (D10) or another overlay step still blocks | rc 0; per-PR dry-run lines for all four incl. the stacked child; `[DRY RUN] Would merge` x4; no `pr edit`/`pr merge` in the stand-in log |
 | A2b | Candidate `--standalone`, MIXED dry run | drafts, holds, failing, cyclic, conflicting PRs must be reported, not dropped | rc 3; named: the hold row for #114, `NOT attempted` for #111, #112 (the cycle) and #113, the `HANDOFF` of #115 with its paths, the `N PR(s) did not land` summary. #110's failing checks appear as the table's `FAIL` and `[DRY RUN] ... required checks failing` line, and #116 (depends on #110) is **previewed**, not blocked: a dry run only reports checks (`merge_cleanup.py:2334-2335`, shared behaviour unchanged). The failure-dependent block of #116 is asserted in a separate **execute** observation (CLEAN plus #110 and #116, `--standalone --execute`): #110 `required checks failing ... not merged`, #116 `NOT attempted — depends on #110` |
 | A3 | Mutant: the `standalone and` condition removed from the wiring skip; **no flag**, fixture without installer | the declaration would be inferred | the GH-1576 diagnostic `landing clone gate wiring failed: githooks/install.sh is missing` is **absent** from the mutant's output (present at base and candidate); a later ledger-gate failure may keep the rc at 2, so the diagnostic is the assertion |
@@ -116,6 +116,23 @@ Exact subsets (fixture, integration branch `main`, fresh HOME, stand-in `gh`; ea
 | A13 | Existing suites (step 4) | regressions | green |
 | A14 | Python: A2 and `py_compile` under 3.9.6 and 3.13 | a 3.10+ construct | identical results |
 | A15 | **Runbook honesty.** Execute the runbook's own commands (`gh pr list`, the `merge-tree` alone/pair/fold) on the fixture, and an order derived only from the runbook text by an independent snippet | the prose and the script disagree | same order as the script's table and same conflict pairs as the forecast; differences recorded as runbook defects |
+
+## Verification results (revision `b227a3151`)
+
+Manual check, `TESTS-RESULTS/2026-11-27+GH-1662/` (`provenance.jsonl`, `runs/`, `run_controls.py`, `runbook_walk.py`, `fixture/`). All rows pass; red controls are real (each mutant fails on the named assertion, the same row passes unmutated).
+
+| Rows | Result |
+|---|---|
+| BASE-M1/M2/M5 | base: sequencing works with no Forge file; T3 refusal; T4 `.tick/` left untracked; stacked child before its base |
+| A1, A4 | Forge regression: same refusal / same ledger-gate RED at base and candidate; stdout identical on a no-stack queue; stderr differs only by the two default-mode `PRE-FLIGHT` lines |
+| A2, A14, A2b, A2b-prs-only, A2b-exec | standalone dry run rc 0 (3.9.6 and 3.13 identical); mixed queue rc 3 with every skipped, held, handed-off, cyclic and blocked PR named; `--prs-only` lists all 17, no clone; execute blocks the dependent of a failing-checks PR |
+| A3, A2-mut, A6, A7 (mutants) | "never inferred" mutant loses the GH-1576 diagnostic; no-preview mutant stops the stacked child; no-`.tick`-ignore mutant reads NOT READY on run 2; no-sorter-edge mutant stops `--execute` at the child |
+| A5 | standalone `--execute` lands 101, 109, 106, 107 in order; primary equals origin and clean; origin has only fixture-author and stand-in commits (no tool push); sweep verdict recorded |
+| A8-A12 | prerequisites before the first clone; scan roots; overlay guard; forecast labels; pushes stay gated |
+| A13 | existing suites green: phase B 39, phase C 111, gh645 8, gh674 6, gh436 227 (disposable full clone, test venv first on PATH, identity unchanged) |
+| A15 | the runbook's commands and rules reproduce the script's order, 20 conflict pairs, alone-conflict and fold stop |
+
+**Not verified:** real GitHub (checks, protection, merge queue, rate limits, real squash effect on a stacked child); Python below 3.9 at runtime; A15 shares an author with the script and the runbook (finds drift, not independent review). One recorded correction: A1's first attempt (stack present, #106/#107 unlisted) differed in the order of two `not in --prs` log lines because D9 reorders the unlisted stacked pair; A1 now uses a `--no-stack` fixture, and that order change is the accepted D9 semantics.
 
 ## Smoke (GH-1088)
 
@@ -137,7 +154,7 @@ Outcome sought: the sequence works anywhere, landing works when declared, an age
 
 ## Lessons learned
 
-NO_ENTRY at plan time.
+NO_ENTRY. Edit verdicts: the `--standalone` flag, the stacked hard edge and the dry-run preview each changed several things at once with only fixture runs behind them (`confounded`); no lesson rests on a `helped` row.
 
 ## Recon ledger
 

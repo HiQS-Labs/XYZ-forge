@@ -54,7 +54,7 @@ def build(name, installer=False, stack=True):
 
 def norm(text, fx):
     text = text.replace(fx, "<FX>").replace(WORK, "<WORK>").replace(os.path.expanduser("~"), "<HOME>")
-    text = re.sub(r"/(?:private/)?var/folders/[A-Za-z0-9_/]*?/T/", "<TMP>/", text)
+    text = re.sub(r"/(?:private/)?var/folders/[A-Za-z0-9_/]*?/T/?", "<TMP>/", text)
     text = re.sub(r"merge-cleanup-[a-z0-9_]{8}", "merge-cleanup-XXXX", text)
     text = re.sub(r"(pr-\d+-[0-9a-f]+-)[a-z0-9_]{8}", r"\1XXXX", text)
     return text
