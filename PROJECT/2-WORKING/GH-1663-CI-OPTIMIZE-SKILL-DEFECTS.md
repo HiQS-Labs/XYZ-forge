@@ -33,7 +33,7 @@ Tracks the `ci-optimize` slice of umbrella [#1661](https://github.com/HiQS-Labs/
 
 | What was just completed | What's next |
 |---|---|
-| Plan written; defects verified against `origin/development` at `52813e56f` (Recon below). Plan-QA round 1 returned FAIL on two findings (issue provenance by subject; discriminating acceptance contract); both adopted in this revision. | Codex plan QA round 2, then the edit, the focused checks, final Codex QA, ready PR. |
+| Plan QA Approved (round 2, codex); edits 1-6 applied; checker, both existing suites and the docs route green; final QA Approved (round 1, codex). Receipts in `TESTS-RESULTS/2026-11-27+GH-1663/`. | PR ready; awaiting merge. Issue #1663 stays open until the PR lands; umbrella #1661 is not closed here. |
 
 ## Recon (base `52813e56f`, documentation-only: instruction/consumer path)
 
@@ -91,11 +91,11 @@ I looked for other wrong counts, dead anchors and cross-section contradictions (
 
 ## Acceptance
 
-- [ ] Both counts agree: 14 principle headings, text says 14; scorecard rows and bands unchanged and described as P1-P12.
-- [ ] Every relative link has a flat-install fallback sentence; relative links unchanged.
-- [ ] Each cited issue number attributed to the repo whose issue matches its subject (XYZ-forge: 35, 365, 558; predecessor: 42, 376, 528, 544, 549, 564); each repo named once.
-- [ ] Manual check recorded with `provenance.jsonl`; existing suites and docs route green; no new test or registry entry; one skill file changed.
-- [ ] Observed rejection: the checker exits 1 on the unchanged base (assertions 1-8 false) and 0 on the candidate, and each single-edit revert exits 1 with its own assertion false (the red controls above), so an unfixed or partially fixed candidate cannot be reported as delivered. The two existing suites do not check these edits and are regression coverage only.
+- [x] Both counts agree: 14 principle headings, text says 14; scorecard rows and bands unchanged and described as P1-P12.
+- [x] Every relative link has a flat-install fallback sentence; relative links unchanged.
+- [x] Each cited issue number attributed to the repo whose issue matches its subject (XYZ-forge: 35, 365, 558; predecessor: 42, 376, 528, 544, 549, 564); each repo named once.
+- [x] Manual check recorded with `provenance.jsonl`; existing suites and docs route green; no new test or registry entry; one skill file changed.
+- [x] Observed rejection: the checker exits 1 on the unchanged base (assertions 1-8 false) and 0 on the candidate, and each single-edit revert exits 1 with its own assertion false (the red controls above), so an unfixed or partially fixed candidate cannot be reported as delivered. The two existing suites do not check these edits and are regression coverage only.
 
 ## Risks
 
