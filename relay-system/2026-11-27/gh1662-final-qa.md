@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -108,5 +108,59 @@ Output: graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`) with `file:lin
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+An explicit per-run standalone flag permits foreign-repository landing without Forge ledger/reconcile steps, retaining push gates. Shared stacked-base ordering and dry-run preview fix parent/child sequencing; a runbook supplies the manual alternative.
+
+**How the existing system works, per this document**
+The plan says git/gh already sequence and forecast foreign queues, but landing requires Forge installer and ledger machinery. It describes hard declared dependencies, soft file collisions, isolated landing clones and guarded pushes; stacked bases currently lack ordering edges.
+
+**What it's not**
+This does not infer mode from missing files, introduce a policy key, implement foreign ledger repair or alter overlays. Real GitHub behavior is explicitly outside the recorded verification; inference: fixture evidence alone cannot establish GitHub squash-stack behavior.
+
+**Source-backed review**
+
+swept file: no
+
+The artifact and runbook were read in full, as were the sorter and changed branches. The full 7,275-line sweep of all six implementation/doc files is **not complete**; no whole-file clearance is claimed. No additional pre-existing defect was established in the portions examined. Full sweep remains required before approval.
+
+- [Should] **F1 — branch-name equality invents stacked dependencies for fork PRs.** `skills/2-daily/merge-cleanup/scripts/toposort_prs.py:115-121` indexes every head by its short branch name, without repository identity. Two independent fork contributions from their respective `main` branches into upstream `main` therefore give #1 a hard dependency on #2. Selecting only #1 removes it altogether through `merge_cleanup.py:783-803`; holding #2 also blocks #1 through `merge_cleanup.py:2186-2197`. This is a Forge-visible difference outside genuine stacks. The runbook repeats the same false equivalence at `STANDALONE.md:92`.
+  **Observed input:** Form 1, narrow pure-Python probe, exit 0, with decisive output `fork-main order/deps: [(2, []), (1, [2])]` and `listed={1}, effective sequence: []`:
+  ```bash
+  PYTHONDONTWRITEBYTECODE=1 python3 - <<'PROBE'
+  import sys
+  sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+  import toposort_prs as ts
+  import merge_cleanup as mc
+  prs = [dict(number=n, title='Fork contribution', body='',
+              headRefName='main', baseRefName='main', files=[],
+              createdAt='2026-11-27') for n in (1, 2)]
+  ordered, _, _ = ts.toposort_prs(prs)
+  print('fork-main order/deps:', [(p['number'], p['_hard_deps']) for p in ordered])
+  print('listed={1}, effective sequence:', [p['number'] for p in mc.effective_sequence(prs, {1})])
+  PROBE
+  ```
+  This uses the exact fields discovery currently supplies (`toposort_prs.py:33-35`); it cannot distinguish two fork heads from an upstream branch. No GitHub service, fixture execution or git command was used.
+  **Affected scope:** automatic stacked edges when head/base names coincide across different repositories, especially the common fork-default-branch case; both modes, selection closure, forecast and dependent eligibility.
+  **Falsifier:** two independent fork `main -> upstream/main` PRs must have no automatic hard edge, and selecting only #1 must retain `[1]`; an actual upstream `feat/parent` head with a child targeting that same upstream branch must still order parent first and block the child when the parent is unlisted. Current output fails the first predicate.
+  **Concrete fix:** qualify stacked-parent matching with repository identity (obtain the necessary discovery metadata; do not guess from the short branch name), preserve real same-repository stacks, and update the prose rule. Check the related short-name matching at `merge_cleanup.py:645-647` and dry-run preview at `:2226-2233` for the same identity assumption. Retain a manual before/after probe with both fork and genuine-stack cases; no new suite.
+
+**Answers to the requested questions**
+
+1. **Acceptance/evidence.** Every A1-A15 ID has a passing receipt in `TESTS-RESULTS/2026-11-27+GH-1662/provenance.jsonl:4-26` (A13 split across five rows). These establish the recorded fixture cases, not all queues. Three retained-output spot checks match: `runs/A2-cand-standalone-clean-dry-py39.out:105-121` has four Would-merge lines plus the stacked preview, rc file `0`; `runs/A5-exec.out:89-120` has four MERGED witnesses and four clean-primary confirmations, `:150` says QA pending, rc file `4`; `runs/A10-overlay-guard.out:4` refuses the ledger marker, rc file `2`. The red-control definitions are non-vacuous: A3 checks the diagnostic rather than rc (`run_controls.py:217-220`), A2-mut checks the stacked stop (`:167-169`), A6 checks second-run NOT READY versus candidate readiness (`:340-346`), A7 retains the changed order/dependency fields (`runs/A7-sorter-probe.json`). They miss F1's cross-repository input.
+2. **Declaration/pushes.** The wiring exception requires the flag and an absent installer (`merge_cleanup.py:1134-1140`); overlay refusal precedes the run (`:2887-2893`). Both push owners retain the gate check (`:1204-1208`, `:1805-1811`); A12's retained JSON reports refusal. The flag reaches roots, prerequisites/ignore, forecast repair classification, clone preparation, handoff, ledger gate and post-merge reconcile. No ungated push was established in these paths. This is source inspection plus retained evidence, not a fresh clone gate run.
+3. **Forge behavior.** Conditional empty kwargs preserve the four-positional clone stubs (`merge_cleanup.py:2161-2162`, `:2258`; `test/gh436-merge-cleanup.py:477`, `test/gh534_phase_a_tests.py:581`). Forecast adds its key only when standalone (`ledger_merge.py:980-981`). F1 defeats the claim that only genuine stacks change behavior; otherwise the inspected diff preserves the default call arguments, including reconcile at `merge_cleanup.py:2578-2581`.
+4. **Correctness/3.9.** A read-only `ast.parse(..., feature_version=(3,9))` over all skill scripts exited 0: `Python 3.9 grammar: all script files parsed`. This is syntax evidence, not runtime evidence. Retained dual-runtime results are at provenance `:5-6`. Handoff sets `failed` and `keep_workdir` (`merge_cleanup.py:2273-2282`), feeding exit 3 (`:2644-2668`). `ensure_tick_ignored` checks tracked records before ignoring, resolves the Git exclude path and rechecks (`:1562-1588`); retained linked-worktree/already-ignored/tracked cases are in `runs/A6-side-cases.json`. No concurrency guarantee beyond the plan's accepted duplicate-line behavior was established.
+5. **Runbook.** It covers ordering, skips, polling, forecast, hubs, pin checks, remote merge witnessing and clean fast-forward (`STANDALONE.md:74-154`), and prohibits force-push, branch deletion, ungated pushing and manual teardown (`:67`, `:141-154`). Correct the stacked identity rule with F1. Minor existing prose discrepancy to reconcile while editing: `:130` says skip a wrong base while `:146` says stop; the script stops (`merge_cleanup.py:2233-2234`). No external-service hazard is being asserted from that wording.
+6. **SKILL/parity.** The new mode section names the guarded skips (`SKILL.md:49-55`), the new row and option are at `:648`, `:656`. The parity guard checks its required capability set, rather than rejecting extra rows (`test/gh534_phase_c_tests.py:584-605`); the receipt for phase C reports 111 green (`provenance.jsonl:23`). This turn did not execute that suite.
+7. **Scope/rating/duplicates.** The supplied diff lists exactly SKILL.md, STANDALONE.md and scripts ledger_merge.py, merge_cleanup.py, scan_clones.py, toposort_prs.py (diff headers at lines 1, 56, 216, 275, 654, 677). It contains no new test, overlay or ci-optimize path. Existing owners are extended rather than a second landing writer added. `40/40/60/35` remains a reasonable bounded assessment, but readiness is failing on F1; the evidence does not justify increasing confidence in fork queues.
+8. **Honesty/limits.** The artifact's **Not verified** paragraph correctly discloses stand-in gh, real GitHub, below-3.9 runtime and shared authorship of A15. Add the uncovered fork-branch identity case until fixed. This review adds no claim of fresh suite execution, full qualification, exhaustive pre-existing-defect clearance or a later configured gate.  [Unverified — no citation]
+
+VERDICT: FAIL
+Basis: F1 is an observed selection/ordering defect in the shared D9 path, beyond the accepted genuine-stack behavior. Recorded acceptance cases pass but do not cover it; the full source sweep also remains outstanding, so approval would be premature.
+
+Handing off to Producer (claude) — address F1, retain both fork and genuine-stack manual receipts, reconcile the noted stop/skip wording, and return for the remaining whole-file QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
