@@ -68,7 +68,7 @@ Use this when Python or the scripts are unavailable. It does by hand what the sc
 ### 1. Inventory
 
 ```bash
-gh pr list --state open --limit 1000 --json number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url > prs.json
+gh pr list --state open --limit 1000 --json number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url,isCrossRepository > prs.json
 ```
 
 A listing that fails is an error, not an empty queue. `files` can be cut off for a very large PR (the listing returns a bounded number of files): for any PR showing exactly 100, read `gh api repos/{owner}/{repo}/pulls/<N>/files --paginate --jq '.[].filename'`. Record, per PR: number, head SHA, base branch, draft, labels, checks, mergeable, created time, files, body.
@@ -79,7 +79,7 @@ A listing that fails is an error, not an empty queue. `files` can be cut off for
 |---|---|---|
 | draft | `isDraft` | skipped; hard dependents wait |
 | held | a label whose lowercase name contains `hold`, `do not merge`, `do-not-merge`, `blocked` or `wip`; or a title word `hold`, `wip`, `dnm`, `blocked`, `do not merge`, `no merge` | skipped; hard dependents wait |
-| wrong base | `baseRefName` is neither `<B>` nor another open PR's head branch | stop: it does not land on the branch you verified |
+| wrong base | `baseRefName` is neither `<B>` nor the head branch of another open, same-repository PR | stop: it does not land on the branch you verified |
 | conflicting | `mergeable` is `CONFLICTING` | not landed; hand off (step 8) |
 | checks | `gh pr checks <N> --required --json name,bucket`: `fail`/`cancel` is failing, `pending` is pending, `pass`/`skipping` is ok, and `no required checks reported` is none | failing: not landed, dependents wait. pending: wait (bounded), then defer. unreadable: defer |
 | mergeable unknown | `UNKNOWN` | re-read every 15 s up to 6 times; still unknown: stop, never guess |
@@ -89,7 +89,7 @@ A listing that fails is an error, not an empty queue. `files` can be cut off for
 A **hard edge** `A -> B` means B waits for A and is never attempted if A did not land:
 
 - the PR title or body says `depends on`, `blocked by`, `after`, `requires` or `prerequisite` followed by `#N` or a pull-request URL (case-insensitive), or `part of wave after #N`, and #N is an **open** PR in this inventory (a merged, closed or external number is ignored);
-- **stacked base:** B's `baseRefName` equals A's `headRefName` for another open PR A. B cannot land on `<B>` until A has, because it targets A's branch.
+- **stacked base:** B's `baseRefName` equals A's `headRefName` for another open PR A **whose head branch is in this repository** (`isCrossRepository` is false: two forks' `main` are not one branch, and not this repository's `main`). B cannot land on `<B>` until A has, because it targets A's branch.
 
 ### 4. File-overlap matrix (edges that decide sequence only)
 
@@ -127,7 +127,7 @@ Without git 2.38, `merge-tree --write-tree` does not exist: use `git merge --no-
 
 For each PR in order, **re-read it live first** (`gh pr view <N> --json state,isDraft,mergeable,headRefOid,baseRefName,labels,mergeCommit,title`):
 
-1. Not `OPEN`, now a draft, now held, or `baseRefName != <B>`: skip it, record why, and treat it as not landed for its hard dependents. (A stacked child's base becomes `<B>` once the operator or you retarget it with `gh pr edit <N> --base <B>`; retarget a child **before** merging its base PR, never after, and only for PRs in the authorized queue.)
+1. Not `OPEN`, now a draft or now held: skip it, record why, and treat it as not landed for its hard dependents. If `baseRefName != <B>`: **stop and report** (a stacked child must already have been retargeted: do that with `gh pr edit <N> --base <B>` **before** merging its base PR, never after, and only for PRs in the authorized queue; a child whose base PR did not land is blocked, step 3).
 2. Head moved from the SHA you recorded: do not merge it; re-do the forecast for the queue and re-confirm.
 3. Re-simulate against the base **now** (`git fetch origin <B>`, then step 6's "alone" command at the new tip). Conflict: hand off (step 8) and continue with the PRs that do not depend on it.
 4. Checks per step 2. Then `gh pr merge <N> --squash --match-head-commit <recorded sha>` (use `--merge` or `--rebase` if the project's policy file says so; never choose by guess).

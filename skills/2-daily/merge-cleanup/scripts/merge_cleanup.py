@@ -2514,7 +2514,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
 
             if dry_run:
                 log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy}`")
-                if pr.get("headRefName"):
+                if pr.get("headRefName") and not pr.get("isCrossRepository"):
                     landing_heads.add(pr["headRefName"])
                 continue
             live = refresh_pr_with_retry(p_num, primary_repo)

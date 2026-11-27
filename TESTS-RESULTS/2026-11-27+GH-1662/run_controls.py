@@ -45,9 +45,9 @@ def want(ac):
     return not ONLY or ac in ONLY
 
 
-def build(name, installer=False, stack=True):
+def build(name, installer=False, stack=True, forks=False):
     d = os.path.join(WORK, name, "fx")  # same last path components everywhere, so the pin file's repo slug is identical
-    cmd = [sys.executable, os.path.join(HERE, "fixture", "build_fixture.py"), d] + (["--with-installer"] if installer else []) + ([] if stack else ["--no-stack"])
+    cmd = [sys.executable, os.path.join(HERE, "fixture", "build_fixture.py"), d] + (["--with-installer"] if installer else []) + ([] if stack else ["--no-stack"]) + (["--with-forks"] if forks else [])
     subprocess.run(cmd, check=True, capture_output=True)
     return d
 
@@ -450,6 +450,43 @@ print(json.dumps({"gate_unwired_reason": reason, "commit_and_push_returned": ok}
         "githooks/install.sh is missing" in got.get("gate_unwired_reason", "") and got.get("commit_and_push_returned") is False
         and "refusing to push post-merge writes" in p.stderr and before == after,
         "gate: %s; push returned %s; origin tip unchanged=%s" % (got.get("gate_unwired_reason", "")[:110], got.get("commit_and_push_returned"), before == after), REV_CAND)
+
+# A16 ---------------------------------------------------------------------------------------------------------
+if want("A16"):
+    probe = r'''
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import toposort_prs as ts
+import merge_cleanup as mc
+def pr(n, head, base, cross=False):
+    return dict(number=n, title="t%d" % n, body="", headRefName=head, baseRefName=base, files=[], createdAt="2026-11-27", isCrossRepository=cross)
+forks = [pr(1, "main", "main", True), pr(2, "main", "main", True)]
+stack = [pr(1, "feat/parent", "main"), pr(2, "feat/child", "feat/parent")]
+out = {}
+for name, prs in (("fork_main_pair", forks), ("genuine_stack", stack)):
+    o, _, _ = ts.toposort_prs([dict(p) for p in prs])
+    out[name] = {"order_deps": [(p["number"], p["_hard_deps"]) for p in o], "listed_1": [p["number"] for p in mc.effective_sequence([dict(p) for p in prs], {1})],
+                 "listed_2": [p["number"] for p in mc.effective_sequence([dict(p) for p in prs], {2})]}
+print(json.dumps(out))
+'''
+    md = patched("mut-fork", "toposort_prs.py", 'if pr.get("headRefName") and not pr.get("isCrossRepository")}', 'if pr.get("headRefName")}')
+    pc = json.loads(subprocess.run([PY39, "-c", probe, CAND], capture_output=True, text=True).stdout)
+    pm = json.loads(subprocess.run([PY39, "-c", probe, md], capture_output=True, text=True).stdout)
+    with open(os.path.join(RUNS, "A16-fork-probe.json"), "w") as fh:
+        json.dump({"candidate": pc, "mutant_no_cross_repository_guard": pm}, fh, indent=1)
+    f = build("a16", forks=True)
+    r, o, e, _ = run(f, "A16-cand-fork-dry", CAND, ["--standalone", "--prs", "118"], root=False)
+    fm = build("a16m", forks=True)
+    rm, om, em, _ = run(fm, "A16-mutant-fork-dry", md, ["--standalone", "--prs", "118"], root=False)
+    ok = (pc["fork_main_pair"]["order_deps"] == [[1, []], [2, []]] and pc["fork_main_pair"]["listed_1"] == [1]
+          and pc["genuine_stack"]["order_deps"] == [[1, []], [2, [1]]] and pc["genuine_stack"]["listed_2"] == []
+          and pm["fork_main_pair"]["listed_1"] == [] and r == 0 and "Would merge PR #118" in o and "Would merge PR #118" not in om and "PR #118: depends on deferred prerequisite (#119)" in (om + em))
+    rec("A16", "Fork heads are not stacked parents (plan QA final R1 F1): two fork PRs from `main` have no edge and a selected one is kept; a genuine same-repository stack still orders and defers; the mutant without the guard reproduces the defect",
+        "toposort_prs / effective_sequence probe (candidate vs mutant); " + cmd_s + " --standalone --prs 118   (fixture --with-forks)", r, ok,
+        "candidate fork pair %s listed {1}->%s; genuine stack %s listed {2}->%s; mutant listed {1}->%s; end-to-end candidate rc %d (Would merge #118: %s), mutant rc %d (#118 previewed: %s; deferred behind fork #119: %s)" % (
+            pc["fork_main_pair"]["order_deps"], pc["fork_main_pair"]["listed_1"], pc["genuine_stack"]["order_deps"], pc["genuine_stack"]["listed_2"],
+            pm["fork_main_pair"]["listed_1"], r, "Would merge PR #118" in o, rm, "Would merge PR #118" in om, "depends on deferred prerequisite (#119)" in (om + em)), REV_CAND,
+        "probes: runs/A16-fork-probe.json. Known, pre-existing and unchanged: _protect_stacked_dependents still matches by short branch name (merge_cleanup.py), harmless unless a fork head shares a name with another PR's non-integration base")
 
 bad = [a for a, ok in results if not ok]
 print("\nrows: %d, failed: %s" % (len(results), bad or "none"))

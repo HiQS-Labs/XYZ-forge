@@ -43,7 +43,7 @@ def tip(branch):
 
 
 def view(pr, state):
-    head = tip(pr["headRefName"])
+    head = git("rev-parse", "refs/pull/%d/head" % pr["number"]).stdout.strip() if pr.get("cross") else tip(pr["headRefName"])
     base = tip(pr["baseRefName"])
     mergeable = "UNKNOWN"
     files = []
@@ -59,7 +59,7 @@ def view(pr, state):
         roll = [{"name": "ci", "conclusion": "SUCCESS", "status": "COMPLETED"}]
     return {
         "number": pr["number"], "title": pr["title"], "body": pr.get("body", ""), "headRefName": pr["headRefName"],
-        "headRefOid": head, "baseRefName": pr["baseRefName"], "isDraft": pr.get("draft", False),
+        "headRefOid": head, "baseRefName": pr["baseRefName"], "isCrossRepository": bool(pr.get("cross")), "isDraft": pr.get("draft", False),
         "labels": [{"name": n} for n in pr.get("labels", [])], "mergeable": mergeable,
         "statusCheckRollup": roll, "files": files, "createdAt": pr["createdAt"], "state": pr["state"],
         "mergeCommit": ({"oid": pr["mergeOid"]} if pr.get("mergeOid") else None),

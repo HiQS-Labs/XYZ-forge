@@ -32,7 +32,7 @@ def fetch_open_prs(repo_path: Optional[str] = None) -> List[Dict[str, Any]]:
     cmd = [
         os.environ.get("MERGE_CLEANUP_GH_BIN") or "gh", "pr", "list",
         "--state", "open", "--limit", "1000",  # GH-1226: the default 30 would hide a listed --prs PR
-        "--json", "number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
+        "--json", "number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url,isCrossRepository"
     ]
     cwd = repo_path or "."
     try:
@@ -110,7 +110,10 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
     # 1b. Stacked bases are HARD (GH-1662): a PR whose base branch is another open PR's head cannot land
     #     on the integration branch before that PR does (the landing loop stops on a base that is not the
     #     integration branch, and retargets a stacked child only when its base PR lands first).
-    heads = {pr.get("headRefName"): pr["number"] for pr in prs if pr.get("headRefName")}
+    # A fork's head branch is not a branch of this repository (two forks' `main` are not one branch, and neither
+    # is the upstream `main`), so a cross-repository PR is never a stacked parent.
+    heads = {pr.get("headRefName"): pr["number"] for pr in prs
+             if pr.get("headRefName") and not pr.get("isCrossRepository")}
     for pr in prs:
         parent = heads.get(pr.get("baseRefName") or "")
         if parent is not None and parent != pr["number"]:
