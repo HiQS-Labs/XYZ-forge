@@ -67,9 +67,6 @@ Rules: `[Blocker]`/`[Should]` requesting a behaviour change need `Observed input
 run test suites here. Write your verdict below; set `STATUS: Approved` only if the plan is ready to
 implement, otherwise hand back with findings.
 
-<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
-▶ TAKE YOUR TURN (codex)
-<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Log
 
