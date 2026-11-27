@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -299,5 +299,45 @@ Plan step 2/3 revised. Dispositions:
 - **[Should] R1-S5 probe pending — Accepted, scheduled.** The two-resume probe needs the implementation; it runs in the disposable clone after build (patching the binding the helper calls) with expected B exit 4 and one additional row, recorded under `TESTS-RESULTS/` and shown at final QA.
 
 Handing off to Reviewer for round 3.
+
+### Round 3 · Reviewer · codex
+
+**What this proposes**
+
+Jog would use the existing manual attempt writer for receipt pushes from wake, resume, and gate-only retry. It would use the exact remote lane ref to recover an already-published bundle without booking again. CLI resume would take the coordinator lock, and supervised recovery would use the body that assumes the lock is already held.
+
+**How the existing system works, per this document**
+
+Marathon attests its own reservation for reviewed source and transcript-only changes. The later Jog evidence commit changes paths outside that attestation, and today's push has no independent attempt context. The accounting writer keeps failed and active rows on disk and archives a completed budget.
+
+**What it's not**
+
+The excluded work includes changes to hook policy, the default cap, and the reservation model. Checkpoint booking is deferred to its own caller. I infer that the precise ordering of the remote lookup and first commit, and how callers retry finalization after recording publication, still need to be pinned down.
+
+swept file: yes
+
+**Source-backed**
+
+**VERDICT: FAIL**
+
+**Basis:** The revised plan fixes the lock ownership and describes a no-rebooking recovery path for an unrecorded receipt. Two cases are still underspecified: the first publication can target a missing remote ref, and the post-push warning can leave a completed row without a reachable Jog recovery path. The two-process probe remains open. I swept the seeded artifact and reviewed the requested source seams. Discovery used the maintained XYZ-forge graph (generation 2026-11-26T04:31:47Z). Graph tracing was unavailable under the session approval policy, so I read the worktree call sites and the flagged fixture range at L729–730 directly. No reviewer phase gate was specified. Build, fixture, and smoke outcomes are [Unverified — needs clone run].
+
+- **[Blocker] Define the first-publish path when the lane ref does not yet exist.**  
+  Observed input: artifact L78–82 books before the new receipt commit, while L90–98 places the remote proof after verifying or committing the bundle, before deciding whether to book. Its cited pattern invokes `ls-remote --exit-code` through `_git`, which raises on every nonzero exit (`utils/py/jog_run.py:1148–1153,2423–2428`). A missing ref returns 2 and never reaches the “remote differs” branch through that wrapper. K2 gives a concrete first-publish case: K1 is red (`test/gh280-jog-marathon-adapter.sh:883–895`) and K2 uses the already-satisfied path (L931–937), for which Marathon explicitly leaves `lane_branch_cut` empty and closeout does nothing (`utils/py/marathon_drive.py:2722–2742,2884–2894`). The base Jog push at `jog_run.py:1237–1238` can create the ref. Also, today's tail proof can accept an approved or ledger-only HEAD without a committed bundle (`jog_run.py:1226–1230,1300–1316,1334–1335`), so equality with the Marathon head alone would be insufficient.  
+  Affected scope: an approved publication on a branch never pushed by Marathon, including a fresh K2 fixture, and first publications where the current remote tip is still the approved code with no Jog bundle.  
+  Falsifier: show the bare remote lacks the exact K2 lane ref before retry; the candidate must book once, create that ref with the receipt bundle, and archive the coordinator row. In G4, equality at a pre-bundle HEAD must still result in one admitted publication. Limit the equality shortcut to a proven committed bundle, then keep the normal booking path for absent or different refs. Specify how the lookup distinguishes absence from a transport failure. The separate checkpoint caller already uses a successful empty lookup to represent absence (`skills/1-hourly/kickstart/scripts/run_record.py:602–609`).
+
+- **[Blocker] Make accounting recovery reachable after Jog records a successful push.**  
+  Observed input: artifact L83–85 makes the helper return success after a finish error and tells callers to record the publication as succeeded. For an archive failure after the completed write (`utils/py/rtl.py:165–190,263–267`), wake saves `committed_receipt` (`utils/py/jog_run.py:719–731`). Resume invokes the publication helper only when that field is absent (L812–827), and the new locked body is otherwise today's body (artifact L99–104). The completed row remains live, so a later publication for the same issue reaches the refusal at `rtl.py:89–95`, contradicting the fresh-budget outcome in artifact L146. G4-archive at L119–124 seeds a crash before projection and does not exercise the now-recorded success case.  
+  Affected scope: the exact approved bundle was pushed and recorded, while its latest manual row is still active or completed awaiting archival after a finish error.  
+  Falsifier: inject a one-time archive error after the completed write on an admitted push. The first invocation reports the remote publication succeeded and persists its receipt. After removing the fault, a fresh resume must finish or archive the same row without another reservation or push; assert the same id, the archived row count, and the unchanged bare ref. Make the existing exact-ref recovery reachable for a saved receipt with accounting pending, or provide an explicit supported recovery using the existing writer and matching row. Preserve the successful delivery outcome.
+
+- **[Should] R1-S5 / R2-S4 remains open pending probe verification.** The exact **Clone probe** and its Observed input, Affected scope, and Falsifier are in Round 1's “two resumes contend” finding. Artifact L125–128 now schedules it, but Round 2's Producer disposition supplies no runtime output. Run it against the implementation in a disposable clone with the reservation binding patched as specified, then record both exits and one additional row. Exercise the supervised entry with its lock already held as planned.
+
+- **[Pass] R2-B1 is addressed at plan level.** The wrapper and already-locked body in artifact L99–104 match the CLI dispatch (`utils/py/releases_app.py:5230–5246`) and the supervised path that holds the coordinator and target locks (`utils/py/jog_run.py:2794–2797,2836–2846,2977–3009`). State load and save stay inside the lock. Update the wake-caller name in the Recon table (artifact L49) to `run_marathon_phase` (`jog_run.py:603,719–727`).
+
+- **[Pass] The shared writer and gate controls fit the normal path.** Wake, resume, and gate retry call the helper at `utils/py/jog_run.py:719–723,815–821,1062–1066`. A fresh manual row binds the source checkout, origin, branch and starting SHA, and permits a descendant or the same SHA (`utils/py/rtl.py:100–114`, `utils/py/gate_receipt.py:137–144,179–187`). Marathon binds and archives its own reservation (`utils/py/relay_drive.py:1011–1022`, `utils/py/marathon_drive.py:2838–2843`), whose attestation excludes the four Jog evidence paths (`jog_run.py:1197–1224`, `utils/py/relay_attest.py:474–526`). The plan preserves the stable key, existing cap, exact context restoration, and CLI output and exit behavior (artifact L75–89, L146; `gate_receipt.py:341–369`, `rtl.py:88–111,268–272`). The focused G4/K2 hook exercises the same per-ref admission as the installed hook and uses a real new ref update for the unchanged negative control (artifact L105–134; `githooks/install.sh:153–185`, `githooks/pre-push:90–99`). Keep the P2 executor-state tripwire and the separate installed-hook smoke (artifact L132–137; `test/gh280-jog-marathon-adapter.sh:1366–1378`). Checkpoint stays with its existing caller (artifact L13–17; `run_record.py:599–611`). Beyond the recovery and Recon findings above, I found no pre-existing defect in the swept plan that needs a separate change.
+
+Handing off to Producer for round 3 to resolve the two recovery cases and the pending clone probe.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
