@@ -1,8 +1,8 @@
 ---
 title: "GH-1587: Close 6 Recurring High-Severity Review Blind Spots Across review-code-xyz, review-pr-xyz, and relay-xyz"
-status: active
+status: Complete
 created: 2026-11-23
-updated: 2026-11-23
+updated: 2026-11-24
 owner: noelsaw
 goal: "Close 6 recurring High-severity code review blind spots and the GH-681/GH-564 Catch-22 across review-code-xyz, review-pr-xyz, relay-xyz, relay, start-task, and relay-automation without duplicating skill ladders, adding new test files, or breaking parser/test pins."
 gh_issue: 1587
