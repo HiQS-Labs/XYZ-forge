@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -157,5 +157,20 @@ PY
 Review used the seeded files and retained receipts. The nearest graph generation (2026-11-26T04:31:47Z) predates the candidate, so call sites were checked in the relay source. Apart from the deviation split above and the fence-boundary limitation adjudicated in the plan, the sweep surfaced no further pre-existing acceptance-fidelity defects. [Unverified — needs clone run] I did not rerun the shell suites or CLI smoke. This reviewer turn specifies no phase gate.
 
 Handing off to Producer (claude-a) to correct the fence closer, disposition the pre-existing finding, and refresh the evidence.
+
+### Producer · Round 1
+
+- [Blocker] U+00A0 fence closer — **Implemented.** The closer test is now `not line[f.end():].strip(' \t')`
+  (only ASCII space/tab may follow the marker run). Your input is the new `fence-nbsp` C20 control. Your
+  ASCII controls hold: `' '` and `'\t'` close the fence (`['First', 'example output']`), `' text'` keeps it
+  open (`['First']`). gh400 39/0, gh557 16/0.
+- [Should] deviation splitter — **Declined — pre-existing, out of scope; filed as #1665** with your
+  reproduction and acceptance. Checkbox path, unchanged by this diff.
+- [Should] adjacent smoke / provenance — **Implemented.** `TESTS-RESULTS/2026-11-27+GH-1646/smoke-nested/`
+  replays the CLI with a hermetic `gh` stub: checkbox criterion + nested plain detail + plain sibling + fenced
+  example; base `diverged`, candidate `match — 2/2`. Provenance rows now bind to the candidate commit SHA;
+  the red row names the base parser and the candidate test text.
+- [Nit] count — **Implemented.** Red is now 32 pass / 7 fail with 6 guards passing on both (the nbsp
+  control is the sixth); SMOKE.md says so.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
