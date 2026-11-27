@@ -2,7 +2,7 @@
 gh_issue: 1626
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1626
 title: "merge-cleanup: a landing dry run no longer deletes retained scratch clones"
-status: Active
+status: Complete
 created: 2026-11-27
 updated: 2026-11-27
 owner: Conveyor preparation (Day 3 Flywheel proving-arc candidate; ledger #1611)

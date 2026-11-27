@@ -1,0 +1,18 @@
+{
+  "issue": 1626,
+  "queue_gid": "jog-01M8EW47YC7MV4S4QNA9F3H8J2",
+  "execution_id": "gh1626-exec1",
+  "pr_number": 1651,
+  "merged_sha": "3d513d02b4ff6be2e36501388b17028b61d814a7",
+  "approved_head_sha": "fd811951f0b5dae07077d36fe9dbe90c36b7c440",
+  "landed_head_sha": "e14a44bd6e630c7d235c4f6d509a5992c6c6ce16",
+  "reviewed_head_sha": "c91560364023c5c462894cbc077c5a3bbcfaf5cc",
+  "reviewed_candidate_sha": "fd811951f0b5dae07077d36fe9dbe90c36b7c440",
+  "tested_head_sha": "fd811951f0b5dae07077d36fe9dbe90c36b7c440",
+  "completion_policy": "merged-pr",
+  "hosted_reconcile": null,
+  "local_reconcile": {
+    "roadmap_gid": "rmi-01M8ESNVCKF4EDQ3SJM31D89TP",
+    "raw_text": "- **GH-1626 \u00b7 merge-cleanup: a landing dry run no longer deletes retained scratch clones** \u2705 **SHIPPED 2026-11-27 (PR #1651)** \u2014 [GH-1626-DRY-RUN-SCRATCH-PRUNE.md](PROJECT/3-COMPLETED/GH-1626-DRY-RUN-SCRATCH-PRUNE.md) \u00b7 [#1626](https://github.com/HiQS-Labs/XYZ-forge/issues/1626)"
+  }
+}
