@@ -1,0 +1,4 @@
+overlap: RuntimeError: sandbox /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-mfsfvyoq/base/clone is not disjoint from the repo /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-mfsfvyoq/base/clone; mutation calls=[]; source intact=True; base entries before=['clone'] after=['clone']
+disjoint: clone ok at /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-mfsfvyoq/sandbox/clone
+descendant: refused
+FIXED: overlap refuses before any mutation; disjoint and descendant behavior kept

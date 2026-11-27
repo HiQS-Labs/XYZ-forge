@@ -1,0 +1,20 @@
+== test: gh-gen4-phase5-campaign ==
+  PASS: utils/py/gen4_campaign.py exists and is executable
+  PASS: gen4_campaign.py --mode suite passes (bounded soak, contamination control, vacuous-sandbox refusal)
+  PASS: default target list covers 9 real harness surfaces
+  PASS: bounded soak exits 0 (zero contamination + valid telemetry)
+  PASS: report: 60 mutations, 0 contamination events, 0 host violations, telemetry line-valid
+  PASS: markdown summary written with the containment verdict
+  PASS: campaign telemetry validates as TelemetryEvent JSONL
+  PASS: one telemetry row per mutation
+  PASS: host clone identity (HEAD, core.bare, remotes, symbolic HEAD, .git/config) unchanged
+  PASS: host working tree unchanged by the soak
+  PASS: sandbox clone tree at baseline after the soak (only .fuzz_corpus/ untracked)
+  PASS: per-target corpora persisted in the sandbox (.fuzz_corpus/<target>/)
+  PASS: poisoning target: host bar still met (exit 0) — sandbox drift is a recorded finding, not a host violation
+  PASS: contamination events recorded; verdict: zero_sandbox_contamination=false, zero_host_violations=true
+  PASS: sandbox restored to baseline after contamination
+  PASS: host clone never received the poison
+  PASS: sandbox root inside the repo is refused
+== gh-gen4-phase5-campaign: 17 passed, 0 failed ==
+bash test/gh-gen4-phase5-campaign.sh  5.24s user 8.84s system 72% cpu 19.357 total

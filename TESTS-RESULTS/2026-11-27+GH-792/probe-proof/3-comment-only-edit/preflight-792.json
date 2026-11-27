@@ -1,0 +1,126 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-27T15:25:10Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-792-gen4-sandbox-disjoint-first"
+  },
+  "provenance": {
+    "source_docs": [
+      "~/flywheel-day3-proof/PROJECT/1-INBOX/GH-792-GEN4-SANDBOX-DISJOINT-FIRST.md"
+    ],
+    "issues": [],
+    "target_root": "~/flywheel-day3-proof",
+    "branch": "docs/XYZ-forge-gh1626-gh792-conveyor-prep-2026-11-27",
+    "commit": "c4dc3449c562753601d175f5cd31e3833f8f25c3",
+    "suggested_branch": "marathon/gh-792-gen4-sandbox-disjoint-first-2026-11-27",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash test/gh-gen4-phase5-campaign.sh",
+    "round_cap": 2,
+    "fix_probes": [
+      {
+        "type": "command",
+        "cmd": "python3 TESTS-RESULTS/2026-11-27+GH-792/readiness_probe.py",
+        "expect_nonzero": true
+      }
+    ],
+    "artifacts": [
+      "utils/py/gen4_campaign.py",
+      "TESTS-RESULTS/2026-11-27+GH-792/"
+    ],
+    "artifacts_new": [],
+    "remediation": {
+      "source": "issue#792",
+      "criteria": "make_sandbox resolves repo and the candidate clone path and runs the existing equality/descendant check before makedirs, rmtree or git clone; an overlapping call refuses with zero mutations; a disjoint candidate still clones; the gen4_campaign.py:348 self-test still refuses. Existing suite only. No new suite."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/docs/XYZ-forge-gh1626-gh792-conveyor-prep-2026-11-27",
+    "ahead": 1,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "c4dc3449c562753601d175f5cd31e3833f8f25c3",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "command",
+        "path": null,
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "unknown",
+      "closed_at": null,
+      "detail": "could not fetch issue state (gh missing, unauthenticated, or offline)"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "unknown",
+      "cause": "fetch-failed",
+      "detail": "could not fetch issue #792 (gh missing, unauthenticated, or offline) \u2014 acceptance fidelity NOT verified",
+      "issue": "792",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "gaps": [],
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #792 (https://github.com/HiQS-Labs/XYZ-forge/issues/792)",
+      "issue": "792",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/792",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 3,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "utils/py/gen4_campaign.py",
+      "TESTS-RESULTS/2026-11-27+GH-792/",
+      "test/gh-gen4-phase5-campaign.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "utils/py/gen4_campaign.py",
+      "TESTS-RESULTS/2026-11-27+GH-792/",
+      "test/gh-gen4-phase5-campaign.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh-gen4-phase5-campaign.sh"
+    ],
+    "inferred_test_helpers": [],
+    "fs_touching_tests": [
+      "test/gh-gen4-phase5-campaign.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

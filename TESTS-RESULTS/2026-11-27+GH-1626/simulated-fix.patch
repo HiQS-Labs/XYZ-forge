@@ -1,0 +1,20 @@
+commit c3c9d53a830568385a6a4af5b5f555e66d607f6e
+Author: conveyor proof <probe@example.invalid>
+Date:   Fri Nov 27 07:24:57 2026 -0800
+
+    SIMULATED FIX (proof clone only)
+
+diff --git a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+index 6fc2aff4..a81b9e28 100644
+--- a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
++++ b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+@@ -2542,7 +2542,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+                 if gone:
+                     log(f"Released landed PRs' clones: {', '.join(gone)}")
+             log(f"Landing clones retained for inspection under {workdir}")
+-        prune_retained_scratch(workdir)
++        if not dry_run:
++            prune_retained_scratch(workdir)
+ 
+ 
+ def prepare_primary_landing(primary_repo: Path, args) -> Dict[str, Any]:
