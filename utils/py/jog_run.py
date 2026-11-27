@@ -783,7 +783,7 @@ def jog_resume(root, gh_num, args=None):
     a new fire is always the explicit retry-build decision. Holds the supervisor lock like the
     retry verbs (GH-1653); supervised recovery, which already holds it, calls the locked body."""
     _require_jog_primary(root)
-    supervisor_lock = JogSupervisorLock(root)
+    supervisor_lock = JogSupervisorLock(root, conservative=True)
     supervisor_lock.acquire()
     try:
         return _jog_resume_locked(root, gh_num, args)
@@ -833,14 +833,20 @@ def _jog_resume_locked(root, gh_num, args=None):
                 base_ref="development", accounting_root=root)
             publication["published_head"] = _git(target, "rev-parse", "HEAD").decode().strip()
         elif (receipt.get("outcome") == "approved" and publication.get("committed_receipt")
-              and os.path.isfile(invocation_path)):
-            # GH-1653: a saved publication whose attempt finish was interrupted.
-            invocation = load_marathon_invocation(invocation_path)
-            target = _execution_root(root, invocation["target_root"])
-            head = _git(target, "rev-parse", "HEAD").decode().strip()
-            jog_settle_publication_attempt(
-                target, root, gh_num, receipt.get("head_branch") or "",
-                head_is_bundle=bool(publication.get("published_head")) and head == publication["published_head"])
+              and _jog_live_publication_row(jog_publication_record(root, gh_num),
+                                            f"GH-{gh_num}-jog-publish")):
+            # GH-1653: a saved publication whose attempt finish was interrupted. Only a pending
+            # row reaches the execution clone or origin; a failure here never blocks projection.
+            try:
+                invocation = load_marathon_invocation(invocation_path)
+                target = _execution_root(root, invocation["target_root"])
+                head = _git(target, "rev-parse", "HEAD").decode().strip()
+                jog_settle_publication_attempt(
+                    target, root, gh_num, receipt.get("head_branch") or "",
+                    head_is_bundle=bool(publication.get("published_head")) and head == publication["published_head"],
+                    need_published=False)
+            except (ContractError, OSError) as exc:
+                print(f"jog: GH-{gh_num} receipt published; attempt accounting pending: {exc}", file=sys.stderr)
         action, reason = jog_project_marathon_outcome(
             root, gh_num, receipt,
             execution_id=latest.get("execution_id"), result_path=latest.get("result_path"))
@@ -1276,8 +1282,12 @@ def _jog_remote_ref(target, branch):
     if proc.returncode:
         raise ContractError(f"cannot read live lane ref {branch}: "
                             f"{proc.stderr.decode(errors='replace').strip()}")
-    fields = proc.stdout.decode().split()
-    return fields[0] if fields else None
+    wanted = f"refs/heads/{branch}"
+    for line in proc.stdout.decode().splitlines():
+        fields = line.split()
+        if len(fields) == 2 and fields[1] == wanted:  # exact refname; ls-remote also glob-matches suffixes
+            return fields[0]
+    return None
 
 
 def _jog_live_publication_row(record, key):
@@ -1293,25 +1303,44 @@ def _jog_live_publication_row(record, key):
     return None
 
 
-def jog_settle_publication_attempt(target, accounting_root, issue, branch, head_is_bundle):
+def jog_publication_record(accounting_root, issue):
+    """Canonical live record of GH-<n>-jog-publish under the coordinator accounting root."""
+    return os.path.join(os.path.realpath(accounting_root), ".tick", "attempts", f"GH-{issue}-jog-publish")
+
+
+def jog_settle_publication_attempt(target, accounting_root, issue, branch, head_is_bundle,
+                                   need_published=True):
     """GH-1653: close a publication reservation an interrupted finish left live.
 
-    A completed row whose archive failed is archived as-is. An active row is finished as
-    completed only when HEAD is the committed bundle and the exact live lane ref equals it
-    (the receipt is already published). Returns True when the receipt is already published.
-    Never books or pushes; without proof an active row stays a consumed attempt."""
+    A completed row whose archive failed is archived as-is, read and renamed under the
+    canonical attempt lock. An active row is finished as completed only when HEAD is the
+    committed bundle and the exact live lane ref equals it (the receipt is already
+    published). Returns True when the receipt is already published (the remote is only
+    queried when need_published or an active row needs the proof). Never books or pushes;
+    without proof an active row stays a consumed attempt."""
     from gate_receipt import manual_attempt_finish
-    from rtl import ATTEMPT_CONTEXT_ENV, archive_lane_attempts
+    from rtl import ATTEMPT_CONTEXT_ENV, archive_lane_attempts, lane_attempt_lock
     key = f"GH-{issue}-jog-publish"
-    record = os.path.join(os.path.realpath(accounting_root), ".tick", "attempts", key)
-    head = _git(target, "rev-parse", "HEAD").decode().strip()
-    published = bool(head_is_bundle) and _jog_remote_ref(target, branch) == head
+    record = jog_publication_record(accounting_root, issue)
+    published = None
+
+    def is_published():
+        nonlocal published
+        if published is None:
+            head = _git(target, "rev-parse", "HEAD").decode().strip()
+            published = bool(head_is_bundle) and _jog_remote_ref(target, branch) == head
+        return published
+
     saved = os.environ.pop(ATTEMPT_CONTEXT_ENV, None)
     try:
         row = _jog_live_publication_row(record, key)
         if row and row.get("state") == "completed":
-            archive_lane_attempts(record)
-        elif row and row.get("state") == "active" and published:
+            with lane_attempt_lock(record):
+                current = _jog_live_publication_row(record, key)
+                if current and current.get("id") == row["id"] and current.get("state") == "completed":
+                    archive_lane_attempts(record, _locked=True)
+        elif row and row.get("state") == "active" and is_published():
+            # lane_attempt_finish re-takes the lock and refuses a superseded row.
             manual_attempt_finish(target, {"kind": "manual", "record": record, "id": row["id"]},
                                   "completed")
     except (ValueError, OSError, subprocess.CalledProcessError) as exc:
@@ -1320,7 +1349,7 @@ def jog_settle_publication_attempt(target, accounting_root, issue, branch, head_
         os.environ.pop(ATTEMPT_CONTEXT_ENV, None)
         if saved is not None:
             os.environ[ATTEMPT_CONTEXT_ENV] = saved
-    return published
+    return is_published() if need_published else bool(published)
 
 
 def _jog_publish_under_attempt(target, accounting_root, issue, branch, bundle_committed, commit):

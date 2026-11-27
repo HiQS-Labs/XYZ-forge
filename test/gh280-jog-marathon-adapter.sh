@@ -711,25 +711,29 @@ use_development
 prepare_execution_target "$FR" "$FT"
 install_admission_hook "$FT"
 touch "$GH1653_FAIL"
-R1_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh1653-retry" \
+RLANE=marathon/gh1653-retry
+remote_oid() { git --git-dir="$REMOTE" rev-parse -q --verify "refs/heads/$RLANE" 2>/dev/null || echo absent; }
+R1_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="$RLANE" \
   PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
   python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" \
     --executor marathon --builder codex --reviewer agy < /dev/null 2>&1)"
+BASE_OID="$(remote_oid)"   # Marathon's own lane push (or absent); the receipt commit never landed
+BUNDLE_OID="$(git -C "$FT" rev-parse HEAD)"
 has "$(queue_status "$FR")" "approved receipt not published" && has "$(publish_rows live)" "1 failed" \
-  && [ "$(remote_subject marathon/gh1653-retry)" != "jog: publish gh901-exec1 approved execution receipts" ] \
-  && pass "G4-retry failed receipt push parks and keeps 1 consumed attempt; remote unchanged" \
-  || fail "G4-retry run: row=$(queue_status "$FR") rows=[$(publish_rows live)] remote=$(remote_subject marathon/gh1653-retry) / $R1_OUT"
+  && [ "$BASE_OID" != "$BUNDLE_OID" ] \
+  && pass "G4-retry failed receipt push parks and keeps 1 consumed attempt; remote not at the bundle" \
+  || fail "G4-retry run: row=$(queue_status "$FR") rows=[$(publish_rows live)] remote=$BASE_OID bundle=$BUNDLE_OID / $R1_OUT"
 R2_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
-[ "$rc" -ne 0 ] && has "$(publish_rows live)" "2 failed,failed" \
-  && pass "G4-retry restart (resume) books a second attempt; both failed rows survive" \
-  || fail "G4-retry resume1 rc=$rc rows=[$(publish_rows live)]: $R2_OUT"
+[ "$rc" -ne 0 ] && has "$(publish_rows live)" "2 failed,failed" && [ "$(remote_oid)" = "$BASE_OID" ] \
+  && pass "G4-retry restart (resume) books a second attempt; both failed rows survive; remote ref unchanged" \
+  || fail "G4-retry resume1 rc=$rc rows=[$(publish_rows live)] remote=$(remote_oid): $R2_OUT"
 rm -f "$GH1653_FAIL"
 R2_ROWS="$(publish_rows live)"
 R3_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
 [ "$rc" -ne 0 ] && has "$R3_OUT" "budget exhausted after 2" && [ "$(publish_rows live)" = "$R2_ROWS" ] \
-  && [ "$(remote_subject marathon/gh1653-retry)" != "jog: publish gh901-exec1 approved execution receipts" ] \
-  && pass "G4-retry exhausted budget refuses publication; rows and remote unchanged" \
-  || fail "G4-retry resume2 rc=$rc rows=[$(publish_rows live)]: $R3_OUT"
+  && [ "$(remote_oid)" = "$BASE_OID" ] \
+  && pass "G4-retry exhausted budget refuses publication; rows and remote ref unchanged" \
+  || fail "G4-retry resume2 rc=$rc rows=[$(publish_rows live)] remote=$(remote_oid): $R3_OUT"
 
 # GH-1653 G4-archive: interrupted finishes. (b) failed + ACTIVE at the cap, remote at the prior SHA.
 LIVE="$FR/.tick/attempts/GH-901-jog-publish"
@@ -751,31 +755,74 @@ set_last_row active
 B_ROWS="$(publish_rows live)"
 B_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
 [ "$rc" -ne 0 ] && has "$B_OUT" "budget exhausted after 2" && [ "$(publish_rows live)" = "$B_ROWS" ] \
-  && pass "G4-archive(b) failed+active at the cap with remote at prior SHA refuses; rows unchanged" \
-  || fail "G4-archive(b) rc=$rc rows=[$(publish_rows live)]: $B_OUT"
-# (d) the push landed before the finish (bundle now on the remote, delivered out of band): resume
-# finishes and archives the SAME active row — no booking, no push.
-git --git-dir="$REMOTE" fetch -q "$FT" "HEAD:refs/heads/marathon/gh1653-retry" 2>/dev/null \
-  || git --git-dir="$REMOTE" fetch -q -f "$FT" "+HEAD:refs/heads/marathon/gh1653-retry"
-D_IDS="$(publish_rows live | awk '{print $3}')"
-D_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
-[ "$rc" -eq 0 ] && [ "$(publish_rows live)" = "0 - -" ] && [ "$(publish_rows archive)" = "2 failed,completed $D_IDS" ] \
-  && has "$D_OUT" "already published" && has "$(queue_status "$FR")" "awaiting-landing" \
-  && pass "G4-archive(d) active row after a landed push is completed+archived as the same row (no booking)" \
-  || fail "G4-archive(d) rc=$rc live=[$(publish_rows live)] archive=[$(publish_rows archive)] ids=$D_IDS: $D_OUT"
-jassert "$GSTATE" 'd["executions"][-1].get("committed_receipt")' "G4-archive(d) resume saved the published receipt"
-# (c)/(d') receipt already saved: the archive failed (completed row back on the live path), then the
-# finish failed before the completed write (active row) — resume settles the same row, never books.
-REMOTE_BEFORE="$(git --git-dir="$REMOTE" rev-parse refs/heads/marathon/gh1653-retry)"
-for case_state in completed active; do
+  && [ "$(remote_oid)" = "$BASE_OID" ] \
+  && pass "G4-archive(b) failed+active at the cap with remote at prior SHA refuses; rows and ref unchanged" \
+  || fail "G4-archive(b) rc=$rc rows=[$(publish_rows live)] remote=$(remote_oid): $B_OUT"
+# A CLI resume with room in the cap publishes the still-unpublished bundle (the superseded active
+# row stays counted in the archived budget).
+P_OUT="$(LANE_MAX_ATTEMPTS=3 python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && [ "$(remote_oid)" = "$BUNDLE_OID" ] && has "$(publish_rows archive)" "3 failed,active,completed" \
+  && jassert "$GSTATE" 'd["executions"][-1].get("committed_receipt")' "G4-retry resume saved the published receipt" \
+  && pass "G4-retry resume with room in the cap publishes the bundle; budget archived with all 3 rows" \
+  || fail "G4-retry publish rc=$rc remote=$(remote_oid) archive=[$(publish_rows archive)]: $P_OUT"
+P_IDS="$(publish_rows archive | awk '{print $3}')"
+
+# Supervised recovery (lock already held by the supervisor) publishes a pending approved receipt:
+# restore the pre-publication state (failed, active live; ref at its prior OID; receipt unsaved;
+# row left running by a dead wake) and let a supervised wake recover it.
+mv "$(ls -d "$FR"/.tick/attempt-history/GH-901-jog-publish-*/attempts | tail -1)" "$LIVE"
+python3 - "$LIVE" <<'PYDROP'
+import sys
+p = sys.argv[1]; lines = [l for l in open(p) if l.strip()]
+open(p, "w").write("".join(lines[:-1]))
+PYDROP
+if [ "$BASE_OID" = absent ]; then git --git-dir="$REMOTE" update-ref -d "refs/heads/$RLANE"
+else git --git-dir="$REMOTE" update-ref "refs/heads/$RLANE" "$BASE_OID"; fi
+python3 - "$GSTATE" <<'PYUNSAVE'
+import json, sys
+p = sys.argv[1]; d = json.load(open(p))
+for k in ("committed_receipt", "published_head"):
+    d["executions"][-1].pop(k, None)
+json.dump(d, open(p, "w"))
+PYUNSAVE
+sqlite3 "$FR/releases.db" "UPDATE jog_queue SET status = 'running', lease_pid = 999999 WHERE gh_number = 901;"
+S_OUT="$( cd "$FR" && LANE_MAX_ATTEMPTS=3 PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
+  python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" --executor marathon \
+    --builder codex --reviewer agy --max-tasks 1 --supervise-until "$(( $(date +%s) + 900 ))" < /dev/null 2>&1)"; rc=$?
+has "$S_OUT" "recovered GH-901 without a new builder turn" && [ "$(remote_oid)" = "$BUNDLE_OID" ] \
+  && has "$(publish_rows archive)" "3 failed,active,completed" && ! has "$S_OUT" "another driver is active" \
+  && pass "G4-retry supervised recovery publishes under the held lock (no self-refusal), 3rd row completed" \
+  || fail "G4-retry supervised rc=$rc remote=$(remote_oid) archive=[$(publish_rows archive)]: $S_OUT"
+S_IDS="$(publish_rows archive | awk '{print $3}')"
+
+# Interrupted finishes after publication: put the archived budget back with its last row as
+# completed (archive failed) or active (finish failed before the completed write), with the receipt
+# saved or unsaved. Resume settles that SAME row: no new row, no push, ref unchanged.
+for case_name in saved-completed saved-active unsaved-active; do
   mv "$(ls -d "$FR"/.tick/attempt-history/GH-901-jog-publish-*/attempts | tail -1)" "$LIVE"
-  set_last_row "$case_state"
+  set_last_row "${case_name#*-}"
+  if [ "${case_name%%-*}" = unsaved ]; then
+    python3 - "$GSTATE" <<'PYUNSAVE2'
+import json, sys
+p = sys.argv[1]; d = json.load(open(p))
+for k in ("committed_receipt", "published_head"):
+    d["executions"][-1].pop(k, None)
+json.dump(d, open(p, "w"))
+PYUNSAVE2
+  fi
   C_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
-  [ "$rc" -eq 0 ] && [ "$(publish_rows live)" = "0 - -" ] && [ "$(publish_rows archive)" = "2 failed,completed $D_IDS" ] \
-    && [ "$(git --git-dir="$REMOTE" rev-parse refs/heads/marathon/gh1653-retry)" = "$REMOTE_BEFORE" ] \
-    && pass "G4-archive saved receipt + live $case_state row: resume archives the same row, no booking or push" \
-    || fail "G4-archive saved/$case_state rc=$rc live=[$(publish_rows live)] archive=[$(publish_rows archive)]: $C_OUT"
+  [ "$rc" -eq 0 ] && [ "$(publish_rows live)" = "0 - -" ] && [ "$(publish_rows archive)" = "3 failed,active,completed $S_IDS" ] \
+    && [ "$(remote_oid)" = "$BUNDLE_OID" ] \
+    && pass "G4-archive $case_name row: resume archives the same row, no booking or push" \
+    || fail "G4-archive $case_name rc=$rc live=[$(publish_rows live)] archive=[$(publish_rows archive)]: $C_OUT"
 done
+# A saved receipt with nothing pending re-projects without the execution clone (retired clone).
+mv "$FT" "$FT.retired"
+X_OUT="$(python3 "$FR/utils/py/releases_app.py" --root "$FR" jog resume 901 2>&1)"; rc=$?
+mv "$FT.retired" "$FT"
+[ "$rc" -eq 0 ] && has "$X_OUT" "re-projected" \
+  && pass "G4-archive saved receipt + no pending row re-projects with the execution clone retired" \
+  || fail "G4-archive retired-clone resume rc=$rc: $X_OUT"
 
 # G5: controlled failure — reviewer refuses every round → escalated receipt → row failed, queue stops
 cleanup_root_fixture
