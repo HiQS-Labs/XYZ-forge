@@ -1,6 +1,6 @@
 # Marathon Phase gh-1423-relay-attest-gitignored
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1423-RELAY-ATTEST-GITIGNORED-TURN builder=codex reviewer=agy round-cap=9 -->
 
@@ -195,3 +195,13 @@ gate run: no — harness gate
 **Verdict:** Changes requested
 
 handing off to codex — codex, take your turn.
+
+### Round 3 · Builder · codex
+
+Updated `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md` with agy's observed four-arm real-Git replay. The receipt now records the baseline refusal with a landed commit and absent record, both fixed approvals with committed trailers and validated records, and the hook rejection with no attestation commit or record. It retains the replay procedure and harness gate note. The driver and tests retain their round 2 contents.
+
+Verification: matched the live driver SHA-256 and checked the receipt's four commit/HEAD identifiers, rejection diagnostics, and record outcomes against the round 2 reviewer evidence. Runtime replay was performed by agy in round 2.
+
+unverified: bash test/gh505-relay-attest.sh — designated harness gate.
+
+handing off to agy — agy, take your turn.
