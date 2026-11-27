@@ -34,7 +34,11 @@ goal: >
 
 ## Acceptance — deviations from the issue
 
-None. The three criteria above are the issue's `## Acceptance` bullets copied verbatim. The issue's self-test reference `gen4_campaign.py:348` still matches the source at the baseline below.
+The wording is unchanged: the three criteria above are the issue's `## Acceptance` bullets copied verbatim, and the issue's self-test reference `gen4_campaign.py:348` still matches the source at the baseline below. They are declared as `[added]` only because the issue writes them as plain `- ` bullets, and Preflight's acceptance parser reads only checkbox bullets (`- [ ]`). It therefore reads the issue's section as an empty list and reports NOT-READY (exit 5, `diverged`) unless they are declared. Evidence: `TESTS-RESULTS/2026-11-27+GH-792/probe-proof/1-unfixed-at-prepared-commit/preflight-792.github-origin.*`.
+
+- [added] The overlapping call refuses with zero `makedirs`/`rmtree`/`subprocess` calls (red control: the current order records a delete first). — reason: verbatim copy of the issue's first plain-bullet criterion; declared because Preflight parses only checkbox bullets.
+- [added] A disjoint candidate still clones as before. — reason: verbatim copy of the issue's second plain-bullet criterion; declared for the same parser reason.
+- [added] The existing self-test at `gen4_campaign.py:348` (`make_sandbox(host, os.path.join(host, "inside"))`) still refuses. — reason: verbatim copy of the issue's third plain-bullet criterion; declared for the same parser reason.
 
 ## Recon note (parent-only)
 
