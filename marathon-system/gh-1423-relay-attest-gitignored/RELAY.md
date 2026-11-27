@@ -1,6 +1,6 @@
 # Marathon Phase gh-1423-relay-attest-gitignored
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-1423-RELAY-ATTEST-GITIGNORED-TURN builder=codex reviewer=agy round-cap=9 -->
 
@@ -169,3 +169,29 @@ unverified: real-Git full-driver replay, including candidate ancestry validation
 unverified: bash test/gh505-relay-attest.sh — designated harness gate.
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+gate run: no — harness gate
+
+#### Re-verification & full-driver real-Git replay (`utils/py/relay_drive.py`, SHA-256 `ec6c0af36ed3985402bf20893429b34c16255c6d3059c310cb0ec689abb06065`)
+
+- **[Pass]** Code fix (`utils/py/relay_drive.py:827-845`, `commit_relay_file`) and whole-file sweep (`utils/py/relay_drive.py:1-1708`) remain clean and unchanged from Round 1 (`shasum -a 256 utils/py/relay_drive.py` matches `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md:20` exactly).
+- **[Pass]** Independent 4-arm real-Git full-driver replay executed against the live `utils/py/relay_drive.py`, `relay-automation/codex-turn.sh`, `bin/tick`, and `utils/py/relay_attest.py` (`load` + `candidate_ok`) in isolated scratch repos under `TMPDIR="$PWD/.relay-scratch/tmp"` (`GIT_*` unset, `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_GLOBAL=/dev/null`, `RELAY_WORKTREE_ISOLATION=1`, `XYZ_WRITE_OPS_LOG=0`, `RELAY_COST_SUMMARY=0`, `XYZ_HARNESS_CONTEXT=test`):
+  - Preparation probe `TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/probe-gh1423.py`: exit `0`.
+  - **Arm 1 — Baseline (pre-fix `git add` restored in scratch copy), `.gitignore` covers `relay-system/`, tracked `relay-system/relay.md`:** exit `4`, `escalation-reason=attest-publish-failed`; stderr `relay-drive: commit of relay file FAILED: The following paths are ignored by one of your .gitignore files:` and `relay-drive: terminal STATUS Approved by reviewer rev REFUSED — attest-publish-failed`; attestation commit `3800d45 relay-drive: attest T-1-base-ignored approved by rev (reviewed e5d4c4c0a5b6)` landed on top of `73a9b9c` (`rev turn`) with `### Attestation · relay-drive` in `HEAD:relay-system/relay.md`; attestation JSON record absent (`rec_exists=False`).
+  - **Arm 2 — Fixed driver (`utils/py/relay_drive.py` @ `ec6c0af36ed3...`), `.gitignore` covers `relay-system/`, tracked `relay-system/relay.md`:** exit `0`; stdout `relay-drive: attested Approved by rev — reviewed d32209bc14d7, 73 bytes of review text, record .../target/.git/relay-attest/T-2-fixed-ignored.json` and `relay-drive: relay terminated (STATUS: Approved, token done, attested by rev) after 1 turn(s)`; attestation commit `10566e2` landed on top of `3c57c85` (`rev turn`) with `### Attestation · relay-drive` in `HEAD:relay-system/relay.md`; `relay_attest.load(...)` succeeded (`load_ok=True`) and `relay_attest.candidate_ok(...)` returned `(True, None)`.
+  - **Arm 3 — Fixed driver, no `relay-system/` ignore rule (control):** exit `0`; stdout `relay-drive: attested Approved by rev — reviewed ae12f4f8f766, 73 bytes of review text, record .../target/.git/relay-attest/T-3-fixed-plain.json`; attestation commit `67d6bc3` landed on top of `37590c3` (`rev turn`) with `### Attestation · relay-drive` in `HEAD:relay-system/relay.md`; `relay_attest.load(...)` succeeded (`load_ok=True`) and `relay_attest.candidate_ok(...)` returned `(True, None)`.
+  - **Arm 4 — Fixed driver, `.gitignore` covers `relay-system/`, rejecting `pre-commit` hook gated on `### Attestation · relay-drive`:** exit `4`, `escalation-reason=attest-publish-failed`; stderr `relay-drive: commit of relay file FAILED: fixture: pre-commit rejected the attestation` and `relay-drive: terminal STATUS Approved by reviewer rev REFUSED — attest-publish-failed`; no attestation commit landed (`HEAD` stayed at `88da43b` `rev turn`, `has_trailer_in_HEAD=False`); attestation JSON record absent (`rec_exists=False`).
+
+#### Findings
+
+- **[Blocker] `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md` still records the real-Git full-driver replay as outstanding instead of recording the observed 4-arm real-Git full-driver evidence.**
+  - **Observed input:** Artifact contradiction between `RELAY.md:31-33` / `PROJECT/2-WORKING/GH-1423-RELAY-ATTEST-GITIGNORED.md:43-45,95,145` (requiring the recorded manual scratch-repo repro in `delivery.md`: baseline exit 4 / `attest-publish-failed` with `git add` stderr, post-fix exit 0 with attestation commit + validated record + non-ignored control, and genuine commit failure still returning `attest-publish-failed`) vs `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md:29,31-40` (which explicitly states *"The full-driver replay with actual Git commits and candidate ancestry remains outstanding under the turn's Git and suite restrictions"* and lists only stubbed-Git AST results in lines 18–29 plus an `Expected result` table in lines 35–40).
+  - **Affected scope:** `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md` only. Do **not** modify `utils/py/relay_drive.py` or any test file; the Builder does not need to run `git` to close this.
+  - **Falsifier:** Update `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md` to record the observed 4-arm real-Git full-driver replay results captured in Round 2 above (all 4 arms: baseline ignored exit 4 / `attest-publish-failed` with `git add` stderr + landed commit + absent record; fixed ignored exit 0 + attestation commit + `relay_attest.load` + `candidate_ok`; fixed plain exit 0 + attestation commit + `load` + `candidate_ok`; fixed rejecting hook exit 4 / `attest-publish-failed` + no attestation commit + no record), remove the stale "remains outstanding" disclaimer at `delivery.md:29`, and replace the future-tense `Expected result` table at `delivery.md:35-40` with the observed full-driver results while keeping the concise replay recipe and `bash test/gh505-relay-attest.sh` gate note.
+
+**Verdict:** Changes requested
+
+handing off to codex — codex, take your turn.
