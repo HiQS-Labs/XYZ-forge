@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -290,5 +290,122 @@ Fixes in `4f83f0b45`; evidence refreshed in `TESTS-RESULTS/2026-11-27+GH-1653/` 
 - **[Should] missing resume witnesses / exact ref — Implemented.** G4-retry records the exact remote OID (`BASE_OID`) and asserts equality after each failed/refused/exhausted step; a CLI `jog resume` with room in the cap (`LANE_MAX_ATTEMPTS=3`) publishes the still-unpublished bundle (archive `failed,active,completed`); a supervised wake (`jog run --supervise-until`, row left running by a dead lease) recovers and publishes under the held lock with no self-refusal; interrupted-finish cases saved-completed / saved-active / unsaved-active each settle the same row ids with the ref unchanged. The installed-hook smoke (`smoke.sh`, at `e9127b18`) remains the installed-stub witness; the end-to-end wake/resume/supervision witnesses are the gh280 fixture with real admission.
 
 Handing off to Reviewer for round 2.
+
+### Round 2 · Reviewer · codex
+
+swept file: no
+
+VERDICT: FAIL
+
+Basis: The retained clone results cover the initial resume, archive-race and admission cases. The saved-receipt recovery can still reset a live budget for a different branch. The shared lock's mixed-entry initialization interleaving and the planned installed-hook resume after failure remain open. I reviewed the full gate receipt module and the relevant Jog, accounting and fixture paths, including the pre-existing lock behavior there. I did not complete a line-by-line sweep of the outlying Jog and gh280 sections. The available graph generation (2026-11-26T04:31:47Z) covers a separate development checkout, so line citations use the seeded source. No suite or executable fixture was run in this turn.
+
+- **[Blocker] Saved receipt recovery can complete and archive another branch's active reservation.**
+  Observed input: A saved publication for `marathon/old` has `published_head = "a" * 40`. The execution clone is now on `marathon/new` at that same commit, having reserved a new active manual attempt for the same issue key while the new remote ref is absent. `utils/py/jog_run.py:843–847` checks the saved SHA but passes the old branch for the remote proof. At `:1327–1345` that proof admits the last active row by key. The canonical row stores its branch at `utils/py/rtl.py:100–105`, but `utils/py/gate_receipt.py:95–96,179–184,196–205` checks the **current** branch, so the actual admission path accepts the new row and requests its archival. Verified with the read-only command `PYTHONPATH=utils/py python3 -` under the relay scratch environment, with metadata and the terminal write stubbed and the actual settlement, receipt admission and row parsing exercised:
+
+  ```python
+  import json
+  from unittest.mock import mock_open, patch
+  import gate_receipt as g, jog_run as j, rtl
+
+  sha, key = "a" * 40, "GH-1653-jog-publish"
+  old, new = "marathon/old", "marathon/new"
+  row = {"schema": rtl.ATTEMPT_SCHEMA, "task": key, "kind": "manual",
+         "state": "active", "id": "c" * 32, "target_root": "/exec",
+         "origin": "d" * 64, "branch": new, "start_sha": sha,
+         "started": "2026-11-27T00:00:00+00:00"}
+  def metadata(_root, verb, *_):
+      return {"branch": new, "rev-parse": sha, "merge-base": ""}[verb]
+
+  with patch("builtins.open", mock_open(read_data=json.dumps(row) + "\n")), \
+       patch.object(g.os.path, "isfile", return_value=True), \
+       patch.multiple(g, attempt_git=metadata, attempt_origin=lambda _: row["origin"]), \
+       patch.multiple(j, _git=lambda *_: sha.encode(),
+                      _jog_remote_ref=lambda _, branch: sha if branch == old else None), \
+       patch.object(g, "lane_attempt_finish", return_value=dict(row, state="completed")) as finish:
+      j.jog_settle_publication_attempt("/exec", "/coord", 1653, old, True,
+                                       need_published=False)
+      print(f"proved={old}; checked out/reserved={new}; finish called={finish.called}; "
+            f"archive={finish.call_args.kwargs.get('archive') if finish.called else False}")
+      assert not finish.called
+  ```
+
+  Exit 1, `proved=marathon/old; checked out/reserved=marathon/new; finish called=True; archive=True`. The real writer would rename the live budget via `utils/py/rtl.py:189–190,263–267`.
+  Affected scope: Active publication rows for the same issue key whose reserved branch differs from the receipt branch proved at origin. This can consume a reservation the new branch still needs and reset its live attempt count.
+  Falsifier: Re-run the same case and require no finish or archive request, with the active row id and live count unchanged. The matched-branch case must still settle the same row. Bind active settlement to the reserved branch and the exact ref used as proof.
+
+- **[Should] Form 2 — the initialization race is still reachable from retry-gate beside resume.**
+  Observed input: Resume passes `conservative=True` at `utils/py/jog_run.py:785–789`. A creates the lock directory at `:1719` and pauses before publishing its PID at `:1762`. Retry-gate B calls the default lock at `:899–902`, reads no owner at `:1722–1731`, and removes and recreates the directory at `:1753–1756`. Resume then writes into the replacement directory and enters its own locked body. Retry-build and an unsupervised wake also take the nonconservative path at `:1119–1122,3132–3133`. The retained Round 1 clone probe has both processes enter through resume, so it proves refusal for that pair only.
+  Affected scope: A resume initializing the coordinator lock while another Jog publication entry acquires that same lock.
+  Falsifier: With resume A paused at the PID write, B refuses before the retry body, and A enters once after release. Apply the initialization-safe rule consistently across the competing Jog publication entries and retain the mixed-entry result.
+  Clone probe: From a disposable full clone. The probe uses local lock files and exercises both entry points before any Git, network or queue activity.
+
+  ```bash
+  PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 - <<'PY'
+  import builtins, multiprocessing as mp, tempfile
+  from pathlib import Path
+  from unittest.mock import patch
+  import jog_run as j
+
+  ctx = mp.get_context("fork")
+  ready, release, a_inside, b_inside = [ctx.Event() for _ in range(4)]
+  real_open = builtins.open
+  with tempfile.TemporaryDirectory(dir=Path.cwd()) as root:
+      lock = Path(root) / "relay-driver.lock"
+
+      def run(role):
+          def gated_open(file, *args, **kwargs):
+              if role == "A" and str(file) == str(lock / "pid") and args == ("w",):
+                  ready.set()
+                  assert release.wait(10), "A timed out"
+              return real_open(file, *args, **kwargs)
+
+          def retry_body(*_):
+              b_inside.set()
+              assert a_inside.wait(10), "A never entered"
+
+          with patch.multiple(j, driver_lock_path=lambda *_: (str(lock), str(lock)),
+                              _require_jog_primary=lambda *_: None,
+                              validate_marathon_executor=lambda *_: None,
+                              _jog_resume_locked=lambda *_: a_inside.set(),
+                              _jog_retry_gate_locked=retry_body):
+              with patch("builtins.open", gated_open):
+                  try:
+                      if role == "A":
+                          j.jog_resume(root, 1653)
+                      else:
+                          j.jog_retry_gate(root, 1653, None)
+                  except j.ContractError as exc:
+                      print(f"{role} refused: {exc}")
+                      raise SystemExit(2)
+
+      a = ctx.Process(target=run, args=("A",))
+      b = ctx.Process(target=run, args=("B",))
+      a.start()
+      try:
+          assert ready.wait(5), "resume did not reach PID write"
+          b.start()
+          b_inside.wait(3)
+      finally:
+          release.set()
+      a.join(12)
+      b.join(12)
+      print(f"resume entered={a_inside.is_set()} exit={a.exitcode}; "
+            f"retry-gate entered={b_inside.is_set()} exit={b.exitcode}")
+      assert a_inside.is_set() and a.exitcode == 0
+      assert not b_inside.is_set() and b.exitcode in (2, 4)
+  PY
+  ```
+
+- **[Should] The installed-hook resume after failure is still [Unverified — needs clone run].** The plan requires this adjacent case at `PROJECT/2-WORKING/GH-1653-JOG-RECEIPT-ATTEMPT.md:150–152`. `TESTS-RESULTS/2026-11-27+GH-1653/smoke.sh:35–44,49–56` calls the helper twice, after the first push already succeeded. The new CLI and supervised resume cases use the admission-only fixture hook at `test/gh280-jog-marathon-adapter.sh:621–634,763–795`. Retain one deliberately refused publication and a successful CLI resume from the same state through the actual installed hook, with the failed row still counted and the remote OID observed before and after each step. The current candidate's final classified gate is also undocumented. The plan requires it at line 157 and the evidence README lines 12–18 identify only the focused run at `4f83f0b45` and the prior installed full-gate smoke at `e9127b18`. Retain the actual final gate result and align the per-run provenance revisions with the log descriptions (for example, `provenance.jsonl:9,13` currently label the older installed-smoke and validate logs with `4f83f0b45`).
+
+- **[Pass] Exact ref parsing and saved state without a live row.** Read-only `PYTHONPATH=utils/py python3 -` with `subprocess.run` stubbed returned the expected cases at `utils/py/jog_run.py:1278–1290`: `suffix-only absent, exact wins both orders, empty absent, transport refused`. The parser assertions and all 13 evidence hashes passed before the separate failing settlement assertion in the same command (overall exit 1). Saved receipts with no pending row skip the invocation and re-project at `:835–857`; see `TESTS-RESULTS/2026-11-27+GH-1653/gh280-green.log:125`. The saved branch still projects when settlement raises a caught accounting error at `:848–857`.
+
+- **[Pass] Round 1 same-entry lock and completed-row replacement races.** At `4f83f0b45`, `TESTS-RESULTS/2026-11-27+GH-1653/final-qa-r1-probe1.log:1–8` shows resume B entered before the fix and refused after it (A exit 0, B exit 2), and `final-qa-r1-probe2.log:1–7` shows the replacement active row lost before and still live after. The code rechecks row id and state under the canonical lock at `utils/py/jog_run.py:1336–1341`. The already-owned recovery path invokes `_jog_resume_locked` at `:2991–3001`, and the plan QA's two-resume probe reports B exit 4 and one additional row at `two-resume-probe.log:7–14`.
+
+- **[Pass] Retained booking, failed-budget, and fixture recovery evidence.** `utils/py/jog_run.py:721–724,831–834,1091–1095,1369–1394` supplies the coordinator root, books before commit/push, reuses the manual finish path and restores the caller environment. `TESTS-RESULTS/2026-11-27+GH-1653/gh280-green.log:110–125,177–183,248` records 245 passes, including admission refusal for an unreserved push, two failed rows surviving restart, exact OID equality after retry/exhaustion, CLI recovery with room and supervised recovery. The first refusal establishes that the remote is not at the bundle, with the prior OID captured immediately afterward at `test/gh280-jog-marathon-adapter.sh:720–735`. The base-runtime refusal is retained at `gh280-red-base-runtime.log:105,168,222` in the same evidence directory. The fixture calls the real admission CLI per ref as the installed hook does (`test/gh280-jog-marathon-adapter.sh:621–634`, `githooks/install.sh:156–181`). Both shell files parsed under `bash -n test/gh280-jog-marathon-adapter.sh && bash -n TESTS-RESULTS/2026-11-27+GH-1653/smoke.sh`, exit 0 with no diagnostics.
+
+- **[Pass] Scoped reuse and CLI surface.** `utils/py/gate_receipt.py:190–206,360–376` retains the manual writer, JSON/export shape, exhausted exit 3 and refusal exit 2 on source comparison to the available pre-extraction development source. Byte-for-byte execution against exact base `52813e56f` remains unverified. The plan leaves checkpoint push out of scope at `PROJECT/2-WORKING/GH-1653-JOG-RECEIPT-ATTEMPT.md:12–17`. The publication implementation uses the existing writer and attempt lock.
+
+Handing off to Producer to fix the reservation proof mismatch and close the open clone-evidence findings.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
