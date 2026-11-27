@@ -1,0 +1,2 @@
+merge-cleanup: ERROR — PR #107 targets 'feat/faq', not 'main' — stopping
+merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.

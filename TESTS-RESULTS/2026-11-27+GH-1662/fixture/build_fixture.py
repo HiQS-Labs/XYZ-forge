@@ -3,7 +3,7 @@
 
 A bare origin plus a primary clone of a small repo ("acme/widgets", integration branch `main`) with NO
 XYZ-forge files, 17 open PRs, and the scripted stand-in `gh` (fakegh.py). Commit dates are fixed so
-the SHAs are reproducible. `--with-installer` adds an empty-success `githooks/install.sh` to the base
+the SHAs are reproducible. `--no-stack` makes #107 target main (no stacked PR). `--with-installer` adds an empty-success `githooks/install.sh` to the base
 commit (a consumer that ships its own installer); the default has none. Python 3.9 compatible.
 """
 import json
@@ -14,6 +14,7 @@ import sys
 
 out = os.path.abspath(sys.argv[1])
 with_installer = "--with-installer" in sys.argv[2:]
+no_stack = "--no-stack" in sys.argv[2:]  # #107 targets main instead of #106's branch (a queue with no stacked PR)
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENV = dict(os.environ, GIT_AUTHOR_NAME="acme", GIT_AUTHOR_EMAIL="dev@example.invalid",
            GIT_COMMITTER_NAME="acme", GIT_COMMITTER_EMAIL="dev@example.invalid")
@@ -93,7 +94,7 @@ pr(104, "feat/ui-polish", "feat: ui polish", {"src/ui.py": (2, "ui line 2 (polis
 pr(105, "feat/hub", "feat: hub rework (touches core, api, ui)",
    {"src/core.py": (3, "core line 3 (hub)"), "src/api.py": (2, "api line 2 (hub)"), "src/ui.py": (2, "ui line 2 (hub)")})
 pr(106, "feat/faq", "docs: faq", {"docs/faq.md": (2, "faq line 2 (rewritten)")}, body="Depends on #109")
-pr(107, "feat/faq-extra", "docs: faq extra (stacked on #106)", {"docs/faq-extra.md": "extra\n"}, base="feat/faq")
+pr(107, "feat/faq-extra", "docs: faq extra (stacked on #106)", {"docs/faq-extra.md": "extra\n"}, base="main" if no_stack else "feat/faq")
 pr(108, "wip/settings-ui", "wip: settings ui", {"config/settings.json": (8, "config/settings.json line 8 (wip)")}, draft=True)
 pr(109, "feat/changelog", "docs: changelog entry", {"CHANGELOG.md": "# Changelog\n- entry\n"})
 pr(110, "feat/util-fix", "fix: util", {"src/util.py": (6, "src/util.py line 6 (fix)")}, checks="fail")
@@ -116,4 +117,4 @@ shim = out + "/bin/gh"
 with open(shim, "w") as fh:
     fh.write('#!/bin/sh\nexec python3 "%s/fakegh.py" "$@"\n' % HERE)
 os.chmod(shim, 0o755)
-print(json.dumps({"fixture": out, "primary": out + "/primary", "prs": len(prs), "installer": with_installer}))
+print(json.dumps({"fixture": out, "primary": out + "/primary", "prs": len(prs), "installer": with_installer, "stack": not no_stack}))

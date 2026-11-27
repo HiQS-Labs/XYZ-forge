@@ -1,0 +1,3 @@
+merge-cleanup: ERROR — PR #107 targets 'feat/faq', not 'main' — stopping
+merge-cleanup: ERROR — Deferred issue/doc sync remains unfinished; affected landings are not reconciled. Recover with the existing --reconcile-pr path before continuing.
+merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.

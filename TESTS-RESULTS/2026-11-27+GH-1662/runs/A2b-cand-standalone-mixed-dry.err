@@ -1,0 +1,7 @@
+merge-cleanup: ERROR — PR #115: HANDOFF — the landing merge conflicts (GitHub said CONFLICTING) and standalone mode has no automatic repair; resolve it on the PR branch, then re-run the dry run to re-pin
+merge-cleanup: ERROR —   conflict set: config/settings.json
+merge-cleanup: ERROR — PR #111: NOT attempted — depends on #112 (not yet processed)
+merge-cleanup: ERROR — PR #112: NOT attempted — depends on #111 (blocked by #112)
+merge-cleanup: ERROR — PR #113: NOT attempted — depends on #111 (blocked by #112)
+merge-cleanup: ERROR — 4 PR(s) did not land (0 deferred by network, 0 awaiting checks or a re-pin, 0 parked on resume, 4 handed off or parked): #115 (handoff), #111 (blocked by #112), #112 (blocked by #111), #113 (blocked by #111)
+merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.

@@ -44,6 +44,15 @@ When the operator speaks naturally:
 - **GitHub CLI (`gh`)**: 2.18.0 or newer. Required for the `headRefOid` JSON field during Phase 4 PR discovery. If an older `gh` (e.g. 2.4.0 from Ubuntu universe) is installed, merge-cleanup will warn during preflight and advise installing the official release from `https://cli.github.com`.
 - **Process & Handle Monitoring (`lsof`)**: Used by `inspect_open_handles` to identify active processes holding checkout directories before any deletion. On Linux hosts (including environments running Docker with overlay filesystems), `lsof` can emit warnings about unstatable mounts outside the target checkout (e.g. `lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/.../merged`). `merge-cleanup` safely classifies and filters out warnings for paths outside the repository checkout, while strictly failing closed for any warnings at, inside, or containing the checkout path. Pruning continues to enforce that checkouts with active root-CWD processes or open handles are never removed.
 
+
+### Two modes: the Forge overlay (default) and `--standalone` (GH-1662)
+
+The default mode assumes the XYZ-forge overlay in the repository being landed: `githooks/install.sh` (each landing clone's pre-push gate, GH-1576), the RELEASES ledger (`releases.sql` at HEAD plus `utils/py/releases_app.py`, for the pre-merge ledger gate), `utils/py/wave_reconcile.py` and `utils/pdda/pdda.sh` (post-merge), and the integration branch **`development`**: post-merge `wave_reconcile.py` defaults to `development`, filters its PR flows on it, and merge-cleanup forwards no branch to it, so `--integration-branch main` merges and then stops at reconcile. A repository without that overlay cannot land through the default mode.
+
+For such a repository the merge **sequence** needs only `git` and `gh`, and **landing** works when the operator declares `--standalone` on the command line. The declaration is explicit and is never inferred from a missing file (GH-1576 stands: without the flag a landing clone with no installer still refuses). It skips only what needs the absent overlay: the gate-wiring refusal when the clone has no installer, the pre-merge ledger gate, post-merge `wave_reconcile`/`releases_app`/`pdda.sh`/Jog, and B1 (a conflicting PR is **handed off** with its conflicting paths, exit 3). Pushes stay gated: a push from a clone without a proven gate hook is still refused, and nothing here uses `--no-verify`. It is refused when the primary contains an overlay file, so it cannot bypass a ledger that exists. It also prints a **STANDALONE PREREQUISITES** block before anything is cloned, keeps the primary clean by excluding `/.tick/` in its own `.git/info/exclude`, and scans only the primary's parent folder (own origin) instead of the fixed default roots; see [`--prefix`](#landing-without-unrelated-checkout-teardown-gh-1470) and `--root` for teardown scope. The default mode reports a missing installer, ledger or non-`development` integration branch as `PRE-FLIGHT` warnings before it clones.
+
+[`STANDALONE.md`](STANDALONE.md) has the exact differences, how to read each report, and a **prose runbook** an agent can follow by hand to sequence and land a large queue when Python or the scripts are unavailable.
+
 ---
 
 ## Project merge policy
@@ -218,7 +227,7 @@ Parking preserves work for later review; it never qualifies it for integration o
    Include the overview in the final chat and qualifying batch issue even on a stopped run.
 
 ### Phase 1: Discover & Inventory
-- Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` — `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces`, `~/marathon-clones` (where `/jog`, marathon flows and older `/start-task` runs create task clones). Without `--root`, the scan also walks the primary's parent folder, where GH-970 task clones sit beside the primary, unless that folder is a `NEVER_DELETE` root (GH-722). From that folder it inspects only checkouts whose `origin` matches the primary's, and only those become removable there; an unreadable origin never matches. When that folder is itself one of the listed roots, it is scanned exactly as before. The Phase 1 header prints the roots scanned. The fixed list in `scan_clones.py` is the list in `WORKTREE-SAFETY.md` §16.1; a test pins the parity (GH-534 A.1).
+- Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` — `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces`, `~/marathon-clones` (where `/jog`, marathon flows and older `/start-task` runs create task clones). Under `--standalone` (and no `--root`) only the primary's parent folder is scanned, origin-filtered, and the fixed roots are not (GH-1662). Without `--root`, the scan also walks the primary's parent folder, where GH-970 task clones sit beside the primary, unless that folder is a `NEVER_DELETE` root (GH-722). From that folder it inspects only checkouts whose `origin` matches the primary's, and only those become removable there; an unreadable origin never matches. When that folder is itself one of the listed roots, it is scanned exactly as before. The Phase 1 header prints the roots scanned. The fixed list in `scan_clones.py` is the list in `WORKTREE-SAFETY.md` §16.1; a test pins the parity (GH-534 A.1).
 - Evaluates component-aware containment (`_within(child, parent)`) and refuses `NEVER_DELETE` protected roots (`$HOME`, `~/Documents`, `~/Desktop`, `/`).
 - Distinguishes **Linked Worktrees** (`.git` is a file with pointer `gitdir: ...`) from **Standalone Clones** (`.git` is a directory).
 - Uses `git worktree list --porcelain` to determine parent-child relationships.
@@ -250,7 +259,7 @@ Parking preserves work for later review; it never qualifies it for integration o
 ### Phase 4: PR Matrix & Topological Sorting
 - Runs only after Phase 0 has reported. The PR sequence is advice until the primary can receive it.
 - Fetches open PRs via GitHub API (`gh pr list`). The discovery call is bounded in time and retried on transient network failures (GH-623): a FAILED discovery is an error, never an empty queue — after three transient retries it exits 2 before Phase 6, because rolling into teardown on a false "no PRs" would report success while the queue was silently skipped.
-- Extracts explicit dependency references (`depends on #N`, `blocked by #N`, `after #N`) as **hard** edges.
+- Extracts explicit dependency references (`depends on #N`, `blocked by #N`, `after #N`) as **hard** edges. A **stacked base** (a PR whose base branch is another open PR's head branch) is a hard edge too (GH-1662): it cannot land on the integration branch before its base PR does. A dry run previews such a child as `would be retargeted ... once that PR lands`; `--execute` retargets it when its base lands.
 - Analyzes touched file sets to detect unannotated file collisions and orders shared-file PRs chronologically as **soft** edges: they decide sequence only, never eligibility (GH-623).
 - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
 - **`--prs` allowlist (GH-1226).** The PRs a run may land are fixed when it starts, never discovered at merge time:
@@ -636,6 +645,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | teardown-fresh-inspection | 6 | script | TestA5FreshInspection.test_teardown_refuses_a_stale_scan_record |
 | mergeable-unknown-poll | 5 | script | TestPhase5EndToEnd.test_unknown_mergeable_settles_and_the_pr_lands |
 | prs-allowlist | 4 | script | TestPhase5EndToEnd.test_unlisted_pr_is_never_sequenced |
+| standalone-mode | 4-5 | script | manual check, `TESTS-RESULTS/2026-11-27+GH-1662/` |
 | landing-forecast | 4 | script | manual checks, `TESTS-RESULTS/2026-11-13+GH-1452/` and `TESTS-RESULTS/2026-11-14+GH-1470/` |
 | batch-issue-threshold | 5 | script | TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved |
 | batch-issue-resume-append | 5 | script | TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved |
@@ -643,7 +653,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | batch-regression-sweep | 5 | caller | — |
 | post-deploy-carryover-dual-sink | 5 | caller | — |
 
-CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--prs`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`, `--record-sweep`, `--no-auto-sweep`, `--landing-plan`, `--landing-reason`.
+CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--prs`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--standalone`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`, `--record-sweep`, `--no-auto-sweep`, `--landing-plan`, `--landing-reason`.
 
 ## CLI Usage
 

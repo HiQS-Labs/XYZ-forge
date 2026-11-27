@@ -38,7 +38,6 @@ REAL_GIT = shutil.which("git")
 
 CLEAN = "101,109,106,107"
 MIXED = "101,102,103,104,105,106,107,109,110,111,112,113,114,115,116,117"
-NOSTACK = "101,102,103,104,105,109,110,111,112,113,114,115,116,117"
 results = []
 
 
@@ -46,9 +45,9 @@ def want(ac):
     return not ONLY or ac in ONLY
 
 
-def build(name, installer=False):
-    d = os.path.join(WORK, name)
-    cmd = [sys.executable, os.path.join(HERE, "fixture", "build_fixture.py"), d] + (["--with-installer"] if installer else [])
+def build(name, installer=False, stack=True):
+    d = os.path.join(WORK, name, "fx")  # same last path components everywhere, so the pin file's repo slug is identical
+    cmd = [sys.executable, os.path.join(HERE, "fixture", "build_fixture.py"), d] + (["--with-installer"] if installer else []) + ([] if stack else ["--no-stack"])
     subprocess.run(cmd, check=True, capture_output=True)
     return d
 
@@ -133,14 +132,14 @@ cmd_s = "merge_cleanup.py --primary <FX>/primary --integration-branch main"
 
 # A1 ---------------------------------------------------------------------------------------------------------
 if want("A1"):
-    fb, fc = build("a1b"), build("a1c")
-    rb, ob, eb, _ = run(fb, "A1-base-forge", BASE, ["--prs", NOSTACK])
-    rc_, oc, ec, _ = run(fc, "A1-cand-forge", CAND, ["--prs", NOSTACK])
+    fb, fc = build("a1b", stack=False), build("a1c", stack=False)
+    rb, ob, eb, _ = run(fb, "A1-base-forge", BASE, ["--prs", MIXED])
+    rc_, oc, ec, _ = run(fc, "A1-cand-forge", CAND, ["--prs", MIXED])
     nb, nc = norm(ob, fb), norm(oc, fc)
     extra = [l for l in norm(ec, fc).splitlines() if l not in norm(eb, fb).splitlines()]
-    ok = rb == rc_ == 2 and nb == nc and "gate wiring failed" in ob and all("PRE-FLIGHT:" in l for l in extra) and len(extra) >= 2
-    rec("A1", "Forge regression: no flag, fixture without installer, queue without a stack; base and candidate stdout identical, same refusal",
-        cmd_s + " --prs " + NOSTACK, rc_, ok,
+    ok = rb == rc_ == 2 and nb == nc and "gate wiring failed" in (ob + eb) and "gate wiring failed" in (oc + ec) and all("PRE-FLIGHT:" in l for l in extra) and len(extra) >= 2
+    rec("A1", "Forge regression: no flag, fixture without installer, queue with no stacked PR (--no-stack); base and candidate stdout identical, same refusal",
+        cmd_s + " --prs " + MIXED + "   (fixture --no-stack)", rc_, ok,
         "base rc %d, candidate rc %d; stdout identical=%s; stderr-only differences=%d (all PRE-FLIGHT lines): %s" % (rb, rc_, nb == nc, len(extra), extra[:1]),
         REV_CAND, "base output: runs/A1-base-forge.out, candidate: runs/A1-cand-forge.out")
 
@@ -165,9 +164,9 @@ if want("A2"):
     # D10 red control: the dry-run preview removed
     md = patched("mut-d10", "merge_cleanup.py", 'if dry_run and (info.get("baseRefName") or "") in landing_heads:', "if False:")
     fm = build("a2m")
-    rm, om, _, _ = run(fm, "A2-mutant-no-stack-preview", md, ["--standalone", "--prs", CLEAN])
+    rm, om, em, _ = run(fm, "A2-mutant-no-stack-preview", md, ["--standalone", "--prs", CLEAN])
     rec("A2-mut", "Red control: without the D10 preview a dry run stops at the stacked child", cmd_s + " --standalone --prs " + CLEAN + "   (mutant)",
-        rm, rm == 2 and "targets 'feat/faq', not 'main'" in om, "mutant rc %d: %s" % (rm, (lines(om, "not 'main'") or [""])[0][:200]), REV_CAND)
+        rm, rm == 2 and "targets 'feat/faq', not 'main'" in (om + em), "mutant rc %d: %s" % (rm, (lines(om + em, "not 'main'") or [""])[0][:200]), REV_CAND)
 
 # A2b ---------------------------------------------------------------------------------------------------------
 if want("A2b"):
@@ -182,10 +181,19 @@ if want("A2b"):
         "rc %d (3 = not everything landed); table rows %d; missing expectations: %s" % (r, len(seq(o)), miss), REV_CAND,
         "draft #108 is not in --prs: a draft cannot be pinned (rc 2 if listed); see the --prs-only run")
     f = build("a2d")
-    r, o, e, _ = run(f, "A2b-cand-standalone-prs-only", CAND, ["--standalone", "--prs-only"])
-    rec("A2b-prs-only", "Standalone --prs-only over all 17 open PRs (draft and held included): rc 0, 17 rows, no clone, cycle named",
-        cmd_s + " --standalone --prs-only", r, r == 0 and len(seq(o)) == 17 and "Cycle or unresolved dependency" in o and "clone" not in (o + e).lower().replace("clones", ""),
-        "rc %d; rows %d; order %s" % (r, len(seq(o)), seq(o)), REV_CAND)
+    rd = os.path.join(WORK, "shims-rec")
+    shutil.rmtree(rd, ignore_errors=True)
+    os.makedirs(rd)
+    rlog = os.path.join(rd, "clones.log")
+    with open(os.path.join(rd, "git"), "w") as fh:
+        fh.write('#!/usr/bin/env python3\nimport subprocess, sys\na = sys.argv[1:]\n'
+                 'if "clone" in a:\n    open(%r, "a").write("clone\\n")\nsys.exit(subprocess.call([%r] + a))\n' % (rlog, REAL_GIT))
+    os.chmod(os.path.join(rd, "git"), 0o755)
+    r, o, e, _ = run(f, "A2b-cand-standalone-prs-only", CAND, ["--standalone", "--prs-only"], env={"PATH": rd + os.pathsep + os.environ["PATH"]})
+    clones_made = os.path.exists(rlog)
+    rec("A2b-prs-only", "Standalone --prs-only over all 17 open PRs (draft and held included): rc 0, 17 rows, no git clone invoked, cycle named",
+        cmd_s + " --standalone --prs-only   (recording git shim)", r, r == 0 and len(seq(o)) == 17 and "Cycle or unresolved dependency" in o and not clones_made,
+        "rc %d; rows %d; git clone invoked=%s; order %s" % (r, len(seq(o)), clones_made, seq(o)), REV_CAND)
     # execute observation: failing-checks predecessor and its dependent
     f = build("a2e")
     run(f, "A2b-exec-dry", CAND, ["--standalone", "--prs", "101,109,110,116"])
@@ -323,7 +331,7 @@ with tempfile.TemporaryDirectory() as td:
 print(json.dumps(res))
 '''
     sp = subprocess.run([PY39, "-c", side, CAND], capture_output=True, text=True)
-    sd = json.loads(sp.stdout) if sp.returncode == 0 else {"error": sp.stderr[-300:]}
+    sd = json.loads(sp.stdout.strip().splitlines()[-1]) if sp.returncode == 0 else {"error": sp.stderr[-300:]}
     with open(os.path.join(RUNS, "A6-side-cases.json"), "w") as fh:
         json.dump(sd, fh, indent=1)
     side_ok = (sd.get("linked_worktree", {}).get("result") is None and sd["linked_worktree"]["ignored_in_worktree"] and sd["linked_worktree"]["exclude_lines"] == ["/.tick/"]
@@ -365,8 +373,8 @@ if want("A8"):
     rec("A8", "Prerequisites: an old git and gh are reported UNMET before the run's first clone; a missing origin is UNMET in the dry run and refuses --execute (rc 2)",
         cmd_s + " --standalone --prs " + CLEAN + "   (git 2.30 and gh 2.4 shims, working origin)", r,
         ok and ro == 2 and "unmet standalone prerequisite(s): origin remote" in oo and "[UNMET] origin remote" in od,
-        "UNMET lines %d, first at %s ns before first clone at %s ns (diff %s us); no-origin execute rc %d; dry run reports origin UNMET=%s" % (
-            len(lines(o, "[UNMET]")), "t", "t", (min(clones) - max(unmet)) // 1000 if clones and unmet else "n/a", ro, "[UNMET] origin remote" in od), REV_CAND,
+        "UNMET lines %d, the last printed %s s before the run's first git clone; no-origin execute rc %d; dry run reports origin UNMET=%s" % (
+            len(lines(o, "[UNMET]")), "%.1f" % ((min(clones) - max(unmet)) / 1e9) if clones and unmet else "n/a", ro, "[UNMET] origin remote" in od), REV_CAND,
         "Python below 3.9 cannot be run on this machine: that row of the block is unverified at runtime")
 
 # A9 ----------------------------------------------------------------------------------------------------------
