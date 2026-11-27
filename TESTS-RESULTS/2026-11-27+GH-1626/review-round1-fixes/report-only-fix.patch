@@ -1,0 +1,31 @@
+diff --git a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+index 6fc2aff4c..74914e8f4 100644
+--- a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
++++ b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+@@ -384,7 +384,7 @@ def _other_merge_cleanup_running() -> Optional[bool]:
+     return any(p.isdigit() and int(p) not in mine for p in res.stdout.split())
+ 
+ 
+-def prune_retained_scratch(current: Optional[Path] = None) -> None:
++def prune_retained_scratch(current: Optional[Path] = None, dry_run: bool = False) -> None:
+     """GH-1475 (P2.3, F1): bound retained landing and check clones. Per prefix, keep the newest
+     MERGE_CLEANUP_KEEP_WORKDIRS (default 3) and anything touched in the last hour; remove older ones
+     only when `lsof` verifies nothing holds them. Skipped while another merge_cleanup.py may run."""
+@@ -420,6 +420,8 @@ def prune_retained_scratch(current: Optional[Path] = None) -> None:
+                 continue
+             if not _tool_shaped(d, prefix):
+                 kept.append(f"{d.name} (not a tool-shaped folder)")
++            elif dry_run:
++                kept.append(f"{d.name} (dry run: would remove)")
+             elif _remove_own_scratch(d, prefix):
+                 pruned.append(d.name)
+             else:
+@@ -2542,7 +2544,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+                 if gone:
+                     log(f"Released landed PRs' clones: {', '.join(gone)}")
+             log(f"Landing clones retained for inspection under {workdir}")
+-        prune_retained_scratch(workdir)
++        prune_retained_scratch(workdir, dry_run=dry_run)
+ 
+ 
+ def prepare_primary_landing(primary_repo: Path, args) -> Dict[str, Any]:

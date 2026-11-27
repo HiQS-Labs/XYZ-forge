@@ -12,11 +12,14 @@ non_goals:
   - "#1578 (pruning does not check for unpushed commits): separate issue, same function, not in this scope"
   - Any change to keep counts, the one-hour age floor, tool-shape matching or lsof checks
   - Reporting a "would remove" list in dry run (allowed but not required)
-  - A new test suite or gate machinery (GH-831)
+  - A new test suite or gate machinery (GH-831); edits to any existing suite, including the
+    preflight-inferred `test/gh549-work-events.sh`
+  - Editing the retained readiness probe or its proof receipts under `TESTS-RESULTS/2026-11-27+GH-1626/`
+  - The current run's own clean-exit removal of its fresh `merge-cleanup-*` workdir (`merge_cleanup.py:2535-2536`), which is unchanged
 goal: >
-  A merge_cleanup.py landing run without --execute must not delete any folder: the
-  end-of-loop retained-scratch pruning runs only on an executing run, while an executing run
-  keeps pruning exactly as today.
+  A merge_cleanup.py landing run without --execute must delete no pre-existing retained
+  scratch folder: the end-of-loop retained-scratch pruning runs only on an executing run
+  (or reports only in a dry run), while an executing run keeps pruning exactly as today.
 ---
 
 # GH-1626 · Landing dry run keeps retained scratch clones
@@ -25,7 +28,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon, capture, Preflight Contract, probe proof (unfixed / simulated fix / comment-only edit), both-consumer validation and PRS rating prepared 2026-11-27. No implementation, no queue admission. | Independent preparation review, publication of this preparation PR, then an explicit `/jog 1626` or `/start-task 1626` by the operator. |
+| Recon, capture, Preflight Contract, probe proof (unfixed / both fix shapes / partial and deletion fakes / comment-only edit), both-consumer validation and PRS rating prepared 2026-11-27; probe strengthened after independent review round 1. No implementation, no queue admission. | Held: preparation review approval, publication of this preparation PR, merge to `development`, then a fresh preflight at the fetched integration ref (Conveyor step 6) before any readiness claim; then an explicit `/jog 1626` or `/start-task 1626` by the operator. |
 
 ## Acceptance
 
@@ -51,14 +54,15 @@ The operator's brief for this run asked for capture, contract, preflight and one
 - **State writer:** `_remove_own_scratch` (`shutil.rmtree`), the only deleter. **Consumer/retry boundary:** none downstream; deletion is not reversible, which is the harm.
 - **Smallest plan:** gate the `:2545` call on `not dry_run` (or pass `dry_run` and log "would remove" without deleting). One function, one file.
 - **Dependencies / overlap:** open PR #1607 edits `merge_cleanup.py` only inside `main()` / `_primary_blocks` (hunks at `:36`, `:2699-3062`), not `:333-430` or `:2545`; no textual overlap with this fix. Related open #1578 (unpushed-commit check in the same pruning) is a separate issue. #1625/PR #1629 (merged) only moved the suite's temp dir.
-- **Discriminating check:** the probe exits 0 only if the dry run keeps the folder **and** an executing run (`dry_run=False`) still prunes it. It stubs only lookups that are not the seam: merge policy, origin URL, the `pgrep` "another run" check, and lsof. Simulated fix (`if not dry_run:` before the `:2545` call): exit 0. Comment-only edit: still exit 1.
+- **Discriminating check:** the probe drives `land_prs` with a **one-PR queue**, because `main` never calls it with an empty one. The fixture PR's live refresh (`refresh_pr_with_retry`) is stubbed to a draft, so the loop skips it without a landing clone, merge or `gh` call, then reaches the same end-of-loop cleanup. The probe credits folder state only if both calls return 0 and refresh the fixture PR exactly once. It exits 0 only if the dry run keeps the folder **and** an executing run (`dry_run=False`) still prunes it. It also stubs merge policy, origin URL, the `pgrep` "another run" check and lsof. Matrix (`TESTS-RESULTS/2026-11-27+GH-1626/review-round1-fixes/`): base 1; skip-call fix 0; report-only fix (`prune_retained_scratch(..., dry_run=)`) 0; partial guard `if not dry_run or ordered_prs:` 1; deleting the call 2; comment-only edit 1.
+- **Write set:** the declared artifacts are the product file plus one new delivery receipt (`artifacts_new`, with a `path_absent` probe). The retained probe and its proof stay outside the builder's lane. Preflight also infers `test/gh549-work-events.sh` into the lane (it references `merge_cleanup.py`). That is the existing inference mechanism; editing it is a non-goal here.
 - **Foreseeable approvals/runtime:** none beyond the normal gate; the probe and gate need no network or `gh`.
 - **Unknowns:** none blocking. Whether dry run should print a "would remove" list is left to the builder (either passes).
 - **Next owner:** the operator (explicit `/jog 1626` or `/start-task 1626`).
 
 ## Attempt and retry history (read 2026-11-27, nothing reset)
 
-- `jog_queue` (primary ledger, read-only, and this clone): no row for #1626. `roadmap_items`: no row before this preparation. `work_events`: none.
+- `jog_queue` (primary ledger, read-only, and this clone): no row for #1626. `roadmap_items`: no row before this preparation. `work_events`: none before this preparation. The preparation pickup itself wrote one `parked` event (`releases.sql`), which is not an execution attempt.
 - Branches and PRs: none for #1626. No prior capture doc, no `relay-system/` receipts, no issue comments.
 - Attempts consumed: 0 queue, 0 native.
 
@@ -83,18 +87,25 @@ The operator's brief for this run asked for capture, contract, preflight and one
   "round_cap": 2,
   "artifacts": [
     "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
-    "TESTS-RESULTS/2026-11-27+GH-1626/"
+    "TESTS-RESULTS/2026-11-27+GH-1626/delivery.md"
+  ],
+  "artifacts_new": [
+    "TESTS-RESULTS/2026-11-27+GH-1626/delivery.md"
   ],
   "fix_probes": [
     {
       "type": "command",
       "cmd": "python3 TESTS-RESULTS/2026-11-27+GH-1626/readiness_probe.py",
       "expect_nonzero": true
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-11-27+GH-1626/delivery.md"
     }
   ],
   "remediation": {
     "source": "issue#1626",
-    "criteria": "A merge_cleanup.py landing dry run (no --execute) removes no retained merge-cleanup-*/merge-check-* folder; an executing run still prunes exactly as today. Gate prune_retained_scratch on dry_run in _land_prs_loop (or make it report-only in dry run). Existing gh436 suite only; manual check under TESTS-RESULTS. No new suite."
+    "criteria": "A merge_cleanup.py landing dry run (no --execute) removes no pre-existing retained merge-cleanup-*/merge-check-* folder; an executing run still prunes exactly as today. Gate prune_retained_scratch on dry_run in _land_prs_loop (or make it report-only in dry run). Record the manual check (readiness probe output before/after) in TESTS-RESULTS/2026-11-27+GH-1626/delivery.md. Do not edit the readiness probe, its proof receipts or any test suite. Existing gh436 suite only. No new suite."
   }
 }
 ```

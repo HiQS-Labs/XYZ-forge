@@ -1,0 +1,4 @@
+fatal: repository '$TMPDIR/gh792-probe-wy5bbe1p/base2/clone/nested' does not exist
+overlap: RuntimeError: sandbox $TMPDIR/gh792-probe-wy5bbe1p/base/clone is not disjoint from the repo $TMPDIR/gh792-probe-wy5bbe1p/base/clone; mutation calls=[]; source intact=True; base entries before=['clone'] after=['clone']
+reverse: CalledProcessError: Command '['git', 'clone', '-q', '--no-hardlinks', '$TMPDIR/gh792-probe-wy5bbe1p/base2/clone/nested', '$TMPDIR/gh792-probe-wy5bbe1p/base2/clone']' returned non-zero exit status 128.; mutation calls=['makedirs', 'rmtree', 'subprocess']; both checkouts intact=False
+UNFIXED: source nested under the candidate clone path was not refused before mutating

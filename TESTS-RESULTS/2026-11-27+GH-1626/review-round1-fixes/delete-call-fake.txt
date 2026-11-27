@@ -1,0 +1,11 @@
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=probe
+merge-cleanup: PR #9: SKIPPED (draft)
+merge-cleanup: Skipped draft PR(s): #9
+merge-cleanup: Landing clones removed after a clean run ($TMPDIR/gh1626-probe-fdk9fn91/tmp/merge-cleanup-a4au65bn)
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=probe
+merge-cleanup: PR #9: SKIPPED (draft)
+merge-cleanup: Skipped draft PR(s): #9
+merge-cleanup: Landing clones removed after a clean run ($TMPDIR/gh1626-probe-fdk9fn91/tmp/merge-cleanup-a93_5wku)
+dry-run:  land_prs rc=0 refreshed=[9] old-folder-kept=True
+execute:  land_prs rc=0 refreshed=[9] old-folder-kept=True
+UNFIXED/INVALID: execute run no longer prunes; the positive control failed

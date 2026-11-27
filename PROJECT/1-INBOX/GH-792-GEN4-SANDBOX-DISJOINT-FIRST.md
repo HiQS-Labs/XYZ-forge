@@ -11,11 +11,14 @@ ratings_provisional: true
 non_goals:
   - Any change to run_campaign, reset_sandbox, the campaign suite or targets
   - Hardening other sandbox helpers in the repository
-  - A new test suite or gate machinery (GH-831)
+  - A new test suite or gate machinery (GH-831); edits to any existing suite, including the
+    preflight-inferred `test/gh-gen4-phase5-campaign.sh`
+  - Editing the retained readiness probe or its proof receipts under `TESTS-RESULTS/2026-11-27+GH-792/`
 goal: >
   make_sandbox must resolve the source repo and the candidate clone path and refuse an
-  overlapping pair before any makedirs, rmtree or git clone, so a checkout that happens to sit
-  at <sandbox_root>/clone is never deleted; disjoint sandboxes clone exactly as before.
+  overlapping pair (equal, clone inside source, or source inside clone) before any makedirs,
+  rmtree or git clone, so no checkout at, inside or above <sandbox_root>/clone is ever
+  deleted; disjoint sandboxes clone exactly as before.
 ---
 
 # GH-792 · Gen 4 sandbox checks disjointness first
@@ -24,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon, capture, Preflight Contract, probe proof (unfixed / simulated fix / comment-only edit), both-consumer validation and PRS rating prepared 2026-11-27. No implementation, no queue admission. | Independent preparation review, publication of this preparation PR, then an explicit `/jog 792` or `/start-task 792` by the operator. |
+| Recon, capture, Preflight Contract, probe proof (unfixed / symmetric fix / forward-only fake / comment-only edit), both-consumer validation and PRS rating prepared 2026-11-27; probe strengthened after independent review round 1. No implementation, no queue admission. | Held: preparation review approval, publication of this preparation PR, merge to `development`, then a fresh preflight at the fetched integration ref (Conveyor step 6) before any readiness claim; then an explicit `/jog 792` or `/start-task 792` by the operator. |
 
 ## Acceptance
 
@@ -50,14 +53,21 @@ The operator's brief for this run asked for capture, contract, preflight and one
 - **State writer:** `make_sandbox` itself (`rmtree`, `git clone`). **Consumer/retry boundary:** `run_campaign` uses the returned clone; nothing retries.
 - **Smallest plan:** compute `clone` and both realpaths first; run the existing check (plus the reverse-descendant case, source inside the clone path) before `makedirs`/`rmtree`/`clone`. One function, one file.
 - **Dependencies / overlap:** no open PR touches `utils/py/gen4_campaign.py` or `test/gh-gen4-phase5-campaign.sh`. Disjoint from #1626's write set.
-- **Discriminating check:** the probe records `os.makedirs` / `shutil.rmtree` / `subprocess.run` calls (each passed through) and exits 0 only when the overlapping call raises `RuntimeError` with zero such calls, the source repo and its sentinel commit are intact, a disjoint call still yields a working clone, and the `:348` descendant shape still refuses. Simulated fix: exit 0. Comment-only edit: still exit 1. Local git only, everything under one temp fixture.
+- **Discriminating check:** the probe records `os.makedirs` / `shutil.rmtree` / `subprocess.run` calls, passing each one through. It exits 0 only when all of these hold:
+  - The equal-path call raises `RuntimeError` with zero such calls, leaving the source repo and its sentinel commit intact.
+  - The **reverse-containment** call (a checkout already at `<base2>/clone`, source nested at `<base2>/clone/nested`) also refuses with zero calls and leaves both checkouts intact. The issue's narrow wording ("run the existing equality/descendant check before …") would miss this, and today it deletes both checkouts. It is the same disjointness rule, so it is in scope.
+  - A disjoint call still yields a working clone.
+  - The `:348` descendant shape still refuses.
+
+  Every git call, including the product's `git clone`, runs with ambient `GIT_*` variables dropped, global/system config ignored and hooks pointed at an empty fixture directory. Matrix (`TESTS-RESULTS/2026-11-27+GH-792/review-round1-fixes/`): base 1; symmetric fix 0; forward-only early check 1; fixed tree under a hostile `GIT_DIR` and a global hook config 0, with the hook sentinel absent. Negative control: the pre-isolation probe under the same global hook ran it twice.
+- **Write set:** the declared artifacts are the product file plus one new delivery receipt (`artifacts_new`, with a `path_absent` probe). The retained probe and its proof stay outside the builder's lane. Preflight also infers `test/gh-gen4-phase5-campaign.sh` into the lane; editing it is a non-goal here.
 - **Foreseeable approvals/runtime:** none beyond the normal gate; `test/gh-gen4-phase5-campaign.sh` runs the campaign self-test (bounded soak, local only).
 - **Unknowns:** none blocking.
 - **Next owner:** the operator (explicit `/jog 792` or `/start-task 792`).
 
 ## Attempt and retry history (read 2026-11-27, nothing reset)
 
-- `jog_queue` (primary ledger, read-only, and this clone): no row for #792. `roadmap_items`: no row before this preparation. `work_events`: none.
+- `jog_queue` (primary ledger, read-only, and this clone): no row for #792. `roadmap_items`: no row before this preparation. `work_events`: none before this preparation. The preparation pickup itself wrote one `parked` event (`releases.sql`), which is not an execution attempt.
 - Branches and PRs: none for #792 (PR #795 is GH-788, where this was found). No prior capture doc; listed as `needs-doc` in the dated marathon plans. No issue comments.
 - Attempts consumed: 0 queue, 0 native.
 
@@ -82,18 +92,25 @@ The operator's brief for this run asked for capture, contract, preflight and one
   "round_cap": 2,
   "artifacts": [
     "utils/py/gen4_campaign.py",
-    "TESTS-RESULTS/2026-11-27+GH-792/"
+    "TESTS-RESULTS/2026-11-27+GH-792/delivery.md"
+  ],
+  "artifacts_new": [
+    "TESTS-RESULTS/2026-11-27+GH-792/delivery.md"
   ],
   "fix_probes": [
     {
       "type": "command",
       "cmd": "python3 TESTS-RESULTS/2026-11-27+GH-792/readiness_probe.py",
       "expect_nonzero": true
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-11-27+GH-792/delivery.md"
     }
   ],
   "remediation": {
     "source": "issue#792",
-    "criteria": "make_sandbox resolves repo and the candidate clone path and runs the existing equality/descendant check before makedirs, rmtree or git clone; an overlapping call refuses with zero mutations; a disjoint candidate still clones; the gen4_campaign.py:348 self-test still refuses. Existing suite only. No new suite."
+    "criteria": "make_sandbox resolves repo and the candidate clone path and refuses any overlapping pair (equal, clone inside repo, or repo inside clone) before makedirs, rmtree or git clone; an overlapping call refuses with zero mutations; a disjoint candidate still clones; the gen4_campaign.py:348 self-test still refuses. Record the manual check (readiness probe output before/after) in TESTS-RESULTS/2026-11-27+GH-792/delivery.md. Do not edit the readiness probe, its proof receipts or any test suite. Existing suite only. No new suite."
   }
 }
 ```

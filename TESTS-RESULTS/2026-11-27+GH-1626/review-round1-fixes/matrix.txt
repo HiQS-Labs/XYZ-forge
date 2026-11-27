@@ -1,0 +1,6 @@
+base rc=1
+skip-call-fix rc=0
+report-only-fix rc=0
+partial-guard-fake rc=1
+delete-call-fake rc=2
+comment-only rc=1

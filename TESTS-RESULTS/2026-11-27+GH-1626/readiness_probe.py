@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """GH-1626 readiness probe (retained manual check, not a suite; GH-831).
 
-Exit 0 only when the FIXED behavior is observed:
+Exit 0 only when the FIXED behavior is observed, with a one-PR queue (as main() requires):
+  0. both landing calls return the expected code and refresh the fixture PR exactly once, AND
   1. a landing dry run (`land_prs(..., dry_run=True)`) leaves an old, tool-shaped
      `merge-cleanup-*` folder in place, AND
   2. the same call with dry_run=False still prunes it (positive control: the fix must not
@@ -64,21 +65,44 @@ def plant():
     return old
 
 
+# Review round 1 (F1): main() only calls land_prs with a NONEMPTY queue, so the probe uses one
+# fixture PR. Its live refresh is stubbed to a draft: the loop skips it (no landing clone, no
+# merge, no gh call) and reaches the same end-of-loop cleanup a real dry-run landing reaches.
+FIXTURE_PR = {"number": 9, "title": "gh1626 probe fixture", "_hard_deps": [], "_soft_deps": []}
+refreshed = []
+
+
+def _refresh(num, *a, **k):
+    refreshed.append(num)
+    return {"number": num, "state": "OPEN", "isDraft": True, "baseRefName": "development",
+            "labels": [], "headRefOid": "0" * 40}
+
+
+mc.refresh_pr_with_retry = _refresh
+# A draft skip is an expected skip: the loop finishes cleanly and returns 0 (observed on base).
+EXPECTED_RC = 0
+
+
 def run(dry_run):
     for d in tmp_root.iterdir():
         mc.shutil.rmtree(d, ignore_errors=True)
     old = plant()
     args = Args(integration_branch="development", strategy=None, resume=False,
-                execute=not dry_run, teardown_only=False)
-    rc = mc.land_prs([], primary, args, dry_run, batch=None)
-    return rc, old.exists()
+                execute=not dry_run, teardown_only=False, prs=[9])
+    del refreshed[:]
+    rc = mc.land_prs([dict(FIXTURE_PR)], primary, args, dry_run, batch=None)
+    return rc, old.exists(), list(refreshed)
 
 
 def main():
-    rc_dry, kept_dry = run(True)
-    rc_exec, kept_exec = run(False)
-    print(f"dry-run:  land_prs rc={rc_dry} old-folder-kept={kept_dry}")
-    print(f"execute:  land_prs rc={rc_exec} old-folder-kept={kept_exec}")
+    rc_dry, kept_dry, ref_dry = run(True)
+    rc_exec, kept_exec, ref_exec = run(False)
+    print(f"dry-run:  land_prs rc={rc_dry} refreshed={ref_dry} old-folder-kept={kept_dry}")
+    print(f"execute:  land_prs rc={rc_exec} refreshed={ref_exec} old-folder-kept={kept_exec}")
+    if (rc_dry, rc_exec) != (EXPECTED_RC, EXPECTED_RC) or ref_dry != [9] or ref_exec != [9]:
+        print(f"INVALID: landing loop did not complete as expected (want rc={EXPECTED_RC} and "
+              "one refresh of the fixture PR in both arms); folder state not credited")
+        return 3
     if not kept_dry:
         print("UNFIXED: a landing dry run pruned a retained scratch folder (GH-1626)")
         return 1
