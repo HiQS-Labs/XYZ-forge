@@ -1,5 +1,5 @@
 diff --git a/relay-automation/relay-turn-lib.sh b/relay-automation/relay-turn-lib.sh
-index ec24bd75b..5a9f2e9f3 100644
+index ec24bd75b..e6c8abf61 100644
 --- a/relay-automation/relay-turn-lib.sh
 +++ b/relay-automation/relay-turn-lib.sh
 @@ -719,6 +719,14 @@ _rtl_sig() {  # <path> — content signature of a file/dir, or "ABSENT". Used to
@@ -17,7 +17,7 @@ index ec24bd75b..5a9f2e9f3 100644
  rtl_worktree_begin() {
    # Create the worktree, seed the CURRENT working-tree allowlist into it (the HEAD checkout may be
    # stale, e.g. an uncommitted relay file), and echo the worktree path. Returns non-zero on failure
-@@ -780,8 +788,35 @@ rtl_worktree_begin() {
+@@ -780,8 +788,38 @@ rtl_worktree_begin() {
        continue
      fi
      if [[ -e "$RTL_ROOT/$a" ]]; then
@@ -28,6 +28,9 @@ index ec24bd75b..5a9f2e9f3 100644
 +        # Containment is proven BEFORE anything is created or removed; any failure fails the begin with
 +        # no worktree path echoed, and teardown is Git-managed only (WORKTREE-SAFETY.md).
 +        local _wtp _anc _par _dst
++        case "/$a/" in
++          */../*|*/./*|*//*) _rtl_seed_abort "$wt" "seed $a: refusing a '.', '..' or empty path segment"; return 1 ;;
++        esac
 +        _wtp="$(cd "$wt" 2>/dev/null && pwd -P)" || _wtp=""
 +        _anc="$wt/$(dirname "$a")"
 +        while [[ ! -e "$_anc" && ! -L "$_anc" ]]; do _anc="$(dirname "$_anc")"; done

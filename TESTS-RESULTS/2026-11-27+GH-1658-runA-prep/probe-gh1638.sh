@@ -90,5 +90,19 @@ printf '%s' "$err5" | grep -qi 'worktree remove' || fail "refused Git teardown w
 ls -d "$T"/wt5/rtl-wt.* >/dev/null 2>&1 || fail "worktree was raw-deleted after Git refused to remove it"
 for w5 in "$T"/wt5/rtl-wt.*; do [ -d "$w5" ] && git -C "$R5" worktree remove --force "$w5" >/dev/null 2>&1; done
 git -C "$R5" worktree prune >/dev/null 2>&1
+# Arm 6: a directory entry with a '..' segment (host resolves it to a real directory) must fail with no path and create nothing outside.
+R6="$T/repo6"; mkrepo "$R6"
+mkdir -p "$R6/x"   # host side resolves (x exists, untracked); the checkout has no x
+mkdir -p "$T/outside6/seeded" && echo o > "$T/outside6/seeded/f.txt"
+mkdir -p "$T/wt6"
+out6="$(cd "$R6" && TMPDIR="$T/wt6" bash -c '
+  source "$1" >/dev/null 2>&1 || exit 3
+  RTL_ROOT="$2"; RTL_ALLOW=("x/../../outside6/seeded")
+  wt="$(rtl_worktree_begin)" || exit 9
+  echo "$wt"' _ "$L" "$R6" 2>/dev/null)"; rc6=$?
+[ "$rc6" -eq 9 ] && [ -z "$out6" ] || fail "a '..' directory entry still reported a seed (rc=$rc6)"
+[ ! -e "$T/wt6/outside6" ] || fail "a '..' directory entry created a directory outside the worktree"
+for w6 in "$T"/wt6/rtl-wt.*; do [ -d "$w6" ] && git -C "$R6" worktree remove --force "$w6" >/dev/null 2>&1; done
+git -C "$R6" worktree prune >/dev/null 2>&1
 cd / && rm -rf "$T"
 exit $st
