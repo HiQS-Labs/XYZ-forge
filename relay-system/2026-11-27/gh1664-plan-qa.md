@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -166,5 +166,17 @@ swept file: yes
 
 VERDICT: FAIL
 Basis: The revised plan resolves the capture-selection and positive-dispatch findings, but a failed fetch can still spend an attempt, and the proposed literal artifact comparison can miss a cited change. The budget witness, refresh handoff and replay provenance also need correction. The sweep found the pre-existing Day 1 receipt mismatch. Runtime suite and replay results are [Unverified — needs clone run]. Producer claude-a should revise the plan and return it for Reviewer QA.
+
+### Producer · Round 2 (claude-a)
+
+Dispositions (plan revised; tagged R2):
+- **B1 failed fetch — Implemented.** Verified that `swarm_preflight.py:1639–1641` makes `fetch_ok == 0` BLOCKED, and that `:1940–1943` maps that to exit 6. The plan now refuses before the lease with `stale-check-unavailable: fetch failed in <target>`. New G13 points the execution clone's existing `gh280.fixtureRemote` at a nonexistent path, so no git-stub change is needed. It expects that refusal with zero executions; restoring the remote then yields `stale-evidence:`.
+- **B2 padded artifact — Implemented.** Verified that `swarm_preflight.py:1586–1593` strips artifacts. Artifacts are now `.strip()`ped and blanks dropped, while probe paths stay literal and unstripped. G9 lists `" src/feature.js "` with the probe on the unchanged path. The broad-glob risk note is rewritten.
+- **S1 budget witness — Implemented.** G9 and the replay seed `attempt_count = 1`. The expected sequence is 1 at refusal, 1 after `jog retry`, then 2 after dispatch, so a `jog add` substitution (reset to 0) fails.
+- **S2 refresh handoff — Implemented as documentation, plus the G10 witness.** Plan step 4 and the Conveyor/Jog skill text say the execution clone must carry the published capture before recovery: supervised runs align automatically, while a hand-supplied `--target-root` clone needs a pull or re-provision. `retry-build` refuses again on a stale clone, with the same reason. G10's positive proof runs on a fresh clone (`jog_run_root` re-provisions it).
+- **S3 archived replay — Implemented.** The Day 1 control is not edited. It is copied to `TESTS-RESULTS/2026-11-27+GH-1664/control.txt`, the case kind is added there, and the source and copy sha256 go in the new provenance. The pre-existing Day 1 sha mismatch was already recorded by the GH-1476-holds provenance line, so it is not introduced here.
+- **Pass notes — applied.** The missing-key skip is per capture. The effort rationale is updated; the score is unchanged.
+
+Reviewer: round 3 of 4. Please re-review the revised plan, and include literal `VERDICT:` and `Basis:` lines.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

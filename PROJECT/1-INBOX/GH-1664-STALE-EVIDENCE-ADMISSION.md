@@ -24,7 +24,7 @@ Parent: [#1476](https://github.com/HiQS-Labs/XYZ-forge/issues/1476) (admission p
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 (Codex) FAIL: 3 Blockers and 2 Shoulds, all accepted and folded in (marked R1 below). | Plan QA round 2, then build in `utils/py/jog_run.py` beside `hold_refusal`. |
+| Plan QA rounds 1–2 (Codex) FAIL; every finding accepted and folded in (marked R1/R2 below). | Plan QA round 3, then build in `utils/py/jog_run.py` beside `hold_refusal`. |
 
 ## Acceptance
 
@@ -81,8 +81,9 @@ plan was written. The operator gets a precise reason and the row survives untouc
      A capture with no contract heading, or an unparseable contract, is skipped, because preflight
      already refuses those after the lease, as today.
    - It parses with `extract_contract`, catching `SystemExit` as `contract_probes_from_doc` does.
-   - If `prepared_commit` is absent, it returns `None` and prints one note:
-     `jog: GH-N stale-evidence check skipped: packet records no prepared_commit`. **Warn, not
+   - If `prepared_commit` is absent **in a capture**, that capture is skipped with one note
+     (`jog: GH-N stale-evidence check skipped: <capture> records no prepared_commit`), and the scan
+     continues to the other captures (R2 Pass note: a legacy sibling cannot end the scan). **Warn, not
      fail-closed. Reason:** every existing capture (start-task, express and legacy rows) records no
      preparation point. Failing closed would park every queued row at roll-out with no remedy except
      a hand edit, and it would break Acceptance 3. Without a recorded point there is no claim to go
@@ -91,20 +92,27 @@ plan was written. The operator gets a precise reason and the row survives untouc
    - **(R1 B2) Same root and revision as Preflight.** The repository is the execution root `target`,
      the same `SWARM_PREFLIGHT_ROOT`/`--target-root` Jog hands Preflight (`jog_run.py:644–647`).
      Python Preflight ignores `target.repo` (`swarm_preflight.py:1412–1418`), so this check does
-     too. Preflight runs `git fetch --prune --quiet` in that root, tolerating failure, and then
-     resolves `target.ref` (`swarm_preflight.py:1519–1521, 1560–1561`). This check performs the
-     same fetch first, only for a capture that records `prepared_commit`, so legacy rows make no
-     new network call. It then resolves `target.ref` the same way, so it compares against the
-     commit Preflight will evaluate seconds later. The remaining window is a landing between the
-     two fetches; at this scale that is accepted, and the next admission catches it.
+     too. Preflight runs `git fetch --prune --quiet` in that root and then resolves `target.ref`
+     (`swarm_preflight.py:1519–1521, 1560–1561`). This check runs the same fetch first, only when
+     a capture records `prepared_commit`, so legacy rows make no new network call. It then resolves
+     `target.ref` the same way, so it compares against the commit Preflight will evaluate seconds
+     later. **(R2 B1)** A nonzero fetch refuses before the lease with
+     `stale-check-unavailable: fetch failed in <target>`. A failed fetch could otherwise leave a
+     cached ref at A and an empty diff, and Preflight treats `fetch_ok == 0` as BLOCKED, exit 6
+     (`swarm_preflight.py:1639–1641, 1940–1943`), but only after the lease. The remaining window is
+     a landing between the two successful fetches; at this scale that is accepted, and the next
+     admission catches it.
    - If `prepared_commit` is present but is not a 40-hex string, or does not resolve to a commit in
      `target`, it returns `stale-check-unavailable: <why>`. If `target.ref` does not resolve, or
      git fails, it also returns `stale-check-unavailable: <why>`. A check that cannot be made
      refuses, matching `hold_refusal`.
    - **(R1 S2) The cited paths use the consumer's literal semantics.** They are `artifacts`
      (which includes the `artifacts_new` subset) plus every non-`command` `fix_probes[].path`,
-     deduplicated. Preflight evaluates probe paths literally (`swarm_preflight.py:257–282`), so each
-     is passed as a `:(literal)<path>` pathspec. Command probes cite no path field, so they are out
+     deduplicated. Each is passed as a `:(literal)<path>` pathspec, normalized the way Preflight
+     reads it. **(R2 B2)** Artifact strings are `.strip()`ped, as Preflight does before its
+     existence check (`swarm_preflight.py:1586–1593`); blank results are dropped. Probe paths are
+     kept literal and unstripped, as `eval_probes` reads them (`swarm_preflight.py:257–282`).
+     Command probes cite no path field, so they are out
      of scope (non-goal). It runs `git diff --name-only <prepared_commit> <ref_commit> -- <paths>`
      in `target`. This is a tree diff, so a squash, merge or parallel landing is all handled the
      same.
@@ -118,9 +126,14 @@ plan was written. The operator gets a precise reason and the row survives untouc
    are the only `jog_run.py` changes. They are confined to the admission path, away from the #1653
    receipt-publication work.
 4. **Refresh path (no new code).** A Conveyor refresh publishes the capture with a new
-   `prepared_commit` (B). Then `jog retry N` followed by `jog run`, or `jog retry-build N`,
-   re-admits the **same row**: no `jog add`, no new row, no reset. The attempt count then
-   increments once, through the normal lease.
+   `prepared_commit` (B) to the integration branch. **(R2 S2)** The execution clone must then carry
+   the published capture: a supervised `jog run` aligns its target first (`_jog_align_target`),
+   while a hand-supplied `--target-root` clone has to be updated (pull or re-provision) before
+   recovery. `retry-build` reads the supplied clone before the lease without aligning it
+   (`jog_run.py:1114`), so a clone still holding the A-stamped capture refuses again, with the same
+   named reason. Then `jog retry N` followed by `jog run`, or `jog retry-build N`, re-admits the
+   **same row**: no `jog add`, no new row, no reset. The attempt count then increments once,
+   through the normal lease. The Conveyor and Jog skill text states this handoff.
 5. **Docs.** Conveyor Step 3 (record `prepared_commit`) and Step 6 (refresh rewrites it; the refusal
    names the changed paths). `relay-automation/CONTRACT.example.md` gets an annotation for the
    optional key. The Jog skill's admission text gets one line. A build-record line in the GH-1476
@@ -141,6 +154,14 @@ plan was written. The operator gets a precise reason and the row survives untouc
     advance `main`. `jog run` must leave the row `parked|stale-evidence: …src/feature.js…|0`, the
     output must say `not started: stale-evidence`, and there must be no execution ledger entry
     (no lease, no preflight, no worker).
+  - **(R2 S1) Budget witness.** Before G9's refusal, the row is seeded with `attempt_count = 1`
+    (one prior spent attempt, written with a single `sqlite3 UPDATE`, as G6 already does for
+    `status`). G9 must leave it at 1, it must still be 1 right after `jog retry`, and it must be 2
+    after G10's dispatch. A `jog add` substitution resets it to 0, which fails the count
+    assertion.
+  - **(R2 B2) Padded artifact.** G9's capture lists the artifact as `" src/feature.js "` (padded).
+    The probe stays on the unchanged `notes/landing-note.txt`, and only `src/feature.js` changes.
+    The refusal must still name `src/feature.js`.
   - **(R1 B3) G10, positive dispatch after refresh.** Refresh so `prepared_commit` = B, committed,
     plus an unrelated file change committed after it. Then `jog retry 901` and `jog run` with G4's
     environment (canned PR, suggested lane branch, approving agent stubs). The assertions: the same
@@ -158,19 +179,26 @@ plan was written. The operator gets a precise reason and the row survives untouc
     re-cloning. The check must fetch as Preflight does, see `origin/main` at B, and park with
     `stale-evidence: …src/feature.js…|0` and no execution. Without the fetch it would read A and
     dispatch.
+  - **(R2 B1) G13, failed fetch.** This is G12's setup with the execution clone's existing
+    `gh280.fixtureRemote` pointed at a nonexistent path, so the stubbed fetch fails while
+    `origin/main` still resolves to A. The row must park with
+    `stale-check-unavailable: fetch failed…|0` and no execution. Restoring the remote and re-running
+    after `jog retry` gives G12's `stale-evidence:` refusal. No git-stub change is needed.
   - Existing G4 and later sections (no `prepared_commit`) must stay green. That is the "admits as
     before" regression.
   - **Red:** run the edited suite with `utils/py/jog_run.py` reverted to base. G9, G11 and G12 must
     fail, because the row dispatches. This proves the base run reaches the worker. **Green:** run it
     with the change. Both runs happen in a disposable full clone, with outputs under
     `TESTS-RESULTS/2026-11-27+GH-1664/` and `provenance.jsonl`.
-- **Disposable replay / Run A stale witness:** add a `stale-evidence` case kind to the existing
-  Day 1 replay `TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt`. It is the same fixture as the
-  GH-1476 holds cases and takes the clone as an argument. Steps: prepare at A, change the cited file
+- **Disposable replay / Run A stale witness (R2 S3):** the archived Day 1 control is **not** edited.
+  It is copied to `TESTS-RESULTS/2026-11-27+GH-1664/control.txt` and a `stale-evidence` case kind is
+  added to the copy, so the GH-1476 receipts keep their bytes. The copy's sha256 and its source sha
+  go in the new `provenance.jsonl`. The copy keeps the same fixture and takes the clone as an
+  argument. It seeds `attempt_count = 1`, like G9. Steps: prepare at A, change the cited file
   at B, expect a 0-call refusal with the reason prefix `stale-evidence:` and an unchanged attempt
   count; then refresh `prepared_commit` to B, run `jog retry 901` and `jog run`, and expect exactly
   1 refresh worker call (counted from the append-only call log), the same `global_id`, one row and
-  attempt 0→1. **(R1 S1)** For this case kind, the control exits nonzero when either assertion
+  attempt 1 → 1 on refusal → 2 after the dispatch. **(R1 S1)** For this case kind, the control exits nonzero when either assertion
   fails. There is no new wrapper script: the exact env and command lines are recorded in
   `provenance.jsonl`. The `base` log is red, the `change` log is green, and the `change` log is the
   labelled stale witness Run A can cite.
@@ -203,8 +231,10 @@ plan was written. The operator gets a precise reason and the row survives untouc
 
 ### Risks and rollback
 
-- Risk: a packet cites a broad glob (`src/**`), so unrelated edits refuse it. The reason lists
-  the paths, and the fix is a Conveyor refresh. This is intended conservatism.
+- Risk (R2 B2): cited paths are literal, as Preflight reads them. A glob-looking artifact string
+  matches only a file with that literal name, so it neither over-refuses nor expands. A packet
+  that cites a directory refuses on any change beneath it; that is intended conservatism, and the
+  reason lists the paths.
 - Risk: a `prepared_commit` from an unfetched branch refuses as unavailable. The reason says so.
 - Rollback: revert the commit. The key is optional and ignored by every other reader, so reverting
   restores today's behaviour with no data migration. Parked rows recover with `jog retry`.
@@ -214,7 +244,7 @@ plan was written. The operator gets a precise reason and the row survives untouc
 `rated 70/55/50/65`. sev 55: a stale packet spends a real build attempt (out of 3) and reviewer time
 on an out-of-date plan, and can land work against moved source; this is wasted or incorrect work,
 not data loss. pri 70: OL-10 scoreboard item, item 4 of the #1657 batch. appeal 50 (neutral, no
-operator value). effort 65: one helper, two call sites, docs, and one suite case. Recurrence: no
+operator value). effort 65: one helper plus a pure extract, two call sites, docs, five cases (G9–G13) in an existing suite and a copied replay; still about one day of work (R2 note). Recurrence: no
 distinct stale-dispatch incident was found in the last 14 days versus the prior 14 (prior-art scan:
 0 matching issues/PRs). Trend unknown, not zero; the gap is known by inspection (GH-1476:32).
 
@@ -234,7 +264,7 @@ distinct stale-dispatch incident was found in the last 14 days versus the prior 
     "skills/2-daily/jog/SKILL.md",
     "relay-automation/CONTRACT.example.md",
     "PROJECT/2-WORKING/GH-1476-RAW-TASK-PREPARATION.md",
-    "TESTS-RESULTS/2026-11-25+GH-1476-day1/control.txt"
+    "TESTS-RESULTS/2026-11-27+GH-1664/control.txt"
   ]
 }
 ```
