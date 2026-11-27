@@ -1,0 +1,7 @@
+merge-cleanup: Landing clones removed after a clean run (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1626-probe-sxxluw9l/tmp/merge-cleanup-fnelnhdd)
+merge-cleanup: Scratch pruning: removed 1 old retained clone folder(s) under /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1626-probe-sxxluw9l/tmp
+merge-cleanup: Landing clones removed after a clean run (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1626-probe-sxxluw9l/tmp/merge-cleanup-vhobg323)
+merge-cleanup: Scratch pruning: removed 1 old retained clone folder(s) under /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1626-probe-sxxluw9l/tmp
+dry-run:  land_prs rc=0 old-folder-kept=False
+execute:  land_prs rc=0 old-folder-kept=False
+UNFIXED: a landing dry run pruned a retained scratch folder (GH-1626)

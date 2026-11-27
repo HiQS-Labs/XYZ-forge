@@ -1,0 +1,5 @@
+overlap: RuntimeError: sandbox $TMPDIR/gh792-probe-0bsc1740/base/clone is not disjoint from the repo $TMPDIR/gh792-probe-0bsc1740/base/clone; mutation calls=[]; source intact=True; base entries before=['clone'] after=['clone']
+reverse: RuntimeError: sandbox $TMPDIR/gh792-probe-0bsc1740/base2/clone is not disjoint from the repo $TMPDIR/gh792-probe-0bsc1740/base2/clone/nested; mutation calls=[]; both checkouts intact=True
+disjoint: clone ok at $TMPDIR/gh792-probe-0bsc1740/sandbox/clone
+descendant: refused
+FIXED: overlap refuses before any mutation; disjoint and descendant behavior kept

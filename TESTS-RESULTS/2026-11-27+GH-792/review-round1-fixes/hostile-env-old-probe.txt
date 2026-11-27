@@ -1,0 +1,3 @@
+fatal: repository '$TMPDIR/gh792-probe-60wdr7_8/base/clone' does not exist
+overlap: CalledProcessError: Command '['git', 'clone', '-q', '--no-hardlinks', '$TMPDIR/gh792-probe-60wdr7_8/base/clone', '$TMPDIR/gh792-probe-60wdr7_8/base/clone']' returned non-zero exit status 128.; mutation calls=['makedirs', 'rmtree', 'subprocess']; source intact=False; base entries before=['clone'] after=[]
+UNFIXED: make_sandbox deleted the source repository before refusing (GH-792)

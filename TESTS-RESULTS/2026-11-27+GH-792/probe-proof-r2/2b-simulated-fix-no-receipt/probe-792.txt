@@ -1,0 +1,5 @@
+overlap: RuntimeError: sandbox /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-vu1jqzc_/base/clone is not disjoint from the repo /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-vu1jqzc_/base/clone; mutation calls=[]; source intact=True; base entries before=['clone'] after=['clone']
+reverse: RuntimeError: sandbox /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-vu1jqzc_/base2/clone is not disjoint from the repo /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-vu1jqzc_/base2/clone/nested; mutation calls=[]; both checkouts intact=True
+disjoint: clone ok at /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-vu1jqzc_/sandbox/clone
+descendant: RuntimeError: sandbox /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-vu1jqzc_/host/inside/clone is not disjoint from the repo /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-vu1jqzc_/host; mutation calls=[]; sandbox root absent=True; host intact=True
+FIXED: overlap refuses before any mutation; disjoint and descendant behavior kept

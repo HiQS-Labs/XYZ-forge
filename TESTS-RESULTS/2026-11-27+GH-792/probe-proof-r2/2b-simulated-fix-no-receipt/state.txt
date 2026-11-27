@@ -1,0 +1,5 @@
+state=2b-simulated-fix-no-receipt
+commit=2382841fac2617fd00f273053fe3713d9f8e5bc3
+base_prepared=b329196355441f5e8d9ce9bce94f5610c4145e25
+date_utc=2026-11-27T15:47:30Z
+python=Python 3.14.7

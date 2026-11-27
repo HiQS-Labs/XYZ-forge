@@ -1,0 +1,126 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-27T15:24:58Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1626-dry-run-scratch-prune"
+  },
+  "provenance": {
+    "source_docs": [
+      "~/flywheel-day3-proof/PROJECT/1-INBOX/GH-1626-DRY-RUN-SCRATCH-PRUNE.md"
+    ],
+    "issues": [],
+    "target_root": "~/flywheel-day3-proof",
+    "branch": "docs/XYZ-forge-gh1626-gh792-conveyor-prep-2026-11-27",
+    "commit": "c3c9d53a830568385a6a4af5b5f555e66d607f6e",
+    "suggested_branch": "marathon/gh-1626-dry-run-scratch-prune-2026-11-27",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash test/gh436-merge-cleanup.sh",
+    "round_cap": 2,
+    "fix_probes": [
+      {
+        "type": "command",
+        "cmd": "python3 TESTS-RESULTS/2026-11-27+GH-1626/readiness_probe.py",
+        "expect_nonzero": true
+      }
+    ],
+    "artifacts": [
+      "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+      "TESTS-RESULTS/2026-11-27+GH-1626/"
+    ],
+    "artifacts_new": [],
+    "remediation": {
+      "source": "issue#1626",
+      "criteria": "A merge_cleanup.py landing dry run (no --execute) removes no retained merge-cleanup-*/merge-check-* folder; an executing run still prunes exactly as today. Gate prune_retained_scratch on dry_run in _land_prs_loop (or make it report-only in dry run). Existing gh436 suite only; manual check under TESTS-RESULTS. No new suite."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/docs/XYZ-forge-gh1626-gh792-conveyor-prep-2026-11-27",
+    "ahead": 1,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "c3c9d53a830568385a6a4af5b5f555e66d607f6e",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "stale",
+    "probes": [
+      {
+        "type": "command",
+        "path": null,
+        "verdict": "landed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "unknown",
+      "closed_at": null,
+      "detail": "could not fetch issue state (gh missing, unauthenticated, or offline)"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "unknown",
+      "cause": "fetch-failed",
+      "detail": "could not fetch issue #1626 (gh missing, unauthenticated, or offline) \u2014 acceptance fidelity NOT verified",
+      "issue": "1626",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "gaps": [],
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1626 (https://github.com/HiQS-Labs/XYZ-forge/issues/1626)",
+      "issue": "1626",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1626",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 3,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+      "TESTS-RESULTS/2026-11-27+GH-1626/",
+      "test/gh549-work-events.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+      "TESTS-RESULTS/2026-11-27+GH-1626/",
+      "test/gh549-work-events.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh549-work-events.sh"
+    ],
+    "inferred_test_helpers": [],
+    "fs_touching_tests": [
+      "test/gh549-work-events.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

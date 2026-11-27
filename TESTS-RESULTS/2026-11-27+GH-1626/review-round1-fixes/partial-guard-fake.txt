@@ -1,0 +1,13 @@
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=probe
+merge-cleanup: PR #9: SKIPPED (draft)
+merge-cleanup: Skipped draft PR(s): #9
+merge-cleanup: Landing clones removed after a clean run ($TMPDIR/gh1626-probe-sgac5u70/tmp/merge-cleanup-qbjzd1oa)
+merge-cleanup: Scratch pruning: removed 1 old retained clone folder(s) under $TMPDIR/gh1626-probe-sgac5u70/tmp
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=probe
+merge-cleanup: PR #9: SKIPPED (draft)
+merge-cleanup: Skipped draft PR(s): #9
+merge-cleanup: Landing clones removed after a clean run ($TMPDIR/gh1626-probe-sgac5u70/tmp/merge-cleanup-_p5wr567)
+merge-cleanup: Scratch pruning: removed 1 old retained clone folder(s) under $TMPDIR/gh1626-probe-sgac5u70/tmp
+dry-run:  land_prs rc=0 refreshed=[9] old-folder-kept=False
+execute:  land_prs rc=0 refreshed=[9] old-folder-kept=False
+UNFIXED: a landing dry run pruned a retained scratch folder (GH-1626)

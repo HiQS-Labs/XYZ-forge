@@ -1,0 +1,131 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-27T15:25:46Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-792-gen4-sandbox-disjoint-first"
+  },
+  "provenance": {
+    "source_docs": [
+      "~/flywheel-day3-proof/PROJECT/1-INBOX/GH-792-GEN4-SANDBOX-DISJOINT-FIRST.md"
+    ],
+    "issues": [],
+    "target_root": "~/flywheel-day3-proof",
+    "branch": "docs/XYZ-forge-gh1626-gh792-conveyor-prep-2026-11-27",
+    "commit": "07a3d91c0469fe6f420144ec9044cf66f5485144",
+    "suggested_branch": "marathon/gh-792-gen4-sandbox-disjoint-first-2026-11-27",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash test/gh-gen4-phase5-campaign.sh",
+    "round_cap": 2,
+    "fix_probes": [
+      {
+        "type": "command",
+        "cmd": "python3 TESTS-RESULTS/2026-11-27+GH-792/readiness_probe.py",
+        "expect_nonzero": true
+      }
+    ],
+    "artifacts": [
+      "utils/py/gen4_campaign.py",
+      "TESTS-RESULTS/2026-11-27+GH-792/"
+    ],
+    "artifacts_new": [],
+    "remediation": {
+      "source": "issue#792",
+      "criteria": "make_sandbox resolves repo and the candidate clone path and runs the existing equality/descendant check before makedirs, rmtree or git clone; an overlapping call refuses with zero mutations; a disjoint candidate still clones; the gen4_campaign.py:348 self-test still refuses. Existing suite only. No new suite."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "07a3d91c0469fe6f420144ec9044cf66f5485144",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "command",
+        "path": null,
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": false,
+    "next_action": "acceptance criteria diverge from issue #792 \u2014 3 doc criterion(a) absent from the issue with no declared deviation. Copy the issue's '## Acceptance' block verbatim, or declare each deviation under '## Acceptance \u2014 deviations from the issue' as `- [dropped|changed|added] <text> \u2014 reason: <why>'",
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #792 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "diverged",
+      "cause": null,
+      "detail": "3 doc criterion(a) absent from the issue with no declared deviation",
+      "issue": "792",
+      "dropped": [],
+      "added": [
+        "The overlapping call refuses with zero `makedirs`/`rmtree`/`subprocess` calls (red control: the current order records a delete first).",
+        "A disjoint candidate still clones as before.",
+        "The existing self-test at `gen4_campaign.py:348` (`make_sandbox(host, os.path.join(host, \"inside\"))`) still refuses."
+      ],
+      "declared": 0,
+      "problems": []
+    },
+    "gaps": [],
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #792 (https://github.com/HiQS-Labs/XYZ-forge/issues/792)",
+      "issue": "792",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/792",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 3,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "utils/py/gen4_campaign.py",
+      "TESTS-RESULTS/2026-11-27+GH-792/",
+      "test/gh-gen4-phase5-campaign.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "utils/py/gen4_campaign.py",
+      "TESTS-RESULTS/2026-11-27+GH-792/",
+      "test/gh-gen4-phase5-campaign.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh-gen4-phase5-campaign.sh"
+    ],
+    "inferred_test_helpers": [],
+    "fs_touching_tests": [
+      "test/gh-gen4-phase5-campaign.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

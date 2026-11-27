@@ -1,0 +1,5 @@
+state=2-simulated-fix
+commit=c3c9d53a830568385a6a4af5b5f555e66d607f6e
+base_prepared=07a3d91c0469fe6f420144ec9044cf66f5485144
+date_utc=2026-11-27T15:25:01Z
+python=Python 3.14.7

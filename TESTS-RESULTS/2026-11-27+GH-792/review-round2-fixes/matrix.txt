@@ -1,0 +1,4 @@
+base rc=1 :: UNFIXED: make_sandbox deleted the source repository before refusing (GH-792)
+symmetric-fix rc=0 :: FIXED: overlap refuses before any mutation; disjoint and descendant behavior kept
+equal-and-reverse-early-forward-late rc=1 :: UNFIXED: descendant sandbox root was refused only after mutating
+forward-only-early rc=1 :: UNFIXED: source nested under the candidate clone path was not refused before mutating

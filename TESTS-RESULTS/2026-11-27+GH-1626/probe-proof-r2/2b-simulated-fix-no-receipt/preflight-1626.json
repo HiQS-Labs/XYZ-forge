@@ -1,0 +1,139 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-27T15:47:26Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1626-dry-run-scratch-prune"
+  },
+  "provenance": {
+    "source_docs": [
+      "~/flywheel-day3-proof/PROJECT/1-INBOX/GH-1626-DRY-RUN-SCRATCH-PRUNE.md"
+    ],
+    "issues": [],
+    "target_root": "~/flywheel-day3-proof",
+    "branch": "docs/XYZ-forge-gh1626-gh792-conveyor-prep-2026-11-27",
+    "commit": "2382841fac2617fd00f273053fe3713d9f8e5bc3",
+    "suggested_branch": "marathon/gh-1626-dry-run-scratch-prune-2026-11-27",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash test/gh436-merge-cleanup.sh",
+    "round_cap": 2,
+    "fix_probes": [
+      {
+        "type": "command",
+        "cmd": "python3 TESTS-RESULTS/2026-11-27+GH-1626/readiness_probe.py",
+        "expect_nonzero": true
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-27+GH-1626/delivery.md"
+      }
+    ],
+    "artifacts": [
+      "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+      "TESTS-RESULTS/2026-11-27+GH-1626/delivery.md"
+    ],
+    "artifacts_new": [
+      "TESTS-RESULTS/2026-11-27+GH-1626/delivery.md"
+    ],
+    "remediation": {
+      "source": "issue#1626",
+      "criteria": "A merge_cleanup.py landing dry run (no --execute) removes no pre-existing retained merge-cleanup-*/merge-check-* folder; an executing run still prunes exactly as today. Gate prune_retained_scratch on dry_run in _land_prs_loop (or make it report-only in dry run). Record the manual check (readiness probe output before/after) in TESTS-RESULTS/2026-11-27+GH-1626/delivery.md. Do not edit the readiness probe, its proof receipts or any test suite. Existing gh436 suite only. No new suite."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "2382841fac2617fd00f273053fe3713d9f8e5bc3",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ambiguous",
+    "probes": [
+      {
+        "type": "command",
+        "path": null,
+        "verdict": "landed"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-27+GH-1626/delivery.md",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1626 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "unknown",
+      "cause": "no-issue-section",
+      "detail": "issue #1626 has no '## Acceptance' section \u2014 nothing to copy from",
+      "issue": "1626",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "gaps": [
+      "issue #1626 has no '## Acceptance' section, so the capture doc's criteria are unverified against it"
+    ],
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1626 (https://github.com/HiQS-Labs/XYZ-forge/issues/1626)",
+      "issue": "1626",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1626",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 3,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+      "TESTS-RESULTS/2026-11-27+GH-1626/delivery.md",
+      "test/gh549-work-events.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+      "TESTS-RESULTS/2026-11-27+GH-1626/delivery.md",
+      "test/gh549-work-events.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh549-work-events.sh"
+    ],
+    "inferred_test_helpers": [],
+    "fs_touching_tests": [
+      "test/gh549-work-events.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

@@ -1,0 +1,5 @@
+overlap: RuntimeError: sandbox $TMPDIR/gh792-probe-1luso_ai/base/clone is not disjoint from the repo $TMPDIR/gh792-probe-1luso_ai/base/clone; mutation calls=[]; source intact=True; base entries before=['clone'] after=['clone']
+reverse: RuntimeError: sandbox $TMPDIR/gh792-probe-1luso_ai/base2/clone is not disjoint from the repo $TMPDIR/gh792-probe-1luso_ai/base2/clone/nested; mutation calls=[]; both checkouts intact=True
+disjoint: clone ok at $TMPDIR/gh792-probe-1luso_ai/sandbox/clone
+descendant: RuntimeError: sandbox $TMPDIR/gh792-probe-1luso_ai/host/inside/clone is not disjoint from the repo $TMPDIR/gh792-probe-1luso_ai/host; mutation calls=['makedirs', 'subprocess']; sandbox root absent=False; host intact=True
+UNFIXED: descendant sandbox root was refused only after mutating
