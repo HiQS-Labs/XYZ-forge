@@ -1,0 +1,21 @@
+{
+  "sha": "90b5f0abe163fe8479fed1b26ff709b8afe49301",
+  "gate": "validate.sh",
+  "mode": "parallel",
+  "exit_code": 0,
+  "passed": 408,
+  "total": 408,
+  "duration_s": null,
+  "timestamp": "2026-11-27T23:18:01.757869+00:00",
+  "host": "Darwin 24.6.0",
+  "attempt": {
+    "attestation": "/Users/noelsaw/flywheel-runA-exec/.git/relay-attest/MARATHON-GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL-TURN.json",
+    "id": "cd7c42c9d79343e2ad3c685968eb39f5",
+    "kind": "lane",
+    "record": "/Users/noelsaw/flywheel-runA-exec/.tick/attempt-history/gh-1666-acceptance-markdown-line-model-a7rm5qoo/attempts",
+    "archived": true,
+    "sha": "90b5f0abe163fe8479fed1b26ff709b8afe49301",
+    "state": "active"
+  },
+  "scope": "full"
+}

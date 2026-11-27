@@ -579,10 +579,56 @@ for f in fence fence-tilde fence-long fence-indent fence-nbsp fence-u2028; do
 done
 printf '## Acceptance\n- [ ] Alpha\342\200\250beta\n- [ ] Second\n' >"$D20/u2028-checkbox.md"
 c20 "a U+2028 inside a checkbox criterion still matches its verbatim copy" "$D20/u2028-checkbox.md" "$D20/u2028-checkbox.md" 'match|[]|[]'
+printf '## Acceptance\n- [ ] Alpha\n- [ ] Second\n' >"$D20/u2028-truncated.md"
+c20 "dropping text after a U+2028 diverges" "$D20/u2028-checkbox.md" "$D20/u2028-truncated.md" \
+  'diverged|["Alpha beta"]|["Alpha"]'
 printf '## Acceptance\n- [ ] First\n\n```inline code```\n\n- Second\n' >"$D20/inline.md"
 printf '## Acceptance\n- [ ] First\n- [ ] Second\n' >"$D20/two.md"
 c20 "an inline code span does not open a fence (full copy)" "$D20/inline.md" "$D20/two.md" 'match|[]|[]'
 c20 "an inline code span does not open a fence (partial copy)" "$D20/inline.md" "$D20/first.md" 'diverged|["Second"]|[]'
+
+# Case 21 (GH-1666): a verbatim match also passed when both parsers truncated the same
+# criterion. Check the full criterion, the packet's raw line, and a deviation containing
+# a second marker on the same Markdown line.
+if python3 - <<'PYEOF'
+import os
+import sys
+
+sys.path.insert(0, os.environ["SP_PY_DIR"])
+from swarm_preflight import (
+    collect_inline_checklist,
+    extract_acceptance_criteria,
+    extract_declared_deviations,
+)
+
+# These are all the extra boundaries recognized by str.splitlines().
+for code_point in (0x0B, 0x0C, 0x1C, 0x1D, 0x1E, 0x85, 0x2028, 0x2029):
+    separator = chr(code_point)
+    criterion = f"Alpha{separator}beta"
+    issue = f"## Acceptance\r\n- {criterion}\r- Second\n"
+    capture = f"## Acceptance\r\n- [ ] {criterion}\r- [ ] Second\n"
+    assert extract_acceptance_criteria(issue, plain_bullets=True) == [
+        "Alpha beta", "Second"
+    ], hex(code_point)
+    assert extract_acceptance_criteria(capture) == ["Alpha beta", "Second"], hex(code_point)
+    items, _, _ = collect_inline_checklist(capture)
+    assert items == [
+        ("Alpha beta", [f"- [ ] {criterion}"]),
+        ("Second", ["- [ ] Second"]),
+    ], (hex(code_point), items)
+
+    deviations = extract_declared_deviations(
+        "## Acceptance — deviations from the issue\n"
+        f"- [added] Alpha{separator}- [added] beta — reason: R\n"
+    )
+    assert deviations["added"] == [("Alpha - [added] beta", "R")], (hex(code_point), deviations)
+    assert not deviations["malformed"], (hex(code_point), deviations)
+PYEOF
+then
+  pass "C21 acceptance readers preserve non-CR/LF separators within Markdown lines"
+else
+  fail "C21 an acceptance reader lost content or split at a non-CR/LF separator"
+fi
 
 echo "  gh400-acceptance-fidelity: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1

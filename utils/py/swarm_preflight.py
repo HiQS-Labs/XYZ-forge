@@ -582,6 +582,10 @@ ACC_PLAIN_BULLET_RE = re.compile(r'^([ \t]*)[-*][ \t]+(\S.*)$')
 ACC_FENCE_RE = re.compile(r'^ {0,3}(`{3,}(?=[^`]*$)|~{3,})')
 ANY_HEADING_RE = re.compile(r'^(#{1,6})\s')
 
+def _markdown_lines(text: str) -> list[str]:
+    """Split on Markdown line endings and keep other separators in the line content."""
+    return re.split(r'\r\n|\r|\n', text)
+
 def normalize_criterion(text: str | None) -> str:
     """Fold hard-wrap and incidental whitespace so a re-wrapped copy still counts as verbatim.
 
@@ -612,7 +616,7 @@ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -
     """
     if not text:
         return None
-    lines = text.splitlines()
+    lines = _markdown_lines(text)
     start: int | None = None
     level: int | None = None
     for i, line in enumerate(lines):
@@ -626,20 +630,10 @@ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -
         return None
     assert level is not None
 
-    # Fence markers are judged on whole Markdown lines (CR/LF only). `splitlines()` also breaks on
-    # U+0085/U+2028/U+2029, which Markdown keeps as line content; the shared line stream above is
-    # left as is (#1666), and a fragment that does not start a Markdown line is never a marker.
-    marker_lines: list[str | None] = []
-    if plain_bullets:
-        physical, at_start = iter(re.split(r'\r\n|\r|\n', text)), True
-        for frag in text.splitlines(keepends=True):
-            marker_lines.append(next(physical) if at_start else None)
-            at_start = frag.endswith(('\r', '\n'))
-
     criteria: list[str] = []
     indents: list[int] = []
     fence: str | None = None
-    for idx, line in enumerate(lines[start:], start):
+    for line in lines[start:]:
         heading = ANY_HEADING_RE.match(line)
         if heading and len(heading.group(1)) <= level:
             break
@@ -647,12 +641,11 @@ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -
             break
         in_fence = fence is not None
         if plain_bullets:
-            ml = marker_lines[idx]
-            f = ACC_FENCE_RE.match(ml) if ml is not None else None
+            f = ACC_FENCE_RE.match(line)
             if fence is None and f:
                 fence, in_fence = f.group(1), True
-            elif fence is not None and f and ml is not None and f.group(1)[0] == fence[0] \
-                    and len(f.group(1)) >= len(fence) and not ml[f.end():].strip(' \t'):
+            elif fence is not None and f and f.group(1)[0] == fence[0] \
+                    and len(f.group(1)) >= len(fence) and not line[f.end():].strip(' \t'):
                 fence = None
         bullet = ACC_BULLET_RE.match(line)
         if not bullet and plain_bullets and not in_fence:
@@ -686,7 +679,7 @@ def extract_declared_deviations(text: str | None) -> dict[str, Any]:
     out: dict[str, Any] = {"dropped": [], "added": [], "changed": [], "malformed": []}
     if not text:
         return out
-    lines = text.splitlines()
+    lines = _markdown_lines(text)
     start: int | None = None
     level: int | None = None
     for i, line in enumerate(lines):
@@ -840,7 +833,7 @@ def collect_inline_checklist(
     """
     if not text:
         return [], "whole-document", 0
-    lines = text.splitlines()
+    lines = _markdown_lines(text)
 
     start, end, mode = 0, len(lines), "whole-document"
     for i, line in enumerate(lines):

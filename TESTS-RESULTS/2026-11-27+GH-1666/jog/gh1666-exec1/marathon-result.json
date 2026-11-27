@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1666-exec1",
+  "generated_at": "2026-11-27T23:18:06Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "1666",
+  "phase": "gh-1666-acceptance-markdown-line-model",
+  "lane": "gh-1666-acceptance-markdown-line-model",
+  "token": "MARATHON-GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "agy",
+  "target_repo": {
+    "path": "/Users/noelsaw/flywheel-runA-exec",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1666-acceptance-markdown-line-model-2026-11-27",
+  "head_sha": "90b5f0abe163fe8479fed1b26ff709b8afe49301",
+  "reviewed_candidate": "90b5f0abe163fe8479fed1b26ff709b8afe49301",
+  "reviewed_head": "f800470df218215eac4569a924a05bd59deb9e2a",
+  "added_sha256": "07bacf56da0aba5432d6e821d1478715a669631b5379e7aa09dfdcb7aa4282f0",
+  "attest_path": "/Users/noelsaw/flywheel-runA-exec/.git/relay-attest/MARATHON-GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL-TURN.json",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash test/gh400-acceptance-fidelity.sh",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/flywheel-runA-exec/.xyz/receipts/90b5f0abe163fe8479fed1b26ff709b8afe49301.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": 1676,
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1676",
+    "state": "OPEN"
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-27T22:57:38Z",
+    "finished_at": "2026-11-27T23:18:06Z"
+  }
+}
