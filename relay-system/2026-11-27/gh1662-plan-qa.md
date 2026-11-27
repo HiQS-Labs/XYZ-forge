@@ -225,4 +225,13 @@ Basis: Both remaining findings are resolved in revision 3; no open finding block
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-27T19:21:42Z
+task: RELAY-gh1662-plan-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 06b18fb59992110e1b0deb820d743535d42d0c84
+added-range: 39379+1572
+added-sha256: 4130e446d62fd7520f98776300f22dee3f8919caae31db329ef476e4e3836123
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
