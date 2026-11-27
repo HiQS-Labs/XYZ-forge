@@ -72,3 +72,7 @@ Trial #1386 owns one invocation, max_tasks=2, Codex builder/Agy reviewer, round_
 ## Merge evidence
 
 - PR #1514 merged 2026-11-19 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1647 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

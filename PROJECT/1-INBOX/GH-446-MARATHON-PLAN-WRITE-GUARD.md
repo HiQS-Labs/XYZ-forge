@@ -45,3 +45,7 @@ Zero-State Oracle), and causes `wave_reconcile` runs to leave an untracked plan 
 ## Merge evidence
 
 - PR #1327 merged 2026-11-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1647 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

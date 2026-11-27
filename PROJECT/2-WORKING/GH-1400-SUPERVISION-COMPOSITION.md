@@ -439,3 +439,7 @@ path aside before dispatching. Shared stops (`cap-or-close-mismatch`, `no-progre
 zero successors. Open finding at the review cap: a delayed receipt from an older concurrent Marathon process on the
 same execution id could still be mistaken for the current one; two live drives in one clone are excluded by the
 clone driver lock, so it was accepted open and is stated in the PR.
+
+## Merge evidence
+
+- PR #1647 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

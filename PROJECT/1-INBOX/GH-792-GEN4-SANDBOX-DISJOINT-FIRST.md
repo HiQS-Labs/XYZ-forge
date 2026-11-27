@@ -116,3 +116,7 @@ The operator's brief for this run asked for capture, contract, preflight and one
 ```
 
 The probe is a retained manual check, not a suite: it exits 0 only when the fixed behavior is observed, and `expect_nonzero: true` makes any crash read as unfixed. Probe evidence and both consumers' exit codes are in `TESTS-RESULTS/2026-11-27+GH-792/`.
+
+## Merge evidence
+
+- PR #1647 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
