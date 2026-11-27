@@ -21,6 +21,9 @@ All runs in disposable full clones, never the primary.
 | CLI `jog resume` smoke, real installed hook | `bash smoke-cli.sh <task clone> <empty dir>` at `8f47703f5` | **0 expectations failed (12 OK)**: refused resume rc=2, one `failed` row, remote OID `absent`→`absent`; `jog resume` rc 0, remote lane = bundle commit, subject `jog: publish gh1653-cli1 approved execution receipts`, archive `failed,completed`, receipt saved; rerun rc 0 re-projected, nothing booked, ref unchanged; unreserved push refused (`smoke-cli-installed-hook.log`) |
 | Final QA r3 probe (reviewer's script) + stale control | `final-qa-r3-probe-wake.sh` (resume initializing vs unsupervised wake) | **reproduced** at `cc6c73d9e`, **fixed** at `8f47703f5`: `resume entered=True exit=0; wake entered=False exit=2`; a fresh owner-less lock is refused, an owner-less lock aged 60s is still reclaimed (`final-qa-r3-probe-wake.log`) |
 
+| Final QA r4 probe (reviewer's extended script) | `final-qa-r4-probe-wake-extended.sh` (owner stalled 11 s before its PID write) | **reproduced** (AssertionError): pre-existing two-step lock protocol; tracked as #1671, not fixed here |
+| Consult tie-break at the final-QA cap | `final-consult/` | agy PROCEED; Codex HOLD on an out-of-band manual booking under Jog's key — declined as out of envelope (see relay round 4 Producer) |
+
 ## What the cases assert (gh280)
 
 - **G4**: wake publishes the bundle on the bare remote lane ref through real per-ref admission; one completed `GH-901-jog-publish` row archived under the coordinator root.
