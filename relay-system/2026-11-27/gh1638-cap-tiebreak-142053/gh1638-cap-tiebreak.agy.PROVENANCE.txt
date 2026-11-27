@@ -1,0 +1,6 @@
+FIRSTHAND_COUNT=0
+ECHOED_COUNT=4
+ECHOED `sim-gh1638.patch`
+ECHOED `sim-gh1638.patch`
+ECHOED `mkdir -p`
+ECHOED `mkdir -p`

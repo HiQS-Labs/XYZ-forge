@@ -1,0 +1,18 @@
+Tie-break at the preparation-review cap (XYZ-forge, Flywheel Run A, ledger #1658). Advisory only; do not edit files.
+
+A Conveyor preparation packet for issue #1638 went through 4 rounds of independent Codex review (the cap). Round 4 left one [Blocker]; the producer then changed the plan, simulated fix and probe. There is no fifth review round, so you are the tie-break. Answer one question:
+
+**Is the #1638 preparation packet now fit to publish as a ready, one-turn Jog packet (preparation only — no implementation is being merged), or must it be withdrawn/held?**
+
+Read:
+- `relay-system/2026-11-27/gh1658-runA-prep-qa.md` — the full review thread; focus on "Round 4 · Reviewer · codex" (the open Blocker) and "Round 4 · Producer · claude-a" (the response).
+- `PROJECT/1-INBOX/GH-1638-RELAY-SEED-DIR-NESTING.md` — the capture (Acceptance, Recon "Smallest plan" and "Discriminating check", Swarm Preflight Contract).
+- `TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/probe-gh1638.sh` (readable copy of the inline probe), `sim-gh1638.patch` (simulated fix, proof input only), `fake*-gh1638*.patch`, `matrix.txt`, `preflight-arms.txt`, `pkg-freshness-arms.txt`, `SUMMARY.md`.
+- Source seam: `relay-automation/relay-turn-lib.sh` lines 722-830 (`rtl_worktree_begin`), `utils/py/rtl.py:1156-1161`, `WORKTREE-SAFETY.md` (Git-managed worktree removal).
+
+Judge specifically:
+1. Does the revised plan + `sim-gh1638.patch` resolve the round-4 Blocker: (a) containment of the deepest existing ancestor is proven before any `mkdir -p`; (b) teardown on failure is `git worktree remove --force` only, a refusal is reported, no raw `rm -rf` of the worktree? Cite file:line.
+2. Does the probe discriminate: base and every retained fake read unfixed, the full fix with the regenerated package reads fixed (`matrix.txt`)? Is there a fake fix that would still read fixed while leaving the defect or creating a new containment hole? Give the concrete input if so.
+3. Is the scope still a one-turn Jog task (one loop + one small helper in one file, plus `make-pkg.sh`), or has the hardening turned it into something that should be held for a design decision?
+
+Operational envelope: local developer tooling; commensurate complexity; XYZ-forge forbids new test suites (GH-831), so do not ask for one. Output: a verdict line `VERDICT: PUBLISH` or `VERDICT: HOLD`, then numbered reasons with file:line citations. Any HOLD reason must carry an observed input that fails under the current packet.

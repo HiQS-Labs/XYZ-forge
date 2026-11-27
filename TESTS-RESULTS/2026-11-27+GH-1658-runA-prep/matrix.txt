@@ -1,0 +1,20 @@
+# standalone probe matrix: $SCRATCH reset to 6142128d9c433d6b12972c6cd9a6f864f0ed9da2, then 'git apply <arm>.patch'; rc 0 = fixed, nonzero = unfixed
+GH-1666 base rc=1 AssertionError: ('0xb', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])
+GH-1666 sim-gh1666 rc=0 
+GH-1666 fake-gh1666 rc=1 AssertionError: ('0xb', ['Alpha beta', 'Gamma'], ['Alpha', 'Gamma'])
+GH-1666 fake2-gh1666-two-reader rc=1 AssertionError: ('0xb', 'deviations reader', {'dropped': [], 'added': [('beta', 'R')], 'changed': [], 'malformed': ["[added] entry has no '— reason: …': - [adde
+GH-1666 fake3-gh1666-mask-three rc=1 AssertionError: ('0xb', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])
+GH-1423 base rc=1 AssertionError: tracked relay file under a gitignored dir: commit landed but reported failure
+GH-1423 sim-gh1423 rc=0 
+GH-1423 fake-gh1423 rc=1 AssertionError: fixture: the attest commit did not land
+GH-1638 base rc=1 a '..' directory entry created a directory outside the worktree
+GH-1638 sim-gh1638 rc=1 rtl_worktree_begin: seed seeded: could not clear the checkout copy
+GH-1638 sim-gh1638-with-pkg rc=0 rtl_worktree_begin: seed seeded: could not clear the checkout copy
+GH-1638 fake-gh1638 rc=1 a '..' directory entry still reported a seed (rc=0)
+GH-1638 fake2-gh1638-overlay rc=1 a '..' directory entry created a directory outside the worktree
+GH-1638 fake3-gh1638-rm-unchecked rc=1 a '..' directory entry created a directory outside the worktree
+GH-1638 fake4-gh1638-mkdir-first rc=1 a '..' directory entry created a directory outside the worktree
+GH-1638 fake5-gh1638-no-dotdot-guard rc=1 a '..' directory entry created a directory outside the worktree
+# #1423 isolation: same, with a hostile inherited GIT_DIR=/nonexistent
+GH-1423 base GIT_DIR=/nonexistent rc=1
+GH-1423 sim-gh1423 GIT_DIR=/nonexistent rc=0

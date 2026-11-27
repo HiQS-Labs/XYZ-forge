@@ -1,0 +1,185 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-11-27T22:27:41Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1666-acceptance-markdown-line-model"
+  },
+  "provenance": {
+    "source_docs": [
+      "PROJECT/1-INBOX/GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md"
+    ],
+    "issues": [],
+    "target_root": "<proof clone>",
+    "branch": "development",
+    "commit": "6142128d9c433d6b12972c6cd9a6f864f0ed9da2",
+    "suggested_branch": "marathon/gh-1666-acceptance-markdown-line-model-2026-11-27",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash test/gh400-acceptance-fidelity.sh",
+    "round_cap": 9,
+    "fix_probes": [
+      {
+        "type": "command",
+        "cmd": "env PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'\nimport sys; sys.path.insert(0, \"utils/py\")\nimport swarm_preflight as s\n# Every separator Python str.splitlines() breaks on besides CR/LF; Markdown keeps them as line content.\nfor cp in (0x0B, 0x0C, 0x1C, 0x1D, 0x1E, 0x85, 0x2028, 0x2029):\n    L = chr(cp)\n    t = \"## Acceptance\\n\\n- [ ] Alpha\" + L + \"beta\\n- [ ] Gamma\\n\"\n    i = s.extract_acceptance_criteria(t, plain_bullets=True)\n    c = s.extract_acceptance_criteria(t)\n    k = s.collect_inline_checklist(t)[0]\n    assert i == c and len(i) == 2 and \"Alpha\" in i[0] and \"beta\" in i[0], (hex(cp), i, c)\n    assert len(k) == 2 and k[0][1] == [\"- [ ] Alpha\" + L + \"beta\"], (hex(cp), \"raw checklist line\", k)\n    v = s.extract_declared_deviations(\"## Acceptance \u2014 deviations from the issue\\n- [added] Alpha\" + L + \"- [added] beta \u2014 reason: R\\n\")\n    assert len(v[\"added\"]) == 1 and v[\"added\"][0][0].startswith(\"Alpha\") and not v[\"malformed\"], (hex(cp), \"deviations reader\", v)\n    f = \"## Acceptance\\n\\n- [ ] Real\\n\\n~~~\\n~~~\" + L + \"\\n- example output\\n~~~\\n\"\n    assert s.extract_acceptance_criteria(f, plain_bullets=True) == [\"Real\"], (hex(cp), \"fence control\")\nassert s.extract_acceptance_criteria(\"## Acceptance\\n\\n- [ ] A\\r\\n- [ ] B\\r- [ ] C\\n\") == [\"A\", \"B\", \"C\"], \"CR/LF control\"\nPY",
+        "expect_nonzero": true
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-27+GH-1666/delivery.md"
+      }
+    ],
+    "artifacts": [
+      "utils/py/swarm_preflight.py",
+      "test/gh400-acceptance-fidelity.sh",
+      "TESTS-RESULTS/2026-11-27+GH-1666/delivery.md"
+    ],
+    "artifacts_new": [
+      "TESTS-RESULTS/2026-11-27+GH-1666/delivery.md"
+    ],
+    "remediation": {
+      "source": "issue#1666",
+      "criteria": "extract_acceptance_criteria (both sides), extract_declared_deviations and collect_inline_checklist split lines on \\r\\n, \\r and \\n only; a criterion containing U+0085/U+2028/U+2029 is read whole and identically on both sides, fences and CR/LF behave as today. Add one case to test/gh400-acceptance-fidelity.sh. Record the probe's before/after output in TESTS-RESULTS/2026-11-27+GH-1666/delivery.md. Leave the frozen Bash twin and #1665 alone. Do not edit any Preflight-inferred lane path (for example test/_setup.sh); they are shared with other Run A packets. No new suite."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/development",
+    "ahead": 0,
+    "behind": 31,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "6142128d9c433d6b12972c6cd9a6f864f0ed9da2",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "command",
+        "path": null,
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "TESTS-RESULTS/2026-11-27+GH-1666/delivery.md",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1666 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "match",
+      "cause": null,
+      "detail": "3/3 criteria copied verbatim from issue #1666",
+      "issue": "1666",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "gaps": [],
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1666 (https://github.com/HiQS-Labs/XYZ-forge/issues/1666)",
+      "issue": "1666",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1666",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 3,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "utils/py/swarm_preflight.py",
+      "test/gh400-acceptance-fidelity.sh",
+      "TESTS-RESULTS/2026-11-27+GH-1666/delivery.md",
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/test_python_layer.py",
+      "test/_setup.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "utils/py/swarm_preflight.py",
+      "test/gh400-acceptance-fidelity.sh",
+      "TESTS-RESULTS/2026-11-27+GH-1666/delivery.md",
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/test_python_layer.py",
+      "test/_setup.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/test_python_layer.py"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh"
+    ],
+    "fs_touching_tests": [
+      "test/gh400-acceptance-fidelity.sh",
+      "test/gh280-jog-marathon-adapter.sh",
+      "test/gh343-gate-program-target-root.sh",
+      "test/gh386-turn-budget-honesty.sh",
+      "test/gh399-packet-acceptance-continuation.sh",
+      "test/gh400-source-url.sh",
+      "test/gh418-issue-state-frozen.sh",
+      "test/gh422-backfill-source-url.sh",
+      "test/gh425-source-url-slug.sh",
+      "test/gh557-unknown-blocks-manifest.sh",
+      "test/gh642-consumer-fruit.sh",
+      "test/_setup.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}
