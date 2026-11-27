@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -134,5 +134,18 @@ VERDICT: FAIL
 Basis: The six-edit scope is proportionate and the rubric decision is sound, but the proposed universal Forge provenance label is contradicted by source records. Tighten the manual rejection contract before implementation; actual clone runs remain implementation evidence owed.
 
 Handing off to Producer (claude) — correct provenance and acceptance specifications, then take the next turn.
+
+### Producer · Round 1
+
+**Disposition of R1 findings**
+
+- **R1-1 [Should] provenance by subject: Implemented (reproduced).** Reproduced the reviewer's observation and extended it: read the title of all nine numbers in BOTH HiQS-Labs/XYZ-forge and `Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm` (the predecessor is private and archived, readable with the operator's gh auth) and matched each to the principle it supports. XYZ-forge: #35 (3-tier test suite selection), #365 (test-suite recalibration), #558 (gh32-releases-app flaky section). Predecessor: #42 (concurrent relay/marathon single-writer hazard), #376 (relay-drive and marathon-drive take different locks), #528 (measure and recalibrate the test suite), #544 (local-gate-before-push), #549 (pre-push gate silently skipped without githooks/), #564 (a suite rewrote the real clone's git remote). The same six numbers in XYZ-forge are unrelated (Commandcode adapter, marathon umbrella, /unstuck, Luna/Needle research, work-state stream, work backfill). The operator brief had proposed labeling all nine as XYZ-forge numbers; the evidence contradicts that, so edit 2 now splits them by repo, naming each repo once. Plan Recon, defect row 3, edit 2, acceptance and the tracking issue body are corrected. Residual uncertainty: the subject match is my reading of which principle each issue backs; the titles are retained in `provenance.jsonl` so the mapping can be contested.
+- **R1-2 [Should] discriminating acceptance: Implemented.** The plan now carries an explicit checker contract: nine named assertions with nonempty-extraction guards, a base-must-fail / candidate-must-pass expectation with exit statuses, and `--red-controls` that revert each of edits 1-6 alone in a temp copy and require exactly the matching assertion(s) to flip. Decisive output and the base/candidate hashes are recorded in `provenance.jsonl`. No new suite or registry entry; the script lives in the evidence directory.
+- **Additional measured fact (not a reviewer finding).** Building the populated flat-layout fixture showed `../ci-suite-audit/SKILL.md` DOES resolve in a flat install when `ci-suite-audit` sits beside it and only dangles when absent (the umbrella said both links resolve only in the tree). The fallback sentence is still added (a partial install is real and the brief asks for it); the plan's defect row 2 now states the measured behavior, and the checker reports all three layouts.
+- Reviewer's [Pass] items: accepted; the suites-compatibility prediction will be verified by running both existing suites in a disposable full clone (owed implementation evidence).
+
+**Ask for round 2:** re-grade R1-1 and R1-2 against the revised plan (`.relay-artifacts/GH-1663-CI-OPTIMIZE-SKILL-DEFECTS.md`), in particular (a) is the repo split supported by subject evidence you can read (the archive entries at `docs/ROADMAP-UPSTREAM-ARCHIVE.md` and the GitHub titles)? (b) does the nine-assertion contract plus the single-edit red controls reject a partial fix? Keep `swept file: yes|no`, `VERDICT:` and `Basis:`. Use bold labels, not markdown heading lines.
+
+handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
