@@ -5,14 +5,15 @@ description: >-
   production-tested, zero-cost principles. Use when an operator asks to "audit our CI/CD",
   "speed up test runs", "fix flaky CI", "harden pre-push gates", "design CI tiering",
   "eliminate test contention", or evaluate CI architecture before investing in costly
-  runners or complex tooling. Provides a structured 12-point audit rubric, failure prevention
-  mechanisms, and a phased adoption roadmap calibrated to repository risk.
+  runners or complex tooling. Provides 14 principles (a 12-point scored audit rubric plus two situational
+  extensions), failure prevention mechanisms, and a phased adoption roadmap calibrated to repository risk.
 ---
 
 # ci-optimize — Transferable CI/CD Architecture & Audit Playbook
 
 Distilled from real production failure modes across thousands of automated agent and
-developer runs (#35, #42/#376, #365, #528, #544, #558, #549, #564). Every rule states
+developer runs (XYZ-forge issues in [HiQS-Labs/XYZ-forge](https://github.com/HiQS-Labs/XYZ-forge): #35, #365, #558;
+issues in its predecessor repo [Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm): #42/#376, #528, #544, #549, #564). Every rule states
 the **mechanism**, the **failure it prevents**, and the **audit check** to verify compliance.
 
 Nothing here requires a paid tier, a dedicated runner vendor, or speculative subsystems.
@@ -33,7 +34,9 @@ only with materially new evidence or changed scope. Keep the operator's authoriz
 audit scope and existing gates intact; removal or weakening remains a concrete
 operator decision. In a flat installed collection, resolve `sanity-check` by name.
 
-## The 12 Foundational Principles
+## The 14 Foundational Principles
+
+Principles 1-12 are scored in the scorecard and sequenced in the four waves. Principles 13-14 are situational extensions: apply them when the situation arises. They are intentionally outside the 12-row scored rubric and the waves.
 
 > **Repos that forbid new tests** (XYZ-forge: `AGENTS.md` *No new tests*, GH-831): recommend nothing that adds a suite, a registry entry, or gate
 > machinery there. Principles 7, 8 and 10 are then met with existing suites or recorded manual checks, and
@@ -124,13 +127,13 @@ When optimizing CI/CD, avoid these high-overhead, low-return traps:
 
 ## Phased Adoption Roadmap
 
-Adopt these principles in 4 structured waves to maximize reliability while minimizing transition risk:
+Adopt Principles 1-12 in 4 structured waves to maximize reliability while minimizing transition risk:
 
 ```mermaid
 flowchart LR
     W1["Wave 1: Boundary & Provenance<br/>(P1 Pre-push Gate + P6 Receipts)"] --> W2["Wave 2: Isolation & Quality<br/>(P5 Disposable Clones + P7 Red Controls)"]
     W2 --> W3["Wave 3: Throughput & Tiering<br/>(P2 Path Tiering + P3 Contention Retry)"]
-    W3 --> W4["Wave 4: Resilience & Governance<br/>(P4 Flakes, P8 Seams, P10-P12 Invariants)"]
+    W3 --> W4["Wave 4: Resilience & Governance<br/>(P4 Flakes, P8 Seams, P9 Hosted CI, P10-P12 Invariants)"]
 ```
 
 1. **Wave 1 — Boundary & Provenance (P1, P6):** Wire an idempotent pre-push gate and emit structured JSONL run receipts. Stops broken code at the author boundary with verifiable evidence.
@@ -159,6 +162,8 @@ Evaluate a repository against each standard (0 = Absent, 1 = Partial / Ad-hoc, 2
 | 11 | **Locking** | Single canonical lock resolver | 2: Central resolver across all modes<br>1: Ad-hoc lock files<br>0: No locking | Lock resolver library |
 | 12 | **Disclosure** | Explicit gap & scope disclosure | 2: Automated reports cite uninspected scope<br>1: Manual notes<br>0: Silent omissions | Gate & review summary reports |
 
+> P13 and P14 are situational extensions with no scorecard row: the 0–24 scale and the A/B/C bands below score P1–P12 only.
+
 ### Scoring Assessment
 * **20–24 Points (A - Resilient):** Production-grade CI/CD with robust isolation, fast feedback loops, and zero false confidence.
 * **14–19 Points (B - Solid):** Functional pipeline with minor contention or isolation gaps; prioritize Wave 2 & 3 improvements.
@@ -168,5 +173,5 @@ Evaluate a repository against each standard (0 = Absent, 1 = Partial / Ad-hoc, 2
 
 ## Related Skills
 
-- **[ci-suite-audit](../ci-suite-audit/SKILL.md):** Individual test suite curation, runtime profiling, flake history, and retention/quarantine/nightly triage (unit: one suite; `ci-optimize` unit: pipeline architecture).
+- **[ci-suite-audit](../ci-suite-audit/SKILL.md):** Individual test suite curation, runtime profiling, flake history, and retention/quarantine/nightly triage (unit: one suite; `ci-optimize` unit: pipeline architecture). In a flat installed collection, resolve `ci-suite-audit` by name.
 
