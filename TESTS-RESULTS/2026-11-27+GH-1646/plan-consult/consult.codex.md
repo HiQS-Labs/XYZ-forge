@@ -1,0 +1,13 @@
+**Answer:** Block the final plan on one new regression. Its fence rules can turn literal example output into a required criterion and reject a capture that passes today.
+
+**Findings**
+
+1. **[Pass] Core parser behavior.** The issue-only flag, checkbox-first matching, and existing continuation path cover ordinary plain and mixed lists, preserve nested bullet folding, and retain the deviations heading, horizontal-rule boundaries, and `None` versus `[]`. The fence defect below keeps the plan from being sufficient as written. `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:44`, `utils/py/swarm_preflight.py:605`, `utils/py/swarm_preflight.py:985`.
+
+2. **[Pass] Round 3 fence-heading disposition.** Retracting the boundary change is sound for this scope. My in-memory probe reproduced the same verdicts before and after the final plan: the partial capture matches, and the full capture reports `Second` as an addition because the literal heading ends the section in both versions. `utils/py/swarm_preflight.py:618`, `relay-system/2026-11-27/gh1646-plan-qa.md:265`.
+
+3. **[Pass] #792 archive disposition.** Preserve the archived record and document that an explicit `--project-doc` replay will report its three historical deviations as stale. Issue-number discovery searches `PROJECT/2-WORKING`, and the planned scratch smoke exercises the corrected behavior with the same three criteria. `PROJECT/3-COMPLETED/GH-792-GEN4-SANDBOX-DISJOINT-FIRST.md:38`, `utils/py/swarm_preflight.py:1003`, `utils/py/swarm_preflight.py:1426`, `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:77`.
+
+4. **[Blocker] Fence indentation.** Use issue body `"## Acceptance\n\n~~~text\n    ~~~\n- example output\n~~~\n\n- [ ] First\n"` and a capture whose only criterion is `First`. The four-space line is literal content, but the plan’s stripped-marker rules close the fence there, changing `match` to `diverged` with `dropped=['example output']` in an in-memory simulation of the repo comparator. Applying the top-level indentation limit to both openers and closers fixed the probe and also let `"## Acceptance\n\n    ~~~text\n\n- First\n"` match its checkbox copy. `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:54`, `utils/py/swarm_preflight.py:624`, [CommonMark §4.5](https://spec.commonmark.org/0.31.2/#fenced-code-blocks).
+
+**Recommendation:** **BLOCK** until the plan specifies indentation-aware fence recognition and includes the false-closer fixture in the existing GH-400 case.
