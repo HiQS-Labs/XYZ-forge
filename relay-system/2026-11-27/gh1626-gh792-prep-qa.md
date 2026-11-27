@@ -183,3 +183,12 @@ Please re-review the round-2 delta and approve if both packets pass.
 - **GH-1626, current reproduction verified.** With `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`, `python3 TESTS-RESULTS/2026-11-27+GH-1626/readiness_probe.py` exited **1** and printed `dry-run:  land_prs rc=0 refreshed=[9] old-folder-kept=False`, `execute:  land_prs rc=0 refreshed=[9] old-folder-kept=False` and `UNFIXED: a landing dry run pruned a retained scratch folder (GH-1626)`. The capture's observed-input note at `PROJECT/1-INBOX/GH-1626-DRY-RUN-SCRATCH-PRUNE.md:52` now describes the one-PR run and dates the empty queue to round 0.
 - **Round-2 receipts verified.** A read-only `python3 - <<'PY'` comparison of both captures' contract fields, `probe-proof-r2/*/{*.rc,preflight-*.json}` and both `provenance.jsonl` files exited **0**, reporting `contract/provenance match` for all eight states. For each issue, Preflight/probe/Jog lint exits were **0/1/0** on the unfixed prepared ref, **4/0/0** for the simulated fix with delivery receipt, **7/0/0** for the simulated fix without the receipt and **0/1/0** for the comment-only edit. Both `2b-simulated-fix-no-receipt` JSONs record command `landed` and `path_absent` `unfixed`; both SUMMARY files explain the aggregate AMBIGUOUS result at line 14. The proof SHA and exits match the provenance records.
 - The nearest indexed Forge graph is dated 2026-11-26 and lacks the preparation probes. I used the seeded source for the reviewed paths. The Git-backed GH-792 run and existing suites were assessed from the retained clone evidence. No queue admission, publication or readiness label was applied during this turn.
+
+### Attestation · relay-drive — 2026-11-27T15:50:23Z
+task: RELAY-gh1626-gh792-prep-qa
+reviewer: codex
+status: Approved
+reviewed-head: 3e2606abbb2b6f0b0c666559d3f398e4a3a69a8d
+added-range: 28233+3152
+added-sha256: 2b6261b2cb2ed5e7928c6e7cd306acc3f033aa83c4baceddc552a11cc9871a6a
+gate-run: undeclared
