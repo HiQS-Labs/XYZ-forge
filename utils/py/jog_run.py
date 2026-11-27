@@ -895,8 +895,9 @@ def jog_retry_gate(root, gh_num, args):
         sys.exit(2)
     # GH-300 (B2): retry verbs dispatch marathon-drive exactly like the run executor, so
     # they hold the same supervisor lock — a retry fired beside a live drive is precisely
-    # the concurrency the lock exists to prevent (GH-42 / GH-354).
-    supervisor_lock = JogSupervisorLock(root)
+    # the concurrency the lock exists to prevent (GH-42 / GH-354). GH-1653: conservative,
+    # like resume, so an initializing owner is refused rather than reclaimed.
+    supervisor_lock = JogSupervisorLock(root, conservative=True)
     supervisor_lock.acquire()
     try:
         return _jog_retry_gate_locked(root, gh_num, args)
@@ -1116,7 +1117,7 @@ def jog_retry_build(root, gh_num, args):
         print(f"jog: {error}", file=sys.stderr)
         sys.exit(2)
     # GH-300 (B2): same supervisor lock as the run executor — see jog_retry_gate.
-    supervisor_lock = JogSupervisorLock(root)
+    supervisor_lock = JogSupervisorLock(root, conservative=True)
     supervisor_lock.acquire()
     try:
         return _jog_retry_build_locked(root, gh_num, args)
@@ -1339,7 +1340,8 @@ def jog_settle_publication_attempt(target, accounting_root, issue, branch, head_
                 current = _jog_live_publication_row(record, key)
                 if current and current.get("id") == row["id"] and current.get("state") == "completed":
                     archive_lane_attempts(record, _locked=True)
-        elif row and row.get("state") == "active" and is_published():
+        elif row and row.get("state") == "active" and row.get("branch") == branch and is_published():
+            # Bound to the reserved branch: the exact-ref proof covers only that lane.
             # lane_attempt_finish re-takes the lock and refuses a superseded row.
             manual_attempt_finish(target, {"kind": "manual", "record": record, "id": row["id"]},
                                   "completed")

@@ -2,7 +2,9 @@
 # GH-1653 manual smoke (GH-1088), not a suite (GH-831). Drives Jog's real receipt publication
 # (`publish_jog_receipt`) through the REAL installed pre-push stub (`githooks/install.sh`) in a
 # disposable clone pushing to a local bare remote.
-#   main path:     approved receipt -> books GH-<n>-jog-publish, pushes the bundle, archives the row
+#   refused:       booked publication whose push cannot reach the remote -> 1 failed row, remote unchanged
+#   main path:     resume of that approved receipt -> books a 2nd row, pushes the bundle through the
+#                  installed stub (admission + full gate), archives [failed, completed]
 #   adjacent path: the same publication again (a rerun/resume) -> already published, no booking
 #   control:       an unreserved task push from the same clone is refused by the installed stub
 # Usage: smoke.sh <source clone at the commit under test> <empty work dir>
@@ -46,8 +48,19 @@ PY
 rows() { cat coord/.tick/attempts/GH-1653-jog-publish 2>/dev/null | wc -l | tr -d ' '; }
 archived() { cat coord/.tick/attempt-history/GH-1653-jog-publish-*/attempts 2>/dev/null | python3 -c 'import json,sys; print([(r["state"], r["id"][:8]) for r in map(json.loads, filter(str.strip, sys.stdin))])'; }
 
-echo "== main path: publish through the installed pre-push stub"
+oid() { git --git-dir=remote.git rev-parse -q --verify refs/heads/marathon/gh1653-smoke || echo absent; }
+live() { cat coord/.tick/attempts/GH-1653-jog-publish 2>/dev/null | python3 -c 'import json,sys; print([(r["state"], r["id"][:8]) for r in map(json.loads, filter(str.strip, sys.stdin))])'; }
+
+echo "== refused publication: the push cannot reach the remote after booking"
+echo "remote lane OID before: $(oid)"
+mv remote.git remote.git.away
 publish; echo "exit=$?"
+mv remote.git.away remote.git
+echo "remote lane OID after: $(oid)  live rows: $(live)"
+
+echo "== main path (resume after the refusal): publish through the installed pre-push stub"
+publish; echo "exit=$?"
+echo "remote lane OID: $(oid)  local HEAD: $(git -C exec rev-parse HEAD)"
 echo "remote lane subject: $(git --git-dir=remote.git log -1 --format=%s refs/heads/marathon/gh1653-smoke 2>&1)"
 echo "live rows: $(rows)  archived: $(archived)"
 
