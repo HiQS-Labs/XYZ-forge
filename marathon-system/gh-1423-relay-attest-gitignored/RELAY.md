@@ -224,3 +224,13 @@ gate run: no — harness gate
 **Verdict:** Approved
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-11-27T23:37:58Z
+task: MARATHON-GH-1423-RELAY-ATTEST-GITIGNORED-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 3142e35245cefe9a2da6ef0773b3f35bafabf438
+added-range: 29729+2592
+added-sha256: 4073a4deaa053da808e7b9af1263fe711266e2852bfaa5094b1884965ba0af9a
+config-sha256: 3482851779bbd35c0ea0350e71b6a7e752ffc8f2051c7c21335a2d51db4482a6
+gate-run: no
