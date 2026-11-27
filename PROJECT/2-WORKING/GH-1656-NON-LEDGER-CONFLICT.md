@@ -29,7 +29,7 @@ goal: "A PR GitHub reports CONFLICTING never reaches `gh pr merge`: a clean loca
 
 | What was just completed | What's next |
 |---|---|
-| Plan revised after Codex plan QA rounds 1–2 (6 blockers accepted, 2 parts declined). | Codex plan QA round 3. |
+| Plan revised after Codex plan QA rounds 1–3 (8 blockers + 1 should accepted, 2 parts declined). | Codex plan QA round 4 (cap). |
 
 ## Problem (observed)
 
@@ -135,7 +135,12 @@ R4. The batch issue names the rung used.
      different merge commit: `mismatch` stop, same assertions.
    - `test_push_acknowledgement_lost` — the one push call runs the real push, then returns rc
      124: the run treats the candidate as published (reads origin), never pushes twice, and
-     lands through confirmation.
+     lands through confirmation. Subcase: after the real push a child D is pushed from another
+     clone before rc 124 returns: origin is D, C is its ancestor, still one push, published.
+   - `test_confirmed_rung_reconciles_candidate` — `MERGE_CLEANUP_USE_HOSTED=1` with
+     `wait_for_hosted_reconcile` intercepted: it receives the candidate as `merged_head` once.
+   - `test_rung_label_survives_recovery` — renderer control on a batch record: rung + matching
+     merge OID → `merged (local-merge rung)`; rung + different merge OID → plain `merged`.
    - `test_clean_conflicting_under_squash_stops` — default squash policy: rc 2, `non-ledger
      conflict; local merge clean: …` message, no `pr merge` call, development unchanged, stacked
      dependents untouched.
@@ -168,10 +173,11 @@ R4. The batch issue names the rung used.
      for "the base is still exactly the gated base"; because HEAD descends from that base, the
      update is always a fast-forward when the lease holds, so it never rewrites history. Never
      `--force` without a lease, never `--no-verify`. The clone's installed hook runs the gate.
-   - Push nonzero (rejection, or rc 124 timeout with a possibly lost acknowledgement): read the
-     destination with `ls-remote`. Candidate present → treat as published; a readable other tip →
-     rejected, nothing landed; unreadable → stop as `publication unknown` naming the candidate
-     OID. Never a second push.
+   - Push nonzero (rejection, or rc 124 timeout with a possibly lost acknowledgement): fetch the
+     destination into the clone. Its tip equals or descends from the candidate
+     (`merge-base --is-ancestor`) → published, go to confirmation; a fetched tip that does not
+     contain the candidate → rejected, nothing landed (an integration branch is never rewound);
+     fetch fails → stop as `publication unknown` naming the candidate OID. Never a second push.
    - After a publication: poll `refresh_pr_with_retry` (bounded by `MERGEABLE_POLL_*`) until
      MERGED. Confirmed only when MERGED, `headRefOid == pin`, `baseRefName == branch` and
      `mergeCommit.oid == candidate` → `("merged", candidate)`. MERGED with any other head, base
@@ -183,7 +189,9 @@ R4. The batch issue names the rung used.
    files; strategy <s> cannot be landed locally` — this check runs **before**
    `_protect_stacked_dependents`, so a stop never edits dependent PRs; anything else → stop
    "GitHub has not decided". Rung `merged` → the existing tail (`_MERGED_THIS_RUN`,
-   `_record_merge_outcome(..., rung="local-merge")`, fast-forward, reconcile, emit, writes).
+   `_record_merge_outcome(..., rung="local-merge")`, fast-forward, reconcile with
+   `merged_head=<confirmed oid>` (rung landings only, so hosted lookup matches the candidate even
+   if the tip moved), emit, writes).
    Rung `unconfirmed` / `mismatch` / `publication unknown` → nothing in `merge_oid`, no
    reconcile, no next PR, exit 2; the stop line (which the Phase 5 finalizer copies into the
    batch row as `stopped: …`) names the rung, the candidate OID, the pin and the target, e.g.
@@ -199,8 +207,12 @@ R4. The batch issue names the rung used.
 4. **Dirty message (R2):** on the existing B1 handoff, when GitHub said CONFLICTING and the
    conflict set holds a non-ledger path, also log
    `PR #N: non-ledger conflict; local merge dirty: <files>`. The handoff itself is unchanged.
-5. **Batch record (R4):** `batch_record.set_outcome(..., rung=None)` stores `rung`; the
-   merge-sequence status cell renders `merged (local-merge rung)`. Status stays `merged`, so
+5. **Batch record (R4):** `batch_record.set_outcome(..., rung=None, rung_oid=None)` stores the
+   rung and the candidate OID it published, both on confirmation and on every post-push stop
+   (`unconfirmed` / `mismatch` / `publication unknown`), never in `merge_oid`. The merge-sequence
+   status cell renders `merged (local-merge rung)` only when `status == merged` and
+   `merge_oid == rung_oid`, so a later `--reconcile-pr N` recovery that records the same merge
+   OID keeps the label, and a different merge OID never gets it. Status stays `merged`, so
    `landed()` / `row_done()` / downgrade protection are untouched. Carry `rung` through
    `_merge_outcome` like the other touched fields.
 6. **SKILL.md:** one bullet in the Phase 5 rules next to B1 describing the rung, its guards and

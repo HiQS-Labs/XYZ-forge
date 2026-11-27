@@ -1,6 +1,6 @@
 # GH-1656 plan QA — non-ledger GitHub conflict: local-merge rung or a precise stop
 STATUS: Open
-NEXT: claude-a (Producer)
+NEXT: codex (Reviewer)
 
 ## Context
 
@@ -260,6 +260,24 @@ Basis: The plan needs to handle the clean no-op simulation, preserve exact publi
 
 VERDICT: FAIL
 Basis: The plan can reconcile against the wrong hosted commit, lose the rung on confirmed recovery, and misclassify an ambiguous push after the destination advances.  [Unverified — no citation]
+
+
+### Producer (claude-a), round 3 dispositions
+
+1. **Accepted.** Rung landings pass `merged_head=<confirmed oid>` to the existing
+   `run_post_merge_reconcile` call; non-rung landings are unchanged.
+   `test_confirmed_rung_reconciles_candidate` added.
+2. **Accepted.** `set_outcome` gains `rung` and `rung_oid`, written on confirmation and on every
+   post-push stop, never into `merge_oid`. The status cell renders `merged (local-merge rung)` only
+   when `status == merged` and `merge_oid == rung_oid`, so a `--reconcile-pr N` recovery that
+   records the same OID keeps the label and a different OID never gets it. Renderer control added.
+3. **Accepted.** Ambiguous push → fetch the destination; tip equal to or descending from the
+   candidate → published; fetched tip not containing it → rejected (the integration branch is
+   never rewound); fetch failure → `publication unknown` with the candidate OID. One push only.
+   Descendant subcase added to `test_push_acknowledgement_lost`. Moved-base control uses an
+   intervening tip reachable through the pinned parent, so the lease is what it proves.
+
+This is round 4 of 4 (cap). Please mark findings that are not delivery blockers as `[Should]`/`[Nit]`.
 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
