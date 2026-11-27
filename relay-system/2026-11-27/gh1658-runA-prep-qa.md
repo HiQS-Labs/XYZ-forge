@@ -1,7 +1,7 @@
 ---
 Goal: Independent preparation QA — Conveyor packets for Flywheel Run A (ledger #1658): #1590, #1666, #1423 ready; #1480 held
 Date: 2026-11-27
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ---
 
@@ -205,4 +205,51 @@ All four findings accepted and fixed. Ready set unchanged: #1666, #1423, #1638; 
 4. **Replayable provenance (Should) — fixed.** Every `provenance.jsonl` row now has `build` (exact arm construction from the retained patch and receipt), `cwd` (`$P`, `$PROOF`, `$SCRATCH`), the full command, evaluated head, exit and output, including the hostile-`GIT_DIR` arms, the admission checks and the package-freshness arms.
 
 Re-run results: READY preflight exit 0 for all three at `6142128d9c43`; consumer arms fixed+receipt → 4 and fixed-no-receipt → 7 for all three (#1638 on the with-package fix); admission checks unchanged; parser/linter read-back matches the proved copies. Round 3 of 4.
+
+### Round 3 · Reviewer · codex
+
+VERDICT: FAIL
+
+#1666 and #1423 pass preparation review, and #1480 is correctly held. #1638's simulated fix can report success after a failed replacement, so the batch stays open.
+
+1. **[Blocker] #1638 must stop when it cannot replace the destination directory.**
+   - Observed input: `TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/sim-gh1638.patch:12-24` ignores the exit from `rm -rf "$_dst"`. If the destination survives, the subsequent successful copy recreates the original nested tree. The normal seed tail logs `SEED` and returns a worktree path (`relay-automation/relay-turn-lib.sh:785,826-829`). `utils/py/rtl.py:1156-1161` passes that path back and `utils/py/codex-turn.py:83-91` accepts it for the isolated turn. The current red control exercises a failed source copy only (`probe-gh1638.sh:36-44`). Its readable arm also skips all content checks when there is no valid returned worktree directory (`:26-35`).
+   - Affected scope: the #1638 directory-only plan, simulated fix and inline proof. Check successful physical path resolution and destination containment before the directory operation, and refuse on a failed removal before attempting the copy. Make the readable arm require a nonempty, existing returned worktree before checking contents. Keep the package and file-seed controls. Clarify the failure handoff in the plan. The Python Codex caller above exits 5 when isolation is requested and begin fails.
+   - Falsifier: a controlled destination-removal refusal yields nonzero and no usable worktree path even when the source is readable. A stub returning success with no path fails the readable arm. The complete mirror with the refreshed archive still passes, and the overlay with a stale child still fails.
+   - Narrow replay, run as `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` with the body below. The interpreter exited 0. The copied branch printed `seed exit: 0 stderr: controlled rm refusal` and `top bytes: HEAD nested copy: True`. The replay never invokes Git or performs the directory removal.
+
+     ```python
+     from pathlib import Path
+     from tempfile import TemporaryDirectory
+     import subprocess
+
+     p = Path("TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/sim-gh1638.patch")
+     block = "\n".join(line[1:] for line in p.read_text().splitlines()[9:27])
+     assert 'rm -rf "$_dst"' in block
+     with TemporaryDirectory(prefix="review-rm-failure-") as d:
+         host, wt = (Path(d) / x for x in ("host", "wt"))
+         for root in (host, wt):
+             (root / "seeded").mkdir(parents=True)
+         (host / "seeded/current").write_text("host")
+         (wt / "seeded/current").write_text("HEAD")
+         result = subprocess.run(
+             ["bash", "-c", 'RTL_ROOT="$1"; wt="$2"; a=seeded\n'
+              'rm() { printf "controlled rm refusal\\n" >&2; return 1; }\n'
+              'seed() {\n' + block + '\n}\nseed', "_", str(host), str(wt)],
+             capture_output=True, text=True)
+         print("seed exit:", result.returncode, "stderr:", result.stderr.strip())
+         print("top bytes:", (wt / "seeded/current").read_text(),
+               "nested copy:", (wt / "seeded/seeded/current").is_file())
+     ```
+
+2. **[Should] Finish the replay instructions for the cited consumer evidence.**
+   - Observed input: `TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/SUMMARY.md:6` describes every command as replayable. `provenance.jsonl:25-28` appends `(n=1480)` and its equivalents outside the quoted Python command while leaving `n` undefined inside. I passed the first admission row's decoded `cmd` plus a newline to `subprocess.run(["bash", "-n"], input=cmd+"\n", capture_output=True, text=True)` from `python3 -`. Bash exited 2 with `syntax error near unexpected token '('`. The consumer commands in `:19-24` now name the correct entry point and target. Their `build` descriptions still omit the prep-clone path to the patch from the scratch clone and the creation of the parent directory before writing the new delivery file.
+   - Affected scope: the Round 2 replayability finding and the summary's evidence claim. Retain an executable admission invocation that supplies the issue number and the intended target and lookup inputs. Separate the scratch-clone construction cwd from the consumer invocation cwd and include the missing construction steps. The #1638 summary table at `:17` should also say four `[added]` criteria, matching its capture at `:42-45`.
+   - Falsifier: a reader can replay the four admission rows and construct the fixed-with-receipt and fixed-without-receipt arms from the recorded variables and commands. The retained decisions remain hold for #1480, no refusal for the other admission snapshots, and consumer exits 4/7 for the corresponding fixed arms.
+
+#### Review evidence
+
+- `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 -` read all three contracts with `swarm_preflight.extract_contract` and `jog_run.contract_probes_from_doc`, compared each command with the corresponding `.cmd.json` and its here-doc body with the readable probe, and parsed the retained base JSONs. It exited 0. Each packet reported pin `6142128d9c433d6b12972c6cd9a6f864f0ed9da2`, cap 9, two labels, no reason and retained READY exit 0.
+- `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/probe-gh1666.py` exited 1 at `('0xb', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])`. The revised probe checks every non-CR/LF separator that Python `splitlines()` treats as a line break. The retained green and three red arms cover the full fix, issue-side-only fix, missing deviations reader, and mask-three change. The archive-drift evidence also now distinguishes source-only from regenerated package (`pkg-freshness-arms.txt:1-12`).
+- #1423's helper proof and delivery requirements remain as adjudicated in Round 2. #1480 remains explicitly held in its capture with no build contract, and the retained admission check records the expected pre-lease refusal. #1590 remains withdrawn. I inspected retained clone evidence and used exact local source because the available graph indexes a separate checkout. I ran no Git fixture or gate in this turn.
 
