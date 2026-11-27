@@ -1,0 +1,4 @@
+# scoped mypy, swarm_preflight.py at ab890c545 (before r4 fix)
+utils/py/swarm_preflight.py:655: error: Value of type "str | None" is not indexable  [index]
+Found 1 error in 1 file (checked 1 source file)
+exit=1
