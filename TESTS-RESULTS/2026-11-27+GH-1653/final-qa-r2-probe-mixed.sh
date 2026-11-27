@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 - <<'PY'
 import builtins, multiprocessing as mp, tempfile
 from pathlib import Path

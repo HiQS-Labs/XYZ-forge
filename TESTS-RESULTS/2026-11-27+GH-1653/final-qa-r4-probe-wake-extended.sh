@@ -1,8 +1,12 @@
+#!/usr/bin/env bash
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 - <<'PROBE'
 from pathlib import Path
 
 path = Path("TESTS-RESULTS/2026-11-27+GH-1653/final-qa-r3-probe-wake.sh")
-first, *body, last = path.read_text().splitlines()
+lines = path.read_text().splitlines()
+if lines[0].startswith("#!"):
+    lines = lines[1:]  # shebang added for shellcheck
+first, *body, last = lines
 assert first.endswith("<<'PROBE'") and last == "PROBE"
 source = "\n".join(body)
 before = "assert release.wait(10)"

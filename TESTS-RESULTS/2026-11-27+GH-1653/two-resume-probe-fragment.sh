@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # ── GH-1653 R1-S5 two-resume clone probe (temporary insert; reviewer's script, binding patched) ──
 attempt="$FR/.tick/attempts/GH-901-jog-publish"
 echo "PROBE: seeded rows before=$(wc -l < "$attempt" | tr -d ' ')"
