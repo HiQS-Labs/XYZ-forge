@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -350,5 +350,40 @@ Plan step 2/3 revised. Dispositions:
 - **[Pass] Recon wake caller renamed to `run_marathon_phase`.**
 
 Handing off to Reviewer for round 4 (cap).
+
+### Round 4 · Reviewer · codex
+
+**What this proposes**
+
+Jog would book a manual publication attempt under a stable per-issue key before committing and pushing evidence. It would reuse the shared writer on wake, resume, and gate-only retry, and recover an already-published bundle by matching the exact remote lane ref. The plan adds archive recovery for saved receipts and puts CLI resume under the existing coordinator lock.
+
+**How the existing system works, per this document**
+
+Marathon qualifies its own candidate under a reservation bound to reviewed code and permissible transcript changes. The subsequent Jog bundle changes evidence paths outside that attestation, and the current push inherits an environment without a publication reservation. Failed and active rows count toward the live cap, and completed budgets move to history.
+
+**What it's not**
+
+Hook policy, the default cap, and the reservation model are excluded. Checkpoint booking is deferred to its separate caller. I infer that settling an active row after an already-recorded successful push remains unresolved.
+
+swept file: yes
+
+**Source-backed**
+
+**VERDICT: FAIL**
+
+**Basis:** The missing-ref and completed-before-archive cases now have discriminating plan checks. The plan still leaves an active row stranded when the push succeeded and Jog persisted the receipt, and the two-process finding remains open under the relay's clone-probe rule. This is the round cap. I read the whole seeded plan and the relevant worktree source. Graph discovery used the maintained Forge generation 2026-11-26T04:31:47Z. Graph tracing was unavailable under the session approval policy, so I read the call sites directly, including the fixture coverage gap at L729–730. No reviewer phase gate was specified. Proposed fixture and installed-hook smoke results are [Unverified — needs clone run].
+
+- **[Blocker] R3-B2 remains open for a saved receipt with an active publication row.**  
+  Observed input: artifact L81–85 returns success and persists publication even if finish fails. The shared writer can fail before the completed-row replacement (`utils/py/rtl.py:165–185`), leaving the original active row. Artifact L90–94 explicitly limits saved-receipt settlement to completed rows and leaves active rows for a later booking. Current resume's publication entry is skipped once the marker is saved (`utils/py/jog_run.py:812–827`), so the exact-ref active-row recovery at artifact L95–105 is unreachable for this input. With one earlier failure and this active row, both slots remain live and another publication for the same issue is refused before it can supersede the row (`rtl.py:82–105`). G4-archive covers completed rows with and without a marker, and an active row with the remote still at the prior SHA (artifact L126–132). It omits the active row whose bundle is already live.  
+  Affected scope: the latest manual publication row stayed active after an admitted push, the exact bundle is at the intended origin ref, and Jog already saved the receipt. At the default cap the concrete input is one failed row and one such active row.  
+  Falsifier: inject a one-time finish error before the completed write on the second booking, with the bare remote already updated. The first invocation saves the receipt and reports accounting pending. After clearing the fault, a fresh resume completes and archives the same row at cap without booking or pushing again. Assert identical row ids and unchanged bare ref, and exercise both with and without the receipt marker. Keep the existing remote-still-old control, which must leave the active row consumed. Reuse the exact-bundle/exact-ref settlement path for the saved receipt and the existing manual finish operation, or specify a supported same-row recovery with equivalent proof.
+
+- **[Should] R1-S5 / R2-S4 remains open as Form 2 pending probe verification.** The Observed input, Affected scope, Falsifier, and exact Clone probe are in Round 1's “two resumes can contend” finding. The revised lock split in artifact L106–111 follows the existing coordinator acquisition and supervised call (`utils/py/jog_run.py:2826–2846,2977–3009`). The Round 3 disposition and artifact L134–137 schedule the probe after implementation and supply no result. Run the recorded two-process clone probe against the actual reservation binding and retain both exits and the single additional row. Exercise supervised recovery under the already-held lock as planned. The current plan-only artifact cannot run that implementation probe.
+
+- **[Pass] First publication and completed-row recovery now have explicit checks.** Artifact L95–105 requires the existing committed bundle and distinguishes a successful absent-ref lookup from transport failure, consistent with `skills/1-hourly/kickstart/scripts/run_record.py:599–609`. K2's already-satisfied path can leave the lane ref absent (`test/gh280-jog-marathon-adapter.sh:931–937`, `utils/py/marathon_drive.py:2722–2742,2884–2894)). Artifact L126–140 checks the same archived row and unchanged bare ref for completed recovery, and requires an admitted first publication from K2 with coordinator accounting.
+
+- **[Pass] Normal publication, gate preservation, and shared accounting fit the plan.** All three call sites have the coordinator and execution target (`utils/py/jog_run.py:719–731,815–827,1062–1066`). A fresh manual row admits the same or descendant HEAD on the reserved branch (`utils/py/rtl.py:100–114`, `utils/py/gate_receipt.py:137–144,179–187`). Marathon's attestation does not cover the separate Jog bundle (`utils/py/relay_drive.py:1012–1022`, `utils/py/relay_attest.py:500–526`, `jog_run.py:1197–1224`). Artifact L75–89 preserves the manual CLI boundary, stable key, cap and exact environment restore. L112–151 retains the unreserved real-ref control, base replay, and separate installed-hook smoke. The focused hook uses the installed gate's real per-ref admission (`githooks/install.sh:153–185`, `githooks/pre-push:90–99`), with the Producer's reproduced transport rewrite accounted for. The P2 check and checkpoint scope remain bounded (artifact L13–17,L141, `test/gh280-jog-marathon-adapter.sh:1366–1378`). The full sweep found no separate pre-existing defect that requires a change beyond the issues recorded above.
+
+Handing off to Producer at the round cap for the plan's consult tie-break and disposition of the open recovery and clone-probe findings.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
