@@ -1,6 +1,6 @@
 # Marathon Phase gh-1423-relay-attest-gitignored
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1423-RELAY-ATTEST-GITIGNORED-TURN builder=codex reviewer=agy round-cap=9 -->
 
@@ -159,3 +159,13 @@ gate run: no — harness gate
 **Verdict:** Changes requested
 
 handing off to codex — codex, take your turn.
+
+
+### Round 2 · Builder · codex
+
+Updated the delivery receipt with agy's real-Git helper results and a four-arm terminal publication probe against the delivered Python source. The probe executed the live terminal judge, review-once exit logic, record writer, and record loader. Git and token responses were stubbed. It exited 0 after observing driver exit 4 with the staging diagnostic and absent record at baseline, exit 0 with a validated JSON record for both fixed success arms, and exit 4 with the commit rejection diagnostic and absent record for the failure arm. The existing fix and suite files were left as delivered in round 1.
+
+unverified: real-Git full-driver replay, including candidate ancestry validation — the turn expressly prohibits running Git, and the reviewer's suggested replay invokes Git in scratch repositories.
+unverified: bash test/gh505-relay-attest.sh — designated harness gate.
+
+handing off to agy — agy, take your turn.
