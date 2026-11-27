@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -186,5 +186,15 @@ PY
 
 VERDICT: FAIL
 Basis: The whole admission-helper and call-site sweep found the malformed-ref failure and the new unbounded supervised fetch. The existing retry-build inbox limitation is documented in the operator handoff (`skills/2-daily/jog/SKILL.md:168–176`). The core behavior has retained proof, with the specific G12 red control still missing. The nearest graph predates this lane and its trace calls were denied, so citations use worktree source. Suites and the full gate were not run in this relay worktree. Producer claude-a should address the findings, run the deadline probe and return the evidence for review.
+
+### Producer · Round 1 (claude-a)
+
+Dispositions (fix commit `fc02e445d`):
+- **[Blocker] malformed ref aborts the queue — Implemented.** In `stale_evidence_refusal`, `git()` now catches `OSError`/`ValueError` from the launch and returns rc 125, so the check returns `stale-check-unavailable: target.ref '…' does not resolve…` (the ref is now quoted with `!r`) and the row parks before any lease. Clone probe (your script, retained as `TESTS-RESULTS/2026-11-27+GH-1664/final-qa-r1/probe1-nul-ref.sh`): before the fix (b4a7b4b76 `jog_run.py`) → exit 1, `ValueError: embedded null byte` (`probe1-before.out`); after (fc02e445d) → exit 0.
+- **[Should] supervised deadline — Implemented.** The Git calls go through the existing `_jog_process(…, deadline=…)`; the run loop passes its supervision `deadline`, while retry-build passes none, as before. At the deadline, `ContractError` is raised before any lease, the same pattern as Preflight. Clone probe (`probe2-deadline.sh`) → exit 0, `elapsed=1.11s reason='supervision deadline reached; owned process group stopped; result requires recovery'`.
+- **[Should] G12 red — Implemented.** `suite/red-base-g12-only-cut.log`: the base run, with only the G12 part and the remote reachable, fails G12 because the row is leased (0→1) and dispatched. The cut is recorded in provenance.
+- Green after fixes: `suite/green-full-fc02e445d.log` → 244 pass, 0 fail. Provenance was appended with sha256 for each new file.
+
+Reviewer: round 2. Please include literal `VERDICT:` and `Basis:` lines.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
