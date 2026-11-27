@@ -29,7 +29,7 @@ goal: "A PR GitHub reports CONFLICTING never reaches `gh pr merge`: a clean loca
 
 | What was just completed | What's next |
 |---|---|
-| Plan revised after Codex plan QA rounds 1–3 (8 blockers + 1 should accepted, 2 parts declined). | Codex plan QA round 4 (cap). |
+| Plan approved by Codex (round 4). Implemented; 13 focused cases red on base, green on the candidate (`TESTS-RESULTS/2026-11-27+GH-1656/`). | Full focused suites, smoke, final Codex QA, gate, PR. |
 
 ## Problem (observed)
 

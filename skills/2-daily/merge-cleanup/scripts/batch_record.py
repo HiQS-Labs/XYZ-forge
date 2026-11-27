@@ -289,7 +289,8 @@ def unfinished_batches(primary: Path, origin: str, integration: str) -> List[Dic
 
 
 def set_outcome(rec: Dict[str, Any], pr: int, status: Optional[str] = None,
-                merge_oid: Optional[str] = None, reconcile: Optional[str] = None) -> None:
+                merge_oid: Optional[str] = None, reconcile: Optional[str] = None,
+                rung: Optional[str] = None, rung_oid: Optional[str] = None) -> None:
     o = rec["outcomes"].setdefault(str(pr), {"status": "unattempted"})
     touched = set(o.get("_touched") or [])
     if status is not None and o.get("status") != "merged":  # GH-1074: a merge is never downgraded
@@ -301,6 +302,10 @@ def set_outcome(rec: Dict[str, Any], pr: int, status: Optional[str] = None,
     if reconcile is not None:
         o["reconcile"] = reconcile
         touched.add("reconcile")
+    for k, v in (("rung", rung), ("rung_oid", rung_oid)):  # GH-1656: the landing rung and the commit it published
+        if v is not None:
+            o[k] = v
+            touched.add(k)
     o["_touched"] = sorted(touched)  # GH-1140: these fields are intentional THIS turn — the
     if status == "merged" and pr not in rec.setdefault("landed_order", []):  # save merge applies
         rec["landed_order"].append(pr)                                       # them, carried values do not
@@ -377,8 +382,11 @@ def script_block(rec: Dict[str, Any]) -> str:
         hard = ", ".join(f"#{d}" for d in row["hard"]) or "—"
         soft = "; ".join(f"#{k}: {', '.join(v)}" for k, v in row["soft"].items()) or "—"
         oid = (o.get("merge_oid") or "")[:10] or "—"
+        status = o.get("status", "unattempted")
+        if status == "merged" and o.get("rung") and o.get("rung_oid") and o.get("rung_oid") == o.get("merge_oid"):
+            status = f"merged ({o['rung']} rung)"  # GH-1656: only for the exact commit the rung published
         lines.append(f"| {row['pos']} | #{row['pr']} {_cell(row['title'])} | {hard} | {_cell(soft)} | "
-                     f"{_cell(o.get('status', 'unattempted'))} | {oid} | {_cell(o.get('reconcile') or '—')} |")
+                     f"{_cell(status)} | {oid} | {_cell(o.get('reconcile') or '—')} |")
     s = rec.get("sweep_inputs") or {}
     lines += ["", "## Sweep inputs"]
     if not s:

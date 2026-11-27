@@ -1,0 +1,196 @@
+FFFEEFFF.FFEFEFF
+======================================================================
+ERROR: test_confirmation_withheld_stops_without_reconcile (__main__.TestGh1656NonLedgerConflict.test_confirmation_withheld_stops_without_reconcile) (knob={'confirm_withheld': True})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 968, in test_confirmation_withheld_stops_without_reconcile
+    self.assertEqual(self.git_origin("rev-parse", "origin/development^2"), pin, "the candidate was not published")
+                     ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 818, in git_origin
+    return _git(self.probe, *a).stdout.strip()
+           ~~~~^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 37, in _git
+    return subprocess.run(["git", "-C", str(cwd)] + list(args), capture_output=True, text=True, check=check)
+           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['git', '-C', '/tmp/claude-501/gh534b.vexo_y7p/probe', 'rev-parse', 'origin/development^2']' returned non-zero exit status 128.
+
+======================================================================
+ERROR: test_confirmation_withheld_stops_without_reconcile (__main__.TestGh1656NonLedgerConflict.test_confirmation_withheld_stops_without_reconcile) (knob={'confirm_oid': 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 961, in test_confirmation_withheld_stops_without_reconcile
+    pin = self.conflicting_pr(1, name=f"feat/a-{tag}")
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 808, in conflicting_pr
+    head = self.branch(name, number, fn)
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 250, in branch
+    w = self.clone(f"w-{number}")
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 243, in clone
+    subprocess.run(["git", "clone", "-q", str(self.origin), str(c)], check=True, capture_output=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['git', 'clone', '-q', '/tmp/claude-501/gh534b.vexo_y7p/origin.git', '/tmp/claude-501/gh534b.vexo_y7p/w-1']' returned non-zero exit status 128.
+
+======================================================================
+ERROR: test_pr_closed_or_retargeted_before_push_stops (__main__.TestGh1656NonLedgerConflict.test_pr_closed_or_retargeted_before_push_stops) (field='baseRefName')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 904, in test_pr_closed_or_retargeted_before_push_stops
+    self.conflicting_pr(1, name=f"feat/{field}")
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 808, in conflicting_pr
+    head = self.branch(name, number, fn)
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 250, in branch
+    w = self.clone(f"w-{number}")
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 243, in clone
+    subprocess.run(["git", "clone", "-q", str(self.origin), str(c)], check=True, capture_output=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['git', 'clone', '-q', '/tmp/claude-501/gh534b.0ymbomf0/origin.git', '/tmp/claude-501/gh534b.0ymbomf0/w-1']' returned non-zero exit status 128.
+
+======================================================================
+ERROR: test_push_acknowledgement_lost (__main__.TestGh1656NonLedgerConflict.test_push_acknowledgement_lost) (descendant=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 982, in test_push_acknowledgement_lost
+    self.conflicting_pr(1, name=f"feat/ack-{descendant}")
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 808, in conflicting_pr
+    head = self.branch(name, number, fn)
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 250, in branch
+    w = self.clone(f"w-{number}")
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 243, in clone
+    subprocess.run(["git", "clone", "-q", str(self.origin), str(c)], check=True, capture_output=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['git', 'clone', '-q', '/tmp/claude-501/gh534b.8buax6_x/origin.git', '/tmp/claude-501/gh534b.8buax6_x/w-1']' returned non-zero exit status 128.
+
+======================================================================
+FAIL: test_clean_conflicting_lands_through_rung (__main__.TestGh1656NonLedgerConflict.test_clean_conflicting_lands_through_rung)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 839, in test_clean_conflicting_lands_through_rung
+    self.assertEqual(rc, 4, self.err)  # landed, QA pending (GH-1064)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 4 : merge-cleanup: ERROR — Failed to merge PR #1: X Pull request example/repo#1 is not mergeable: the merge commit cannot be cleanly created.
+merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.
+
+
+======================================================================
+FAIL: test_clean_conflicting_under_squash_stops (__main__.TestGh1656NonLedgerConflict.test_clean_conflicting_under_squash_stops)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 1009, in test_clean_conflicting_under_squash_stops
+    self.assertIn("non-ledger conflict; local merge clean", self.err)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'non-ledger conflict; local merge clean' not found in 'merge-cleanup: ERROR — Failed to merge PR #1: X Pull request example/repo#1 is not mergeable: the merge commit cannot be cleanly created.\nmerge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.\n'
+
+======================================================================
+FAIL: test_confirmation_lag_then_tail_once (__main__.TestGh1656NonLedgerConflict.test_confirmation_lag_then_tail_once)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 924, in test_confirmation_lag_then_tail_once
+    self.assertEqual(rc, 0, self.err)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 0 : merge-cleanup: ERROR — Failed to merge PR #1: X Pull request example/repo#1 is not mergeable: the merge commit cannot be cleanly created.
+merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.
+
+
+======================================================================
+FAIL: test_confirmed_rung_reconciles_candidate (__main__.TestGh1656NonLedgerConflict.test_confirmed_rung_reconciles_candidate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 946, in test_confirmed_rung_reconciles_candidate
+    self.assertEqual(rc, 0, self.err)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 0 : merge-cleanup: ERROR — Failed to merge PR #1: X Pull request example/repo#1 is not mergeable: the merge commit cannot be cleanly created.
+merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.
+
+
+======================================================================
+FAIL: test_dirty_non_ledger_conflict_message (__main__.TestGh1656NonLedgerConflict.test_dirty_non_ledger_conflict_message)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 1021, in test_dirty_non_ledger_conflict_message
+    self.assertIn("non-ledger conflict; local merge dirty: README.md", self.err)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'non-ledger conflict; local merge dirty: README.md' not found in 'merge-cleanup: ERROR — PR #1: HANDOFF — code/doc conflict outside the ledger set: README.md\nmerge-cleanup: ERROR —   conflict set: README.md\nmerge-cleanup: ERROR —   export MERGE_CLEANUP_RECORD=/private/tmp/claude-501/gh534b.7t9khvmw/primary/.tick/merge-cleanup/gh534b.7t9khvmw-origin/pr-1.json  # caller ladder: /debug-mantra → /recon → /ponytail → /start-task → /unstuck\nmerge-cleanup: ERROR — 1 PR(s) did not land (0 deferred by network, 0 awaiting checks or a re-pin, 0 parked on resume, 1 handed off or parked): #1 (handoff)\nmerge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.\n'
+
+======================================================================
+FAIL: test_dry_run_conflicting_clean_previews_rung (__main__.TestGh1656NonLedgerConflict.test_dry_run_conflicting_clean_previews_rung)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 1030, in test_dry_run_conflicting_clean_previews_rung
+    self.assertNotIn("Would merge PR #1", self.out)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Would merge PR #1' unexpectedly found in 'merge-cleanup: Merge policy: preserve_commit_history=False; strategy=merge; source=legacy default (no .merge-cleanup.json)\nmerge-cleanup: Operating on primary repo: /private/tmp/claude-501/gh534b.9rniw463/primary\nmerge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.\n\n================================================================================\nPHASE 0: PRIMARY ON-DISK CHECKOUT\n================================================================================\n\nPrimary checkout: /private/tmp/claude-501/gh534b.9rniw463/primary\n  branch: development  (integration: development)\n  clean: yes\n  landing: READY\n\n\n================================================================================\nPHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)\n================================================================================\n\nScanned roots: /private/tmp/claude-501/gh534b.9rniw463/no-roots\n\n| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |\n|---|---|---|:---:|:---:|:---:|:---:|---|---|\n\nmerge-cleanup: Preview of every open PR: a merging --execute lands only the PRs named with --prs (GH-1226).\n================================================================================\nPHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)\n================================================================================\n\n| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |\n|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|\n| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | no | PASS | CONFLICTING | 0 |\n\n================================================================================\nPHASE 5: EXECUTING PR MERGES & RECONCILIATION\n================================================================================\n\nmerge-cleanup: Merge policy: preserve_commit_history=False; strategy=merge; source=legacy default (no .merge-cleanup.json)\nmerge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)\nmerge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)\nmerge-cleanup: PR #1: pre-merge ledger gate green on d7f53b315d + origin/development\nmerge-cleanup: PR #1: required checks: no required checks\nmerge-cleanup: [DRY RUN] Would merge PR #1 via `gh pr merge 1 --merge`\nmerge-cleanup: Landing clones removed after a clean run (/tmp/claude-501/merge-cleanup-orovapgd)\n================================================================================\nPHASE 6: SAFE TEARDOWN & RECOVERY PRUNING\n================================================================================\n\nmerge-cleanup: Re-inspecting every non-exempt checkout before teardown...\nmerge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).\n\n================================================================================\nmerge-cleanup: Merge cleanup run complete.\n'
+
+======================================================================
+FAIL: test_moved_base_refused (__main__.TestGh1656NonLedgerConflict.test_moved_base_refused)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 893, in test_moved_base_refused
+    self.assertTrue(fired)
+    ~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: [] is not true
+
+======================================================================
+FAIL: test_pr_closed_or_retargeted_before_push_stops (__main__.TestGh1656NonLedgerConflict.test_pr_closed_or_retargeted_before_push_stops) (field='state')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 915, in test_pr_closed_or_retargeted_before_push_stops
+    self.assertEqual(self.merge_calls(1), [])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [['pr', 'merge', '1', '--merge', '--match-[53 chars]47']] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+['pr', 'merge', '1', '--merge', '--match-head-commit', 'cbf6297fdcc0b1518d1e82975672c619901e7447']
+
++ []
+- [['pr',
+-   'merge',
+-   '1',
+-   '--merge',
+-   '--match-head-commit',
+-   'cbf6297fdcc0b1518d1e82975672c619901e7447']]
+
+======================================================================
+FAIL: test_push_acknowledgement_lost (__main__.TestGh1656NonLedgerConflict.test_push_acknowledgement_lost) (descendant=False)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 996, in test_push_acknowledgement_lost
+    self.assertEqual(len(pushes), 1, "the rung pushed more than once")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 1 : the rung pushed more than once
+
+======================================================================
+FAIL: test_rejecting_hook_leaves_origin_unchanged (__main__.TestGh1656NonLedgerConflict.test_rejecting_hook_leaves_origin_unchanged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 879, in test_rejecting_hook_leaves_origin_unchanged
+    self.assertIn("rejected by the GH-1656 test hook", self.err)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'rejected by the GH-1656 test hook' not found in 'merge-cleanup: ERROR — Failed to merge PR #1: X Pull request example/repo#1 is not mergeable: the merge commit cannot be cleanly created.\nmerge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.\n'
+
+======================================================================
+FAIL: test_rung_label_survives_recovery (__main__.TestGh1656NonLedgerConflict.test_rung_label_survives_recovery)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1656-non-ledger-conflict-2026-11-27/test/gh534_phase_b_tests.py", line 854, in test_rung_label_survives_recovery
+    self.assertIn("merged (local-merge rung)", batch_record.script_block(rec))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'merged (local-merge rung)' not found in '<!-- merge-batch:script:start -->\n## Merge sequence\n_Planned order from Phase 4. This block is maintained by merge-cleanup; edits inside it are replaced._\n\n| # | PR | depends on | file overlap with | status | merge commit | reconcile |\n|---|----|------------|-------------------|--------|--------------|-----------|\n| 1 | #1 t | — | — | merged | cccccccccc | — |\n\n## Sweep inputs\n- No landings yet.\n\n## Sweep verdict\n- **QA pending** — record one with `merge_cleanup.py --primary <path> --record-sweep <file>`.\n<!-- merge-batch:script:end -->\n'
+
+----------------------------------------------------------------------
+Ran 13 tests in 34.061s
+
+FAILED (failures=11, errors=4)
