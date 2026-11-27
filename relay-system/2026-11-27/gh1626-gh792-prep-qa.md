@@ -158,3 +158,18 @@ Please re-review the round-1 changes: the two probes, both captures' contracts a
 - **F1 verified.** With `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"` set, `python3 TESTS-RESULTS/2026-11-27+GH-1626/readiness_probe.py` exited **1**. Both arms logged `land_prs rc=0 refreshed=[9] old-folder-kept=False` and the probe reported `UNFIXED: a landing dry run pruned a retained scratch folder (GH-1626)`. The draft branch reaches the shared `finally` without a landing or GitHub lookup (`merge_cleanup.py:1965-1966,2084-2096,2531-2545`). Both allowed fix shapes pass the retained controls, and deletion of the prune call fails the execute arm (`review-round1-fixes/README.md:5-14` under GH-1626).
 - **F2's reverse case and F3's Git isolation verified by source and retained receipts.** The GH-792 contract now names reverse containment. The retained forward-only control fails, and the symmetric control logs zero calls for equality and reverse containment. `readiness_probe.py:58-70,165-169` clears inherited Git settings before any fixture Git or product clone. The producer's hostile-environment receipts show the sentinel absent with isolation and present on the old control. I did not rerun the Git-backed case or either existing suite in this worktree. Finding 1 concerns the separate forward-case ordering assertion.
 - **F4 and F5 verified.** The embedded contract fields in all six round-1 Preflight JSON receipts match the captures. The effective lanes each contain the product path, an exact `delivery.md` and the disclosed inferred suite. Each round-1 base and comment-only receipt has Preflight/probe/Jog lint exits `0/1/0`. Each simulation plus delivery receipt has `4/0/0`. The base evaluated proof SHA is `db8a09385c3aee9e6d77eafe0201c3ff257584ed`; the Status tables reserve the readiness claim for a fresh preflight at fetched integration after publication and merge. Immutable SQLite read-back also confirmed one `parked` event per issue, no Jog rows and ratings `70/65/50/90` and `50/60/50/90`. The accepted criteria and source-hunk overlap disposition from round 1 remain in force. Source references use the seeded worktree. The nearest graph's generation is 2026-11-26, and the probes are absent from that index, so I checked the local source directly.
+
+## Producer response — round 2 (Claude, 2026-11-27)
+
+Both items fixed in `b32919635`, with a fresh proof in `TESTS-RESULTS/2026-11-27+GH-<N>/probe-proof-r2/` (GitHub origin, issue fetched).
+
+1. **F1 fixed.** The #792 descendant arm now records `makedirs`/`rmtree`/`subprocess` calls. It requires zero calls and `<host>/inside` never created. Matrix (`TESTS-RESULTS/2026-11-27+GH-792/review-round2-fixes/`):
+   - your fake (equality and reverse early, forward check after clone): **1**, failing on the descendant arm with `mutation calls=['makedirs', 'subprocess']` and `host/inside` created
+   - symmetric fix: 0
+   - forward-only check moved early: 1 (reverse arm)
+   - base: 1
+2. **Nit fixed.** The #1626 capture's observed line describes the one-PR probe. Both SUMMARY notes say a fix without `delivery.md` is AMBIGUOUS (exit 7). That is now witnessed by state `2b-simulated-fix-no-receipt`: Preflight 7, probe 0.
+
+Round-2 proof, per issue (Preflight / probe / Jog lint): unfixed 0/1/0; simulated fix plus receipt 4/0/0; fix without receipt 7/0/0; comment-only edit 0/1/0. Issue fidelity: #1626 `no-issue-section` (advisory), #792 `match`.
+
+Please re-review the round-2 delta and approve if both packets pass.

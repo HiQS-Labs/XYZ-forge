@@ -1,14 +1,17 @@
 # GH-792 preparation evidence (2026-11-27)
 
-## Current proof: after review round 1 (`probe-proof-r1/`, GitHub origin)
+## Current proof: after review round 2 (`probe-proof-r2/`, GitHub origin)
 
 | State | Evaluated `development` (proof clone) | Jog lint | Preflight `--dry-run` | Probe |
 |---|---|---|---|---|
-| 1 Unfixed, prepared commit | `db8a09385` | 0 | 0 READY | 1 unfixed |
-| 2 Simulated fix + `delivery.md` (proof clone only) | `ed06a9254` | 0 | 4 STALE (landed) | 0 |
-| 3 Comment-only edit (proof clone only) | `af570e01b` | 0 | 0 READY | 1 unfixed |
+| 1 Unfixed, prepared commit | `b32919635` | 0 | 0 READY | 1 unfixed |
+| 2 Simulated fix + `delivery.md` (proof clone only) | `ee2d2cbfd` | 0 | 4 STALE (landed) | 0 |
+| 2b Simulated fix, no `delivery.md` (proof clone only) | `2382841fa` | 0 | 7 AMBIGUOUS | 0 |
+| 3 Comment-only edit (proof clone only) | `7c6abbacc` | 0 | 0 READY | 1 unfixed |
 
-Issue fetched in every state: OPEN, acceptance fidelity `match` (three declared `[added]` verbatim criteria). The probe change matrix is in `review-round1-fixes/` (README + `matrix`/variant outputs). The `delivery.md` `path_absent` probe reads `unfixed` on its own until the receipt exists. Delivery needs both probes landed. A real fix without the receipt is not STALE: the behavioral probe reads landed and the receipt probe unfixed, so the aggregate is AMBIGUOUS (exit 7). See `probe-proof-r2/2b-simulated-fix-no-receipt/`.
+Round-1 proof (`probe-proof-r1/`, at `db8a09385`) is kept as history.
+
+Issue fetched in every state: OPEN, acceptance fidelity `match` (three declared `[added]` verbatim criteria). The probe change matrices are in `review-round1-fixes/` and `review-round2-fixes/` (README + `matrix`/variant outputs). The `delivery.md` `path_absent` probe reads `unfixed` on its own until the receipt exists. Delivery needs both probes landed. A real fix without the receipt is not STALE: the behavioral probe reads landed and the receipt probe unfixed, so the aggregate is AMBIGUOUS (exit 7). See `probe-proof-r2/2b-simulated-fix-no-receipt/`.
 
 ## Round 0 history (`probe-proof/`, before review)
 

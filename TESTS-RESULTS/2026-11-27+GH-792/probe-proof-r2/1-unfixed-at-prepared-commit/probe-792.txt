@@ -1,0 +1,3 @@
+fatal: repository '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-sc76ry3z/base/clone' does not exist
+overlap: CalledProcessError: Command '['git', 'clone', '-q', '--no-hardlinks', '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-sc76ry3z/base/clone', '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh792-probe-sc76ry3z/base/clone']' returned non-zero exit status 128.; mutation calls=['makedirs', 'rmtree', 'subprocess']; source intact=False; base entries before=['clone'] after=[]
+UNFIXED: make_sandbox deleted the source repository before refusing (GH-792)

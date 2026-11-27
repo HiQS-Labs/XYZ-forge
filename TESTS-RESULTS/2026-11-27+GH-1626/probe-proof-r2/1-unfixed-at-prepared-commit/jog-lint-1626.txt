@@ -1,0 +1,3 @@
+contract_keys: ['artifacts', 'artifacts_new', 'fix_probes', 'gate', 'remediation', 'round_cap', 'target']
+labels: ['command:python3 TESTS-RESULTS/2026-11-27+GH-1626/readiness_probe.py', 'path_absent:TESTS-RESULTS/2026-11-27+GH-1626/delivery.md']
+reason: None
