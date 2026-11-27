@@ -1,5 +1,5 @@
 # GH-1656 plan QA — non-ledger GitHub conflict: local-merge rung or a precise stop
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 ## Context
@@ -282,3 +282,34 @@ This is round 4 of 4 (cap). Please mark findings that are not delivery blockers 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+### Codex reviewer, round 4
+
+**What this proposes.** When the final GitHub read reports CONFLICTING and the merge policy permits it, the command builds a base-first merge from the approved pin and verifies both parents and the gated tree. It pushes through the installed hook with an exact-base lease, then requires GitHub to confirm the candidate before the common reconciliation tail runs.
+
+**How the existing system works, per this document.** Phase 5 waits for mergeability and simulates the merge in a landing clone before the ledger and eligibility checks. Dirty non-ledger conflicts hand off at B1. A clean local merge can still reach the GitHub merge command or the generic dry-run preview.
+
+**Scope limits.** The frontmatter preserves the merge history policy, B1 repair budget and existing push gate. Steps 3 and 5 reuse the current reconcile command after the operator verifies the publication identity, and preserve the rung on recovery through the batch record.
+
+**Verdict:** Approved for implementation. The round-4 revision resolves the three round-3 findings. The implementation and clone verification remain pending.
+
+- **Recon and routing.** A clean simulation reaches the ledger gate and head-specific checks, then falls through to the existing GitHub command (`merge_cleanup.py:2294–2345,2379–2418`). A dirty non-ledger conflict hands off the affected PR before that command (`ledger_merge.py:565–582`, `merge_cleanup.py:2206–2219`). Persistent UNKNOWN already stops before the preview (`merge_cleanup.py:1902–1916,2112–2128`). The final live read is the right selector for the observed CONFLICTING/DIRTY pair. The plan retains eligibility, the pin and the stack protection call, and places the strategy stop ahead of dependent retargeting (`merge_cleanup.py:640–658,2382–2415`). Merge-only fits the configured history policy (`.merge-cleanup.json:2`, `merge_cleanup.py:508–515`).
+- **Publication and reconciliation.** Plan lines 158–184 handle both a no-op simulation and an active merge, compare the candidate tree and parents with the ledger-gated inputs, and lease the exact base. The immutable pin bounds what can be published even if PR state changes during the push. A matching head, base and candidate OID are all required to attribute the landing. The existing gated push at `merge_cleanup.py:1690–1702` provides the transport precedent. The successful rung joins the existing tail once and passes the candidate to hosted reconciliation, following the existing recovery caller (`merge_cleanup.py:1595–1606,2419–2448,2861–2869`).
+- **Batch and recovery.** The rung and its candidate OID belong in the touched outcome fields. The finalizer updates status or reconcile fields, so persistence of both rung fields through its save follows the existing field merge (`merge_cleanup.py:1979–1996`, `batch_record.py:123–142,291–307`). The renderer should require a nonempty rung OID that equals the confirmed merge OID. The existing recovery writer can then carry the rung forward with its ordinary merged/reconciled update (`merge_cleanup.py:2874–2885`). Pending publication stays outside landed and QA accounting (`batch_record.py:235–247`).
+- **Planned red controls.** R1 reaches the forced-CONFLICTING refusal at the existing `pr merge` seam. R2's squash case reaches that same refusal on base, and its dirty case fails on the missing diagnostic. R3's conflict case sees the old generic preview, with persistent UNKNOWN serving as a green control. R4 fails on the absence of the rung label in the captured issue body. The two-PR fixture reaches batch creation (`merge_cleanup.py:3214–3228`), and bare-origin inspection keeps the parent/tree checks independent of the GitHub stub (`test/gh534_phase_b_tests.py:74–91,112–124,220–236`). The stub's ancestry-derived view exercises the consumer's confirmation logic. Live GitHub attribution remains unverified here.
+
+**[Should] Make the hosted reconciliation regression distinguish the candidate from the primary tip.**
+
+**Observed input:** The plan's hosted test (`GH-1656-NON-LEDGER-CONFLICT.md:140–141`) says the lookup receives the candidate once. Without a later published commit, the fallback at `merge_cleanup.py:1598–1606` already supplies that SHA because the common tail fast-forwards primary first (`2427–2440`).
+
+**Affected scope:** The hosted regression assertion only. Publish a descendant D before confirmation finishes, then retain the normal Phase 5 fetch and fast-forward. The plan already specifies the correct production argument at lines 191–194.
+
+**Falsifier:** Bare origin and primary end at D while hosted lookup receives the candidate C and the pin once. Removing the explicit `merged_head` argument makes the assertion fail with D.
+
+**Clone probe:** In a disposable full clone run `python3 test/gh534_phase_b_tests.py TestGh1656NonLedgerConflict.test_confirmed_rung_reconciles_candidate` with the D advance above, then repeat after temporarily omitting the rung-only `merged_head` argument in that clone. Expect pass with the argument and failure without it. [Unverified — needs clone run]
+
+**[Nit]** During push readback, treat an ancestry result of 1 as negative. Treat a failed ancestry query or missing fetched OID as publication unknown, preserving the candidate OID (`GH-1656-NON-LEDGER-CONFLICT.md:176–180`).
+
+**Evidence limits.** Verify-tier source review. The nearest graph is the canonical Forge clone at generation 2026-11-26T04:31:47Z. Coverage reported no recorded gaps for the queried source and fixture, and the plan and relay were absent from that index. The line references above use the seeded worktree. No runtime tests, external publication or reviewer gate ran.
+
+VERDICT: PASS
+Basis: The plan preserves the existing landing controls, specifies exact publication and confirmation, and retains durable batch attribution. The planned red and green checks still need to run in a disposable full clone.
