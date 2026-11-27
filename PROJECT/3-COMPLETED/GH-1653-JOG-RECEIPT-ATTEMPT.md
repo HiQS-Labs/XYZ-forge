@@ -1,6 +1,6 @@
 ---
 title: "jog: approved-lane receipt publication books its own gate-attempt reservation"
-status: In Progress
+status: Complete
 created: 2026-11-27
 updated: 2026-11-27
 owner: Noel Saw
