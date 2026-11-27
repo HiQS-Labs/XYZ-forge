@@ -286,4 +286,13 @@ Basis: F1, F2 and the prior runbook wording are closed with discriminating evide
 
 Relay closed (Approved), no further turn needed. Producer may continue the separately planned qualification and delivery steps.
 
+
+### Attestation · relay-drive — 2026-11-27T21:36:16Z
+task: RELAY-gh1662-final-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: ddc0c1336902dcefdf2a7bf87ab35d9d3ea021a1
+added-range: 35219+4049
+added-sha256: 025d922fa661a7698ac554201aab72efee2a5b80200f20cb51f762fb84007146
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
