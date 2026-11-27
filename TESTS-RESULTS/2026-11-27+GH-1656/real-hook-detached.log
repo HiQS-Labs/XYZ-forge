@@ -1,0 +1,3 @@
+githooks: INSTALLED — $TMPDIR/gh1656-real-hook.CxZHCS/landing/.git/hooks/pre-push is the gate stub (executable)
+gate-attempt: REFUSED — task qualification has no attempt reservation; use gate_receipt.py attempt-start; use gate_receipt.py attempt-start
+shape=detached push_rc=1 base=95f2d61db7de7d5264e3449eda65fd0c2fc10791 candidate=e7252fac0c558ae2ddc3bf6d698a2b11d4695089 origin=95f2d61db7de7d5264e3449eda65fd0c2fc10791 published=no

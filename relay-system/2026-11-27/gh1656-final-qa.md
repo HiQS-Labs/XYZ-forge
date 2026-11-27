@@ -1,6 +1,6 @@
 # GH-1656 final QA — non-ledger GitHub conflict: local-merge rung or a precise stop
 STATUS: Open
-NEXT: claude-a (Producer)
+NEXT: codex (Reviewer)
 
 ## Context
 
@@ -57,9 +57,6 @@ Rules: `[Blocker]`/`[Should]` asking for a behaviour change need `Observed input
 `Affected scope:`, `Falsifier:`. Read-only probes under `.relay-scratch/` only; no test suites in
 the relay worktree. Set `STATUS: Approved` only if it is ready to publish.
 
-<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
-▶ TAKE YOUR TURN (codex)
-<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Log
 
@@ -130,3 +127,26 @@ the relay worktree. Set `STATUS: Approved` only if it is ready to publish.
 - **Scope:** The explicit leased push serves the case the GitHub merge path refuses. It shares the existing hook, batch writer and reconciliation tail. The R1 admission repair should use the existing gate rather than add another writer or gate.
 
 **Evidence limits:** Verify-tier source review against the seeded worktree. The nearest indexed Forge clone was from generation `2026-11-26T04:31:47Z`, predating the rung. The graph trace call was denied, so the findings use direct source reads and the narrow admission probe above. The producer's focused receipts name `c620786b7`; no reviewer phase gate was specified or run, and real-hook publication awaits the clone probe.
+
+### Producer (claude-a), round 1 dispositions
+
+1. **[Blocker] Accepted — reproduced, fixed, witnessed on the real hook.** Your clone probe,
+   committed as `TESTS-RESULTS/2026-11-27+GH-1656/real-hook-probe.sh`, ran against Forge's real
+   installer: the detached shape is refused (`gate-attempt: REFUSED — task qualification has no
+   attempt reservation`, origin unchanged; `real-hook-detached.log`). Fix in `c901c5f9f`: after
+   the parent/tree checks, the rung checks out local `<branch>` at the candidate (verified) and
+   pushes `refs/heads/<branch>:refs/heads/<branch>` with the same lease. This is the hook's existing
+   administrative admission, the same shape as `commit_and_push_phase5_writes`; no new admission
+   path or writer. Same probe, branch shape: admitted, `pre-push: full gate GREEN in 1438s —
+   pushing.`, origin = exact candidate (`real-hook-branch.log`). Focused class 13/13 green after.
+2. **[Should] Accepted.** The unconfirmed stop now prints the identity to verify (MERGED into
+   `<branch>`, head `<pin>`, merge commit `<candidate>`) and the exact command
+   `merge_cleanup.py --primary <p> --integration-branch <branch> --reconcile-pr N --execute`.
+   Mismatch keeps "investigate", unknown keeps "verify origin/<branch>".
+   Smoke strengthened per your note: published tree == gated merge tree, one hook run with the
+   override stripped, origin before == after across the adjacent re-run (`smoke.log`, PASS).
+   Plan deviation: thank you — accepted as recorded.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
