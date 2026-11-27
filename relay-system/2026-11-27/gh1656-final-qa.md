@@ -1,5 +1,5 @@
 # GH-1656 final QA — non-ledger GitHub conflict: local-merge rung or a precise stop
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 ## Context
@@ -289,3 +289,6 @@ of this file, a block containing exactly a `VERDICT:` line immediately followed 
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+VERDICT: PASS
+Basis: Round 3 stands. Replayed its documented shell probe against the seeded source, exit 0. The parsed argv preserved the space-containing primary path, development, PR 19 and --execute. Decisive output: foreign-cwd CLI --help = 0; identity and mismatch text passed. The retained Forge-hook branch replay recorded push_rc=0 and origin equal to the candidate, and the CLI smoke recorded the expected parents and gated tree. The recovery write was traced in source. The focused-suite provenance names an earlier revision, and no reviewer phase gate was specified or run.
