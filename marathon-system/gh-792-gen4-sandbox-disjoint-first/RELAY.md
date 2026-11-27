@@ -159,3 +159,13 @@ Reviewed all three artifact files in full (`utils/py/gen4_campaign.py` L1–409,
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-11-27T16:58:27Z
+task: MARATHON-GH-792-GEN4-SANDBOX-DISJOINT-FIRST-TURN
+reviewer: agy
+status: Approved
+reviewed-head: c9f85ccbae3347f5486eb33d0a0dfb75587837c3
+added-range: 12054+3997
+added-sha256: d1a3252c8102a606991ed862abac041ca045bda03c1544a97ac1a71dc4b9230b
+config-sha256: ffa956d5b2f314e9749b86eee9b8f8a50ba212cf63b71773b8f6536be00f7233
+gate-run: no
