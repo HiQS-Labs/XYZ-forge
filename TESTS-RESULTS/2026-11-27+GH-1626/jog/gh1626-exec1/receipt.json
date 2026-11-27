@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1626,
+  "execution_id": "gh1626-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1626-dry-run-scratch-prune-2026-11-27",
+  "pr_number": null,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "cd584d6cb77d0531c65a93b047878f13832ecccfbd8fdbed455de8de37ea5316",
+    "gate-receipt.json": "dab6909e4d7396e4c96cfe1e1a3752958b0001ca60f434f99af638523dd9251f",
+    "provenance.jsonl": "62a147c47ac33f689278cd18152ef95ff5043dd6fdebc641b976b57c28b9ac47"
+  }
+}

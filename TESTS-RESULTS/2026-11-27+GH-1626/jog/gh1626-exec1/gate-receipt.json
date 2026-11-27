@@ -1,0 +1,21 @@
+{
+  "sha": "fd811951f0b5dae07077d36fe9dbe90c36b7c440",
+  "gate": "validate.sh",
+  "mode": "parallel",
+  "exit_code": 0,
+  "passed": 408,
+  "total": 408,
+  "duration_s": null,
+  "timestamp": "2026-11-27T16:31:45.409493+00:00",
+  "host": "Darwin 24.6.0",
+  "attempt": {
+    "attestation": "/Users/noelsaw/flywheel-day3-exec/.git/relay-attest/MARATHON-GH-1626-DRY-RUN-SCRATCH-PRUNE-TURN.json",
+    "id": "5ed640d08933469689798aa607dd35d3",
+    "kind": "lane",
+    "record": "/Users/noelsaw/flywheel-day3-exec/.tick/attempt-history/gh-1626-dry-run-scratch-prune-0lfy3q18/attempts",
+    "archived": true,
+    "sha": "fd811951f0b5dae07077d36fe9dbe90c36b7c440",
+    "state": "active"
+  },
+  "scope": "full"
+}

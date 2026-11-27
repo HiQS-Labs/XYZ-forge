@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1626-exec1",
+  "generated_at": "2026-11-27T16:31:47Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "1626",
+  "phase": "gh-1626-dry-run-scratch-prune",
+  "lane": "gh-1626-dry-run-scratch-prune",
+  "token": "MARATHON-GH-1626-DRY-RUN-SCRATCH-PRUNE-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "agy",
+  "target_repo": {
+    "path": "/Users/noelsaw/flywheel-day3-exec",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1626-dry-run-scratch-prune-2026-11-27",
+  "head_sha": "fd811951f0b5dae07077d36fe9dbe90c36b7c440",
+  "reviewed_candidate": "fd811951f0b5dae07077d36fe9dbe90c36b7c440",
+  "reviewed_head": "c91560364023c5c462894cbc077c5a3bbcfaf5cc",
+  "added_sha256": "1d022cfe4277ef11c41783318f968dd6c18fea9c61f0f851520cd8eae76bdcd2",
+  "attest_path": "/Users/noelsaw/flywheel-day3-exec/.git/relay-attest/MARATHON-GH-1626-DRY-RUN-SCRATCH-PRUNE-TURN.json",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash test/gh436-merge-cleanup.sh",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/flywheel-day3-exec/.xyz/receipts/fd811951f0b5dae07077d36fe9dbe90c36b7c440.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": "pr-publication-failed: closeout exited 3; the phase stays green and its commits are on 'marathon/gh-1626-dry-run-scratch-prune-2026-11-27' \u2014 open the PR by hand: gh pr create --base development --head marathon/gh-1626-dry-run-scratch-prune-2026-11-27",
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-27T16:07:26Z",
+    "finished_at": "2026-11-27T16:31:47Z"
+  }
+}
