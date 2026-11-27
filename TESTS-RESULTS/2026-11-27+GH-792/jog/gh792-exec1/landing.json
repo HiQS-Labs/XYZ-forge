@@ -1,0 +1,18 @@
+{
+  "issue": 792,
+  "queue_gid": "jog-01M8EW487B14E9THPD5MQC6FKH",
+  "execution_id": "gh792-exec1",
+  "pr_number": 1652,
+  "merged_sha": "0b5dc5233b59f46b1244f77a276e889635b77d49",
+  "approved_head_sha": "5c185ac2e436042b87f0c0ceb11ce7985c4b83be",
+  "landed_head_sha": "140f5f9a217c4e60bb36dae1baa7740fbfcffa48",
+  "reviewed_head_sha": "c9f85ccbae3347f5486eb33d0a0dfb75587837c3",
+  "reviewed_candidate_sha": "5c185ac2e436042b87f0c0ceb11ce7985c4b83be",
+  "tested_head_sha": "5c185ac2e436042b87f0c0ceb11ce7985c4b83be",
+  "completion_policy": "merged-pr",
+  "hosted_reconcile": null,
+  "local_reconcile": {
+    "roadmap_gid": "rmi-01M8ESNVJ077B2MTJ2WEF4Y4CW",
+    "raw_text": "- **GH-792 \u00b7 gen4_campaign.make_sandbox checks disjointness before deleting or cloning** \u2705 **SHIPPED 2026-11-27 (PR #1652)** \u2014 [GH-792-GEN4-SANDBOX-DISJOINT-FIRST.md](PROJECT/3-COMPLETED/GH-792-GEN4-SANDBOX-DISJOINT-FIRST.md) \u00b7 [#792](https://github.com/HiQS-Labs/XYZ-forge/issues/792)"
+  }
+}

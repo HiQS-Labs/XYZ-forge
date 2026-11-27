@@ -114,7 +114,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #492 GH-492 · Nothing reconciles roadmap_items against issues closed outside a merged PR — `already-landed`
 - #1075 GH-1075 · merge-cleanup batch record keeps stale per-PR file lists on resume — `already-closed`
 - #1087 GH-1087 · docs: restore spacing in the GH-1051 work record — `already-closed`
-- #792 GH-792 · gen4_campaign.make_sandbox checks disjointness before deleting or cloning — `already-closed`
 
 ### 🔧 Reconcile — undocumented partial completion
 - #14 GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files — `partial`

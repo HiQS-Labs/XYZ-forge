@@ -2,7 +2,7 @@
 gh_issue: 792
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/792
 title: "gen4_campaign.make_sandbox checks disjointness before deleting or cloning"
-status: Active
+status: Complete
 created: 2026-11-27
 updated: 2026-11-27
 owner: Conveyor preparation (Day 3 Flywheel proving-arc candidate, post-checkpoint successor; ledger #1611)
