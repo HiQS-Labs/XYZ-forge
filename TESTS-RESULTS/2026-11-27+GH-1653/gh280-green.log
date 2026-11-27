@@ -133,6 +133,23 @@
   PASS: G7 re-projection fired no new execution
   PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
   PASS: G8 preflight refusal parks with exit code
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G9 stale cited evidence refused before the lease (names src/feature.js, attempt_count stays 1)
+  PASS: G9 refusal printed before any dispatch
+  PASS: G9 no execution recorded (no lease, no preflight, no worker)
+  PASS: G9 jog retry keeps the same row's spent attempt (1)
+  PASS: G10 one jog_queue row for GH-901 with the same global_id (no jog add)
+  PASS: G10 refreshed packet admitted on the same row and dispatched (attempt 1 → 2)
+  PASS: G10 exactly one approved execution after refresh
+  PASS: G10 stub builder ran on the refreshed packet
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G11 unresolvable prepared_commit refuses before the lease
+  PASS: G11 no execution recorded
+  PASS: seed fixture byte-unchanged after the section that just ran (cleanup boundary) (containment)
+  PASS: G13 failed fetch refuses before the lease (no cached-ref pass)
+  PASS: G13 no execution recorded
+  PASS: G12 fetched tracking ref at B refuses (same revision Preflight evaluates)
+  PASS: G12 no execution recorded
   PASS: H1 vendored marathon queue run exits 0 from a foreign cwd
   PASS: H2 vendored row parked awaiting-landing (green, no PR)
   PASS: H3 vendored execution ledger lives in the consumer repo
@@ -245,4 +262,4 @@
   PASS: P2 jog never invokes the tick binary or writes executor attempt state (Marathon keeps executor attempts and Tick tokens; Jog writes only GH-1653 publication rows through gate_receipt)
   PASS: P3 jog never cuts lane branches (branch identity is Marathon's)
   PASS: seed fixture byte-unchanged after the full suite (final check) (containment)
-  gh280-jog-marathon-adapter: 245 pass, 0 fail
+  gh280-jog-marathon-adapter: 262 pass, 0 fail

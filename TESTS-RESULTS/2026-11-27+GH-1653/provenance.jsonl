@@ -1,4 +1,4 @@
-{"file": "README.md", "sha256": "4e0fd9143df75c626af9b54c17140bb4d17af5c420cec6f328a8f9ec8b705703", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
+{"file": "README.md", "sha256": "db729d911984b6180f4aac240f20a8bcbb80deeeb44034917ec4f5ea3525dc42", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "final-qa-r1-probe1.log", "sha256": "298ce0adc8cd9922fce844fd3c86428665b1d3a489daa3cbc0ed07a0c7612d11", "revision": "e9127b18 -> 4f83f0b45", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "final-qa-r1-probe1.sh", "sha256": "a3fb7357bd7574baddcff7e6064255c5c0acc44dfe33193e7ce27da4c4423924", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "final-qa-r1-probe2.log", "sha256": "ac4e9f7373780e184ee6f9e58ee5ef53dd6b4fe685c5cfe7ab4de2725a689bad", "revision": "e9127b18 -> 4f83f0b45", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
@@ -9,9 +9,11 @@
 {"file": "final-qa-r2-probe-mixed.sh", "sha256": "7c8b1a0b025503a743ce37d62d2e69304679c621ffd0de1442493cb308241010", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "final-qa-r3-probe-wake.log", "sha256": "ff9d2c18a5eed11c4297402f2b6030a2eeeaba44b993f246c746a05b788a2516", "revision": "cc6c73d9e -> 8f47703f5", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "final-qa-r3-probe-wake.sh", "sha256": "6c2630efb6e962202dd982e11df68bcb5488ae88283df0ae9b4a7734a3d6f4fe", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
-{"file": "gh280-green.log", "sha256": "47d8666144d64adf93b7a9f78385bbeb1111fa9cd0338ca2eac4127dd1d3e6b2", "revision": "8f47703f5", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
+{"file": "final-qa-r4-probe-wake-extended.log", "sha256": "a2131fcdc6baf5291b94e4581fbfd371f59d90d1095ccf184759820a981f55ae", "revision": "c1fe3bd6f", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
+{"file": "final-qa-r4-probe-wake-extended.sh", "sha256": "1ff8f360e0c4c286fe46776355964058a723c379d89f0b43b46bb1d76d198928", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
+{"file": "gh280-green.log", "sha256": "14bcd51d2cd89e79974ee1ad43b85c30113724a4e8f3d94fe3d3c43660cd983a", "revision": "ad6e5a6bd", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "gh280-red-base-runtime.log", "sha256": "8a3a124a5e241f6c287ec84af1f1429d8d3e6f2a8cb135db3b82490ae779820e", "revision": "52813e56f runtime + 8164e2ec1 tests", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
-{"file": "smoke-cli-installed-hook.log", "sha256": "5e415741c7479b92791acb8bc07db672893b43a3cb9fb04e2caecb7706b5f3dd", "revision": "8f47703f5", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
+{"file": "smoke-cli-installed-hook.log", "sha256": "71db3a59aa487c9d5d16589e0a47d60786765e93f3c53360828d46fc657858e0", "revision": "ad6e5a6bd", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "smoke-cli.sh", "sha256": "c7ccdbeef0091cc4df9b4352fb55c057b1947fa4e2cc8f824a2a1d443d699d10", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "smoke-installed-hook-run1-gate-red.log", "sha256": "a2ee58bb23179b906dabe8363c14ae97ad93ce0a4b8ed5118b2a1b1c44d9327f", "revision": "8164e2ec1", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "smoke-installed-hook.log", "sha256": "644bf32f9bf1bb0cfc80ad75261ffd83b894e7537715b42cc5a7bdb04e649379", "revision": "e9127b18", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
@@ -19,3 +21,6 @@
 {"file": "two-resume-probe-fragment.sh", "sha256": "ef8abfad7be80b246d1cb4e5a06dd21a2d23d139b9b5a7be4e4e9564733b3dfd", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "two-resume-probe.log", "sha256": "9c1ebcd42a41f1c69ec34f3d3484d45f4848266e8d90bc82dbe3c2d054aacb0c", "revision": "8164e2ec1", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
 {"file": "validate-full-8164e2ec1-tail.log", "sha256": "7606dbb9e72f498ad87af50ca0ca5036bc38f34f74e26797545c57b93631aff1", "revision": "8164e2ec1", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
+{"file": "final-consult/consult-final-q.md", "sha256": "a4e5808d76735b57789e3ed41ce26a22ec79d36dfb14dc6cc9dae495a593048f", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
+{"file": "final-consult/consult.agy.md", "sha256": "c2ca26ecc3e694900ad6f0e0095fdb8ca9db47ee7facdece9d2921cfc362f422", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
+{"file": "final-consult/consult.codex.md", "sha256": "345a053e467561c52c4da702a0883d09a647b6e3c00aefec8eb50efab6a472a7", "revision": "script/doc", "base": "52813e56f", "date": "2026-11-27", "issue": 1653}
