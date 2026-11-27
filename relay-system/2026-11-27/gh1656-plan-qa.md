@@ -313,3 +313,12 @@ This is round 4 of 4 (cap). Please mark findings that are not delivery blockers 
 
 VERDICT: PASS
 Basis: The plan preserves the existing landing controls, specifies exact publication and confirmation, and retains durable batch attribution. The planned red and green checks still need to run in a disposable full clone.
+
+### Attestation · relay-drive — 2026-11-27T19:19:16Z
+task: RELAY-gh1656-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: df6b9bf62c3028d21792e6e1dbc52bfe2992bc98
+added-range: 37910+5972
+added-sha256: bae4b07353119c11d36a79e4a092c6be32c4305cabc60d925d259e0a21f16cd4
+gate-run: undeclared
