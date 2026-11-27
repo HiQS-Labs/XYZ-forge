@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -235,5 +235,55 @@ No finding declined. Handing off to Reviewer (codex), round 3 (the cap): confirm
 
 ### ROUND 3 INSTRUCTIONS (read first)
 - Bold labels inside your block, no markdown heading lines. No new paraphrase; the sweep of round 2 stands for unchanged files, re-read `merge_cleanup.py` `_protect_stacked_dependents` and its callers. Grade against the same envelope.
+
+### Reviewer · Round 3
+
+**Source-backed review**
+
+swept file: yes
+
+The round 2 whole-file sweep stands for unchanged content. Re-read the seeded artifact, revised `_protect_stacked_dependents`, discovery/live-read paths and its execute caller. No additional pre-existing defect was established. No git, executable fixture, suite, network or GitHub mutation ran this turn.
+
+- [Pass] **F2 closed, including the production caller shape.** `merge_cleanup.py:648-652` uses live identity when available and otherwise looks up the same PR number in discovery. Discovery requests `isCrossRepository` (`toposort_prs.py:35`), preserves every open PR before selection (`merge_cleanup.py:3116`), and the execute caller passes that list (`:2557-2558`). Thus the missing field in `refresh_pr` (`:592-593`) no longer loses fork identity. A fresh narrow import-only probe, with `_gh` intercepted in memory, exited **0** and printed:
+  ```text
+  fork-live: []
+  fork-production: []
+  same-repository: [['pr', 'edit', '12', '--base', 'main']]
+  legacy-no-identity: [['pr', 'edit', '12', '--base', 'main']]
+  all four assertions passed
+  ```
+  Command (environment and full probe):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 - <<'PROBE'
+  import sys, subprocess
+  from pathlib import Path
+  sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+  import merge_cleanup as mc
+  calls=[]
+  mc._gh=lambda args,*a,**kw:(calls.append(args) or subprocess.CompletedProcess(args,0,'',''))
+  child=dict(number=12,headRefName='feat/child',baseRefName='feat/parent',isCrossRepository=False)
+  for label,live_cross,discovery_cross in [('fork-live',True,True),('fork-production',None,True),('same-repository',None,False),('legacy-no-identity',None,None)]:
+      info=dict(number=10,headRefName='feat/parent',baseRefName='main')
+      parent=dict(info)
+      if live_cross is not None: info['isCrossRepository']=live_cross
+      if discovery_cross is not None: parent['isCrossRepository']=discovery_cross
+      calls.clear()
+      ok=mc._protect_stacked_dependents(info,[parent,child],Path('.'),'main')
+      expected=[] if discovery_cross else [['pr','edit','12','--base','main']]
+      assert ok and calls==expected,(label,ok,calls)
+      print(label+': '+repr(calls))
+  print('all four assertions passed')
+  PROBE
+  ```
+  The retained red control is discriminating: `TESTS-RESULTS/2026-11-27+GH-1662/runs/A16-protect-probe.json` records the mutant issuing the wrong edit for both fork shapes, while the candidate issues none; `provenance.jsonl:21` binds these results to `217845ee1`. Genuine same-repository retargeting and the documented legacy missing-identity behavior are preserved.
+
+- [Pass] **Evidence and scope remain adequate within the declared envelope.** Acceptance receipts A1-A15 and A16 are refreshed at `217845ee1` (`provenance.jsonl:4-27`); A13 records the five existing suite results, not a fresh run by this reviewer. The prior three retained-output spot checks, red-control analysis, push-gate trace, default-call compatibility, runbook/parity assessment and `40/40/60/35` assessment stand. The refreshed diff adds the F2 guard at `gh1662-final-qa-scripts.diff:287-300` and still lists only the six previously reviewed implementation/doc paths. D9 and the A16 artifact row now describe the fixed exception; the artifact's **Not verified** paragraph still explicitly excludes real GitHub and below-3.9 runtime and discloses A15's shared authorship. No new suite, duplicate writer or out-of-scope subsystem was established.
+
+VERDICT: PASS
+Basis: F1, F2 and the prior runbook wording are closed with discriminating evidence. The required whole-file sweep is complete, and no finding remains open. Approval is final QA within the stated fixture/source-review envelope; it does not assert a fresh qualification run, real GitHub validation, or a later gate result.
+
+Relay closed (Approved), no further turn needed. Producer may continue the separately planned qualification and delivery steps.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
