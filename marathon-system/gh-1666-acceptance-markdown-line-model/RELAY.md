@@ -1,5 +1,5 @@
 # Marathon Phase gh-1666-acceptance-markdown-line-model
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL-TURN builder=codex reviewer=agy round-cap=9 -->
@@ -130,3 +130,29 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 unverified: `bash test/gh400-acceptance-fidelity.sh` — the relay reserves this fixture-writing gate for harness execution.
 
 handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+gate run: no — harness gate
+
+Reviewed the full contents of `utils/py/swarm_preflight.py` (2251 lines), `test/gh400-acceptance-fidelity.sh` (635 lines), and `TESTS-RESULTS/2026-11-27+GH-1666/delivery.md` (16 lines), plus the covering test specs (`test/gh399-packet-acceptance-continuation.sh`, `test/test_python_layer.py`) and cross-checked `test/` for source-text pins.
+
+#### Assessment
+- **Shared Markdown line model (`utils/py/swarm_preflight.py`):** `_markdown_lines(text: str) -> list[str]` (`:585-587`) splits strictly on `\r\n|\r|\n` (CommonMark §2.1 order, typed cleanly for `mypy.ini`). All three acceptance readers — `extract_acceptance_criteria` (`:619`, both issue and capture paths), `extract_declared_deviations` (`:682`), and `collect_inline_checklist` (`:836`) — now share `_markdown_lines`. Issue-side fence tracking (`:643-649`) operates directly on those same lines and preserves `line[f.end():].strip(' \t')` so non-ASCII/separator suffixes do not close fences. Trailing empty element from `re.split` on final newline is safely ignored by all three readers.
+- **Test coverage (`test/gh400-acceptance-fidelity.sh`):** No new suite added (GH-831). Case 20 (`:580-584`) keeps the U+2028 fence-closer and verbatim `Alpha\u2028beta` positive pins and adds the negative shortened-copy pin (`diverged|["Alpha beta"]|["Alpha"]`). Case 21 (`:590-631`) exercises all eight extra `str.splitlines()` separators (`0x0B, 0x0C, 0x1C, 0x1D, 0x1E, 0x85, 0x2028, 0x2029`) with mixed `\r\n`, `\r`, `\n` boundaries across issue extraction, capture extraction, raw+normalized `collect_inline_checklist`, and `extract_declared_deviations`.
+- **Delivery receipt (`TESTS-RESULTS/2026-11-27+GH-1666/delivery.md`):** Accurately records before/after results for `../2026-11-27+GH-1658-runA-prep/probe-gh1666.py`, direct fidelity and checklist rendering results, and notes that `bash test/gh400-acceptance-fidelity.sh` is owned by the harness.
+- **Whole-file sweep / scope:** No in-scope defects found in the touched files. Pre-existing `extract_declared_deviations` first-`reason:` matching (#1665) and non-acceptance `splitlines()` callers (`extract_contract:98`, `frozen_manifest_members:943`) are explicitly out of scope per `PROJECT/2-WORKING/GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md` `non_goals`. No source-text pins in `test/` were broken.
+
+#### Reviewer probes (non-mutating, `PYTHONDONTWRITEBYTECODE=1`)
+- `python3 -c 'import ast; ast.parse(open("utils/py/swarm_preflight.py", encoding="utf-8").read()); print("AST OK")'` -> exit 0 (`AST OK`).
+- `bash -n test/gh400-acceptance-fidelity.sh` -> exit 0.
+- `python3 TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/probe-gh1666.py` -> exit 0 (`PROBE-GH1666 OK`).
+- Extracted and executed the Case 21 Python block from `test/gh400-acceptance-fidelity.sh` with `SP_PY_DIR="$PWD/utils/py"` -> exit 0 (`CASE 21 PYTHON BLOCK OK`).
+- Dogfooded `PROJECT/2-WORKING/GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md` directly through `extract_acceptance_criteria` (both sides), `collect_inline_checklist`, `render_inline_checklist`, and `verify_inlined_acceptance` -> exit 0 (3 criteria extracted intact, literal `\u2028` preserved in rendered checklist, `verify_inlined_acceptance` returned `[]`).
+- Direct `check_acceptance_fidelity` matrix across U+2028 fence-closer (`match`), verbatim `Alpha\u2028beta` (`match`), shortened `Alpha` (`diverged`, `dropped=['Alpha beta']`, `added=['Alpha']`), all 8 separators with mixed CRLF/CR/LF and `[changed]` deviations (`match`), and empty/None inputs -> exit 0 (`EDGE-CASE & FIDELITY MATRIX PROBE OK`).
+- Note: `mypy` is not installed in this environment (`No module named mypy`); type annotations on `_markdown_lines` and its call sites were verified by inspection against `mypy.ini` (`python_version = 3.10`, strict untyped defs).
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
