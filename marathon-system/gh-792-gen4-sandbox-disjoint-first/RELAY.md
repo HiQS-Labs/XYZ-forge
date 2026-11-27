@@ -1,5 +1,5 @@
 # Marathon Phase gh-792-gen4-sandbox-disjoint-first
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-792-GEN4-SANDBOX-DISJOINT-FIRST-TURN builder=codex reviewer=agy round-cap=2 -->
@@ -127,3 +127,35 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - Added `TESTS-RESULTS/2026-11-27+GH-792/delivery.md` with the retained red and green probe results. Parsed the delivered Python source and confirmed its blob ID matches the retained symmetric-fix postimage. The existing campaign suite remains the gate.
 
 unverified: fresh readiness probe and campaign self-test — this turn prohibits running the probe and gate. The harness is configured to run the campaign gate after the turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+gate run: no — harness gate
+
+Reviewed all three artifact files in full (`utils/py/gen4_campaign.py` L1–409, `TESTS-RESULTS/2026-11-27+GH-792/delivery.md` L1–20, and `test/gh-gen4-phase5-campaign.sh` L1–92) against `PROJECT/2-WORKING/GH-792-GEN4-SANDBOX-DISJOINT-FIRST.md` and the retained preparation proof under `TESTS-RESULTS/2026-11-27+GH-792/`.
+
+#### Verification performed (non-mutating)
+- **AST parse, executable bit, and blob SHA-1 check** (exit `0`): `utils/py/gen4_campaign.py` parses cleanly, preserves mode `0o100755`, and hashes to git blob `604cc8c03fa5634cf1076103c36ca27e2ac159b8`, matching the `604cc8c03` postimage of `TESTS-RESULTS/2026-11-27+GH-792/review-round2-fixes/symmetric-fix.patch`.
+- **Mock-only `make_sandbox` probe** (monkey-patched `os.makedirs`, `shutil.rmtree`, `subprocess.run`, `os.path.isdir`, zero disk/git writes; exit `0`):
+  - `equal` (`<base>/clone`, `<base>`): raised `RuntimeError`, `calls=[]`.
+  - `reverse-containment` (`<base>/clone/nested`, `<base>`): raised `RuntimeError`, `calls=[]`.
+  - `descendant-348` (`<base>/host`, `<base>/host/inside`): raised `RuntimeError`, `calls=[]`.
+  - `same-root-as-repo` (`<base>/host`, `<base>/host`) and `root-repo` (`/`, `<base>`): raised `RuntimeError`, `calls=[]`.
+  - `prefix-sibling-disjoint` (`<base>/clone2`, `<base>`), `disjoint-fresh` (`<base>/src`, `<base>/sb`), and `disjoint-existing-clone` (`<base>/src`, `<base>/sb` with `.git`): proceeded through the existing `makedirs` → optional `rmtree` → `git clone` path unchanged.
+- **Acceptance & receipt check**:
+  - `utils/py/gen4_campaign.py:90-97` resolves `repo` and `clone` and rejects equality or containment in either direction before `makedirs`, `rmtree`, or `subprocess.run`.
+  - `utils/py/gen4_campaign.py:348` (`make_sandbox(host, os.path.join(host, "inside"))`) remains on line 348 and still raises `RuntimeError`.
+  - `TESTS-RESULTS/2026-11-27+GH-792/delivery.md` accurately summarizes the change, cites the verified blob SHA-1, links valid relative retained receipts (`review-round2-fixes/symmetric-fix.patch`, `base.txt` rc=1, `symmetric-fix.txt` rc=0, verified against `matrix.txt` and `provenance.jsonl`), and honestly discloses that runtime execution of the readiness probe and campaign gate was deferred to the harness.
+  - `test/gh-gen4-phase5-campaign.sh`, `readiness_probe.py`, and retained proof files were left untouched per the capture doc's `non_goals`.
+- **Runtime gate / readiness probe status**: `[Unverified — needs clone run]` for a fresh post-edit execution of `bash test/gh-gen4-phase5-campaign.sh` (runs in the harness after this turn) and `python3 TESTS-RESULTS/2026-11-27+GH-792/readiness_probe.py` (pre-verified byte-identically on blob `604cc8c03` in `review-round2-fixes/symmetric-fix.txt`).
+
+#### Whole-file sweep findings (non-blocking `[Nit]`, pre-existing / out-of-scope per `non_goals`)
+- `[Nit]` `utils/py/gen4_campaign.py:87-93`: if `sandbox_root` is `None` and `TMPDIR` points inside `repo`, `tempfile.mkdtemp` creates an empty `gen4-campaign.*` directory before the disjointness check raises `RuntimeError` (leaks the empty temp dir; no deletion occurs and explicit `sandbox_root` calls are unaffected).
+- `[Nit]` `utils/py/gen4_campaign.py:338` (pre-existing, out of scope): `host_identity(host) == host_identity(host)` in `run_suite` is a tautology (relies on `not s["host_violations"]` rather than a pre-run snapshot).
+- `[Nit]` `utils/py/gen4_campaign.py:126,134-139` (pre-existing, out of scope): `log` handle and `created_tmp` are not released via `try...finally` when `make_sandbox` or the baseline cleanliness check raises.
+- `[Nit]` `test/gh-gen4-phase5-campaign.sh:10,17` (pre-existing, out of scope): `fixture-guard.sh` is sourced twice (benign); line 89 `rm -rf "$ROOT/.gen4-vacuous"` is now a harmless no-op since the descendant refusal no longer creates that directory.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
