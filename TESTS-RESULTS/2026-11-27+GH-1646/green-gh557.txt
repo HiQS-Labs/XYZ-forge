@@ -1,0 +1,19 @@
+== test: gh557-unknown-blocks-manifest ==
+  workdir: <abs-path>
+  PASS: manifest member + issue with no '## Acceptance' is NOT-READY (exit 5)
+  PASS: the refusal says the issue is a frozen manifest member
+  PASS: the refusal names WHICH release manifest claims the issue
+  PASS: the refusal states the remedy, not just the fault
+  PASS: the packet line reports the CAUSE, not a bare 'unknown'
+  PASS: OVER-BLOCK CONTROL: non-member with no issue section still reaches ready (exit 0)
+  PASS: the non-blocking case SAYS why it did not block
+  PASS: OUTAGE CONTROL: manifest member + unreachable gh stays ready (exit 0)
+  PASS: the outage is reported as fetch-failed, distinct from no-issue-section
+  PASS: manifest member with verbatim-matching criteria reaches ready (exit 0)
+  PASS: the matching case still reports match, uncomplicated by this change
+  PASS: structural cause is 'no-issue-section'
+  PASS: transient cause is 'fetch-failed'
+  PASS: a match carries no cause — the field qualifies 'unknown' only
+  PASS: membership comes from goalpost MANIFEST arrays, not RELEASES.md prose
+  PASS: the structural case has its own packet provenance wording
+  gh557-unknown-blocks-manifest: 16 pass, 0 fail

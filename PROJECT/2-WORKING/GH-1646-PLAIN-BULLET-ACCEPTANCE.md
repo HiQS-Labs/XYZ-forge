@@ -52,9 +52,9 @@ Batch: item 2 of #1657.
    the existing continuation branch unchanged (raw-indent fold or skip), so it gets exactly the
    result the doc side gives the same verbatim line, including mixed tab/space indents.
    Fenced code (tracked only when `plain_bullets` is true, i.e. issue side): an opener is a line
-   whose stripped text starts with 3+ tildes, or 3+ backticks with no further backtick on the line
-   (so an inline code span is not an opener); it closes only on a line of the same character, at
-   least as long, with nothing else on it (CommonMark rule). Inside a fence a line is never
+   indented at most 3 spaces that starts with 3+ tildes, or 3+ backticks with no further backtick on
+   the line (so an inline code span is not an opener); it closes only on a line indented at most 3
+   spaces of the same character, at least as long, with nothing else on it (CommonMark §4.5). Inside a fence a line is never
    classified as a plain bullet. That is the only thing fence tracking changes: heading/rule
    boundaries, checkbox matching and continuation folding are exactly as before, so the old parser's
    result for any section without plain bullets is unchanged.
@@ -110,6 +110,8 @@ sub-bullet into its own criterion and diverge from a verbatim copy, which folds 
 - [ ] Fence control: `- [ ] First` followed by a fenced block containing `- example output` matches a
       capture holding only `First`; same with a literal `~~~` (or shorter backtick run) inside a
       ```` ``` ```` (or longer) fence.
+- [ ] Indented false-closer control: inside a `~~~text` fence, a `    ~~~` line (4-space indent) does
+      not close it, so a following `- example output` is not a criterion.
 - [ ] Inline-span control: a line ```` ```inline code``` ```` between `- [ ] First` and `- Second` does not
       open a fence (`Second` still read: full copy `match`, partial `dropped=['Second']`).
 - [ ] Tab control: verbatim `  - [ ] First` / `\t- detail` / `- [ ] Last` on both sides still matches.

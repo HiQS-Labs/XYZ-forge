@@ -506,6 +506,80 @@ res="$(check "$WORK/arrow-doc.md" 306)"
 [ "${res%%|*}" = "match" ] && pass "C19 a [changed] entry survives an arrow inside the criterion text" \
   || fail "C19 arrow inside criterion text broke the declaration: $res"
 
+# ── Case 20 (GH-1646): plain-bullet issue Acceptance ───────────────────────────────────────────────
+# GitHub issues commonly write `## Acceptance` as plain `- ` bullets. The issue side read only
+# checkboxes, so that list parsed as present-but-empty and a VERBATIM checkbox copy read `diverged`
+# (exit 5) unless every criterion was declared `[added]` (#792's workaround). The capture side stays
+# checkbox-only. fid <issue-body-file> <capture-body-file> → "<status>|<dropped json>|<added json>"
+fid() {
+  python3 - "$1" "$2" <<'PYEOF'
+import json, os, sys
+sys.path.insert(0, os.environ["SP_PY_DIR"])
+from swarm_preflight import check_acceptance_fidelity
+issue = open(sys.argv[1]).read()
+doc = os.path.join(os.path.dirname(sys.argv[2]), "fid-doc.md")
+with open(doc, "w") as f:
+    f.write("---\ngh_issue: 1646\n---\n" + open(sys.argv[2]).read())
+r = check_acceptance_fidelity(doc, "1646", ".", issue_details={"body": issue})
+print(f"{r['status']}|{json.dumps(r['dropped'])}|{json.dumps(r['added'])}")
+PYEOF
+}
+c20() {  # c20 <label> <issue> <capture> <expected "status|dropped|added">
+  local got; got="$(fid "$2" "$3")"
+  [ "$got" = "$4" ] && pass "C20 $1" || fail "C20 $1: expected '$4', got '$got'"
+}
+D20="$WORK/c20"; mkdir -p "$D20"
+cat >"$D20/plain.md" <<'EOF'
+## Acceptance
+
+- The parser rejects a negative timeout.
+* A nested detail stays with its criterion:
+  - the detail line.
+- A hard-wrapped criterion continues
+  on an indented line.
+
+---
+
+*footer*
+EOF
+cat >"$D20/plain-copy.md" <<'EOF'
+## Acceptance
+
+- [ ] The parser rejects a negative timeout.
+- [ ] A nested detail stays with its criterion:
+      - the detail line.
+- [ ] A hard-wrapped criterion continues on an indented line.
+EOF
+c20 "a verbatim checkbox copy of a plain-bullet issue list matches" "$D20/plain.md" "$D20/plain-copy.md" 'match|[]|[]'
+head -n 5 "$D20/plain-copy.md" >"$D20/plain-partial.md"
+c20 "dropping a plain-bullet criterion is reported as dropped" "$D20/plain.md" "$D20/plain-partial.md" \
+  'diverged|["A hard-wrapped criterion continues on an indented line."]|[]'
+
+printf '## Acceptance\n- [ ] First\n  - detail\n- Second\n' >"$D20/mixed.md"
+printf '## Acceptance\n- [ ] First\n  - detail\n- [ ] Second\n' >"$D20/mixed-copy.md"
+printf '## Acceptance\n- [ ] First\n  - detail\n' >"$D20/mixed-partial.md"
+c20 "mixed checkbox + plain sibling: full copy matches" "$D20/mixed.md" "$D20/mixed-copy.md" 'match|[]|[]'
+c20 "mixed checkbox + plain sibling: omitted sibling is dropped" "$D20/mixed.md" "$D20/mixed-partial.md" 'diverged|["Second"]|[]'
+
+printf '## Acceptance\n-  [ ]\n- First\n' >"$D20/padded.md"
+printf '## Acceptance\n- [ ] First\n' >"$D20/first.md"
+c20 "a padded empty task marker is not a criterion" "$D20/padded.md" "$D20/first.md" 'match|[]|[]'
+printf '## Acceptance\n  - [ ] First\n\t- detail\n- [ ] Last\n' >"$D20/tab.md"
+c20 "verbatim tab-indented nesting still matches itself" "$D20/tab.md" "$D20/tab.md" 'match|[]|[]'
+
+# Literal example output inside a fence is never a plain criterion (valid closers only, CommonMark).
+printf '## Acceptance\n- [ ] First\n\n```text\n- example output\n```\n' >"$D20/fence.md"
+printf '## Acceptance\n- [ ] First\n\n```text\n~~~\n- example output\n```\n' >"$D20/fence-tilde.md"
+printf '## Acceptance\n- [ ] First\n\n````\n```\n- example output\n````\n' >"$D20/fence-long.md"
+printf '## Acceptance\n\n~~~text\n    ~~~\n- example output\n~~~\n\n- [ ] First\n' >"$D20/fence-indent.md"
+for f in fence fence-tilde fence-long fence-indent; do
+  c20 "fenced example text is not a criterion ($f)" "$D20/$f.md" "$D20/first.md" 'match|[]|[]'
+done
+printf '## Acceptance\n- [ ] First\n\n```inline code```\n\n- Second\n' >"$D20/inline.md"
+printf '## Acceptance\n- [ ] First\n- [ ] Second\n' >"$D20/two.md"
+c20 "an inline code span does not open a fence (full copy)" "$D20/inline.md" "$D20/two.md" 'match|[]|[]'
+c20 "an inline code span does not open a fence (partial copy)" "$D20/inline.md" "$D20/first.md" 'diverged|["Second"]|[]'
+
 echo "  gh400-acceptance-fidelity: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1
 exit 0

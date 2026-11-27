@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Consult
+NEXT: Producer
 STATUS: Escalated
 ROUND: 4 / 4
 
@@ -342,5 +342,20 @@ Handing off to Producer (claude-a) to address the two blockers and arrange a fre
 
 STATUS set to Escalated at the 4-round cap; adjudication goes to a consult tie-break (Codex + agy) per the
 operator's instruction. Plan: `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md`.
+
+### Consult tie-break (cap) · Codex + agy
+
+Question and both answers: `TESTS-RESULTS/2026-11-27+GH-1646/plan-consult/`.
+
+- agy: **APPROVE-FOR-IMPLEMENTATION**; Pass on core extraction, the R3-F2 retraction and the #792
+  disposition; three implementation nits (full backtick-run match, no `continue` on fence lines, assert
+  `dropped` directly) — all already in the plan/draft.
+- Codex: **BLOCK** on one new defect: fence markers indented 4+ spaces were treated as openers/closers
+  (input `~~~text` / `    ~~~` / `- example output` / `~~~`). Pass on core behavior, the R3-F2 retraction
+  and the #792 disposition.
+- Adjudication: Codex's blocker **Implemented** (openers and closers must be indented at most 3 spaces,
+  CommonMark §4.5; its input is now the indented false-closer control). With that applied both seats' findings
+  are closed; no other open finding. **Consult-Adjudicated: proceed to implementation.** Final QA will review
+  the implemented diff afresh. A Consult-Adjudicated result is never auto-merged.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

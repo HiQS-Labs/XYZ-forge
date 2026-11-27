@@ -1,0 +1,41 @@
+== test: gh400-acceptance-fidelity ==
+  workdir: <abs-path>
+  PASS: C1 the real GH-202 inversion is refused (4 issue criterion(a) missing from the doc with no declared deviation; 3 doc criterion(a) absent from the issue with no declared deviation)
+  PASS: C1b the report names the inverted requirement verbatim
+  PASS: C1c the report shows the doc's substituted wording, continuation line included
+  PASS: C2 a verbatim copy passes
+  PASS: C3 a hard-wrapped copy passes (continuations folded)
+  PASS: C4 a trailing '---' + footer is not folded into the criterion
+  PASS: C5 a silently dropped criterion is refused
+  PASS: C6 the same drop passes once declared with a reason
+  PASS: C7 a deviation with no '— reason:' is refused
+  PASS: C8 a deviation naming the wrong criterion is refused
+  PASS: C8b a deviation declared while the lists agree is refused
+  PASS: C9 omitting the acceptance section entirely is refused
+  PASS: C10 an unauthenticated/offline gh reports unknown, not divergence
+  PASS: C11 a doc with no gh_issue reports unknown
+  PASS: C12 an issue with no acceptance section reports unknown
+  PASS: C13 preflight exits 5 NOT-READY on unexplained acceptance drift
+  PASS: C13b the verdict names the issue and the reason
+  PASS: C13c no packet is written when fidelity fails
+  PASS: C14 a faithful, hard-wrapped copy of the SAME issue still emits a packet (exit 0)
+  PASS: C14b the packet records that acceptance was verified against the issue
+  PASS: C15 readiness.acceptance_fidelity is recorded in run-candidate.json
+  PASS: C16 an empty issue acceptance section does not license invented criteria
+  PASS: C17 prose between criteria does not truncate the list
+  PASS: C18 heading variants are recognized on both sides, not bypassed
+  PASS: C18b a prose heading is still not an acceptance section
+  PASS: C19 a [changed] entry survives an arrow inside the criterion text
+  PASS: C20 a verbatim checkbox copy of a plain-bullet issue list matches
+  PASS: C20 dropping a plain-bullet criterion is reported as dropped
+  PASS: C20 mixed checkbox + plain sibling: full copy matches
+  PASS: C20 mixed checkbox + plain sibling: omitted sibling is dropped
+  PASS: C20 a padded empty task marker is not a criterion
+  PASS: C20 verbatim tab-indented nesting still matches itself
+  PASS: C20 fenced example text is not a criterion (fence)
+  PASS: C20 fenced example text is not a criterion (fence-tilde)
+  PASS: C20 fenced example text is not a criterion (fence-long)
+  PASS: C20 fenced example text is not a criterion (fence-indent)
+  PASS: C20 an inline code span does not open a fence (full copy)
+  PASS: C20 an inline code span does not open a fence (partial copy)
+  gh400-acceptance-fidelity: 38 pass, 0 fail
