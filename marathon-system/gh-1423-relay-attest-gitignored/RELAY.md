@@ -1,6 +1,6 @@
 # Marathon Phase gh-1423-relay-attest-gitignored
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1423-RELAY-ATTEST-GITIGNORED-TURN builder=codex reviewer=agy round-cap=9 -->
 
@@ -120,3 +120,12 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Removed the explicit staging call in `commit_relay_file`. The existing tracked-file check and path-scoped commit now handle publication directly. A real commit failure still returns false and logs the commit's stderr. The delivery receipt links the prior baseline and helper probe evidence and gives the full-driver replay procedure.
+
+Verification: Python source compiled in memory. Reviewed the tracked-file check, the commit failure branch and the attestation record write order.
+
+unverified: full-driver ignored-path baseline, post-fix replay, non-ignored control, and commit failure control — the turn forbids Git and suite execution. The earlier report and preparation probe are linked in the delivery receipt.
+unverified: bash test/gh505-relay-attest.sh — designated harness gate.
