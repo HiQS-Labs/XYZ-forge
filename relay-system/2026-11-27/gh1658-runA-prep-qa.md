@@ -2,7 +2,7 @@
 Goal: Independent preparation QA — Conveyor packets for Flywheel Run A (ledger #1658): #1590, #1666, #1423 ready; #1480 held
 Date: 2026-11-27
 NEXT: claude-a
-STATUS: Open
+STATUS: Escalated
 ---
 
 # Context
@@ -316,4 +316,13 @@ VERDICT: FAIL
 Round cap reached (4 of 4). The single open finding is answered below; per the Flywheel cap rule it goes to a consult tie-break instead of a fifth review round. #1666, #1423 and #1480 passed in rounds 3 and 4.
 
 1. **#1638 containment on the failure path (Blocker) — fixed in plan, simulated fix and probe.** `sim-gh1638.patch` now proves the deepest **existing** ancestor of the entry's parent resolves inside the worktree **before** `mkdir -p`, re-checks the parent after creating it, then clears and copies. All failures go through one helper, `_rtl_seed_abort`, which tears down with `git worktree remove --force` only and, if Git refuses, prints `git worktree remove refused …; left in place for inspection` and never raw-deletes the worktree. File entries keep `mkdir -p` + `cp -R`. The probe gained arm 4 (your replay: tracked checkout symlink `parent -> <outside>` with a real host directory; the begin must fail with no path and `<outside>/new` must not exist) and arm 5 (`git worktree remove` shadowed to refuse after a failed copy; the refusal must be reported and the worktree must still exist). `matrix.txt`: base 1, source-only 1, with-package 0, skip-dirs 1, overlay 1, rm-unchecked (round-2 fix) 1, mkdir-first (round-3 fix, retained as `fake4-gh1638-mkdir-first.patch`) 1. READY preflight exit 0 and consumer arms 4/7 re-run; admission checks unchanged.
+
+### Cap tie-break · consult (coordinator: claude-a)
+
+**Outcome: Consult-Adjudicated — PUBLISH all four packets (#1666, #1423, #1638 ready; #1480 held). Never auto-merge.** Review rounds were exhausted at 4/4 with one open #1638 Blocker (round 4). The producer's round-4 response was put to a consult tie-break instead of a fifth round.
+
+- **Panel 1** (`relay-system/2026-11-27/gh1638-cap-tiebreak-142053/`): degraded. The Codex seat failed before reviewing (its backend refused the prompt with a content flag; see the `.codex.md.transcript`). The surviving agy seat said PUBLISH with one [Should]: refuse `.`, `..` and empty path segments in a directory entry. Folded into the plan, `sim-gh1638.patch` and probe arm 6; `fake5-gh1638-no-dotdot-guard.patch` reads unfixed.
+- **Panel 2** (`relay-system/2026-11-27/gh1638-cap-tiebreak-r2-142845/`, agy + kimi, both answered): **both PUBLISH**, reconciled blind before attribution. **Agree:** the round-4 Blocker is resolved (deepest existing ancestor proven inside the worktree before `mkdir -p`; teardown is `git worktree remove --force` only, refusals reported, no raw `rm -rf "$wt"`); base, source-only and all five fakes read unfixed and the packaged fix reads fixed; scope is still one loop plus one helper in one file plus `make-pkg.sh`. **Disagree:** none on the verdict. One seat added a second probe gap (no multi-segment directory positive case), with an in-sandbox mutant that passes the probe. Both called the gaps build-QA items, not HOLD: the plan and remediation require the behaviour, and the implementation gets its own independent review. Deciding criterion: claims checked against the source (both cited `sim-gh1638.patch:31-53` and `probe-gh1638.sh` and replayed fixtures). The `.`/empty-segment and multi-segment checks are recorded as a builder checklist in the capture's recon note.
+
+Rounds 1-4 approved #1666 and #1423 (rounds 3 and 4) and #1480's hold (rounds 1-4). #1590 stays withdrawn (prior operator hold).
 
