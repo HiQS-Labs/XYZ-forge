@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -172,5 +172,48 @@ Handing off to Producer (claude-a) to correct the fence closer, disposition the 
   the red row names the base parser and the candidate test text.
 - [Nit] count — **Implemented.** Red is now 32 pass / 7 fail with 6 guards passing on both (the nbsp
   control is the sixth); SMOKE.md says so.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: The original NBSP reproduction now passes, and the revised evidence closes the smoke, provenance and count findings. A Unicode line separator still makes the candidate report a false dropped criterion inside a fenced example.
+
+- [Blocker] Make fence recognition use Markdown line boundaries. Preserve the legacy checkbox, heading, continuation and capture behavior, and extend the existing C20 fence control to witness the failing candidate and the corrected result.
+  - Observed input: `"## Acceptance\n- [ ] First\n\n~~~text\n~~~\u2028\n- example output\n~~~\n"` with capture `"## Acceptance\n- [ ] First\n"` returns `diverged`, `dropped=['example output']`, `added=[]`. The checkbox-only extractor returns `['First']`. At `utils/py/swarm_preflight.py:615`, `splitlines()` consumes U+2028, so the closer check at `:639–645` sees a bare `~~~`. The plain branch at `:646–653` then counts the next literal example line. The drop is computed at `:1029` and can refuse an otherwise-ready candidate at `:1793–1797`. The plan requires a valid closer at `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:54–59`. U+2028 is content on the marker line under the [CommonMark line and line-ending rules](https://spec.commonmark.org/0.31.2/#characters-and-lines).
+  - Affected scope: Issue Acceptance fences with an apparent marker followed by a character that Python treats as a line boundary but Markdown retains as line content. U+0085 and U+2029 gave the same result in the probe.
+  - Falsifier: The exact U+2028 input yields `match` with empty dropped and added lists. The U+0085, U+2029 and earlier NBSP variants do too. ASCII space or tab before LF and a valid closer with CRLF still expose the subsequent example bullet as a dropped criterion. The checkbox-only extraction stays `['First']` on these inputs.
+
+- [Pass] Original NBSP input now returns `match` in the probe below. `utils/py/swarm_preflight.py:643–645` checks only ASCII space or tab after the marker run, and `test/gh400-acceptance-fidelity.sh:575–577` retains that input. The original failure is in the round 1 probe output.
+- [Pass] The issue opts in at `utils/py/swarm_preflight.py:1011–1012`. Capture extraction uses the default and packet inlining remains checkbox-only at `:816–867,1785–1786`. Heading and rule termination still precede bullet parsing at `:618–637`. Deeper plain bullets fall through to the existing continuation path at `:648–656`. The retained mixed, padded-task, tab, indented fence and inline-span controls pass in `green-gh400.txt:31–41`. C20 calls the actual fidelity function at `test/gh400-acceptance-fidelity.sh:514–529` and explicitly checks the dropped direction at `:553–562,581–582`.
+- [Pass] The red receipt rules out the base parser. `red-gh400-unfixed.txt:30–33` records the full-copy failure with three additions and the omitted mixed sibling wrongly returning `match|[]|[]`. Lines 35–40 record six guards passing on base, and line 43 reports 32 pass / 7 fail. `provenance.jsonl:1–3` gives exit 1 for base with candidate test text, then binds exit 0 for both green suites to `c6985bd10e50cedbf34dae46d7aa2e9feb3de6d4`. The retained green totals are 39/0 (`green-gh400.txt:42`) and 16/0 (`green-gh557.txt:19`). The refreshed `SMOKE.md:49–54` agrees with the receipts.
+- [Pass] The adjacent smoke now retains both sides of the nested case. The body and capture show the nested detail and sibling at `smoke-nested/issue-body.md:7–13` and `smoke-nested/capture.md:10–12`. The paired CLI outputs change from `diverged` to `match — 2/2` at line 9 of `smoke-nested/preflight-unfixed.txt` and `smoke-nested/preflight-fixed.txt`. Both exit 5 on the missing synthetic artifact (lines 12–14 and 11–13, respectively). `SMOKE.md:12–18` retains the #792 main-path change, with exit 4 for the closed issue.
+- [Pass] The rating remains consistent with the recorded single incident, readiness refusal and workaround (`PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:124–129`, `releases.sql:1072`). `sqlite3 -readonly releases.db 'SELECT gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr,doc_path FROM roadmap_items WHERE gh_number=1646;'` exited 0 with `1646|65|55|50|85||PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md`.
+- [Pass] Accepted the separate disposition for the pre-existing deviation splitter at `utils/py/swarm_preflight.py:705–713`. The GitHub issue record retains the exact round 1 reproduction and its two expected outcomes. [GH-1665](https://github.com/HiQS-Labs/XYZ-forge/issues/1665)
+
+The replay below exited 0. Decisive rows were `'\xa0' match [] [] ['First']`, `'\u2028' diverged ['example output'] [] ['First']`, and `' text' match [] [] ['First']`. U+0085 and U+2029 also reported `diverged ['example output'] [] ['First']`, as did the valid ASCII space, tab and CRLF controls.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+PYTHONPATH=utils/py python3 - <<'PY'
+from pathlib import Path
+import os
+from swarm_preflight import check_acceptance_fidelity as check, extract_acceptance_criteria as extract
+p = Path(os.environ["TMPDIR"]) / "gh1646-review-fence.md"
+doc = "## Acceptance\n- [ ] First\n"
+p.write_text(doc, encoding="utf-8")
+for suffix in ("\u00a0", "\u0085", "\u2028", "\u2029", " ", "\t", " text", "\r"):
+    body = doc + "\n~~~text\n~~~" + suffix + "\n- example output\n~~~\n"
+    result = check(str(p), 1646, ".", issue_details={"body": body})
+    print(ascii(suffix), result["status"], result["dropped"], result["added"], extract(body))
+PY
+```
+
+The 2026-11-26T04:31:47Z graph generation predates the candidate and graph traces were unavailable. The review used the seeded source and receipts for current line and call-site evidence. The change uses the existing fidelity path with no additional writer. The sweep found no further pre-existing acceptance-fidelity defect beyond GH-1665 and the plan's documented heading/rule limitation. [Unverified — needs clone run] Suite and CLI results above are retained Producer evidence. This turn specifies no phase gate.
+
+Handing off to Producer (claude-a) to fix the Markdown line-boundary case and retain the focused before/after evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
