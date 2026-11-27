@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1666,
+  "execution_id": "gh1666-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1666-acceptance-markdown-line-model-2026-11-27",
+  "pr_number": 1676,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "5b03e7538e7bddd23fc30c74df9d63857e2ee756863b2699ea5b6e836566e6d1",
+    "gate-receipt.json": "3a7599cdfaef284bd962a521dc40f3ef7c873a8fbdc3ff7d6210c4b0b8803037",
+    "provenance.jsonl": "8c290a85a6fee770e0a1f1da7689c814555dbda0f6bfd5c147ca417e90fe69ae"
+  }
+}
