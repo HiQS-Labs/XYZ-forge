@@ -7,11 +7,12 @@ GH-1666 fake3-gh1666-mask-three rc=1 AssertionError: ('0xb', ['Alpha', 'Gamma'],
 GH-1423 base rc=1 AssertionError: tracked relay file under a gitignored dir: commit landed but reported failure
 GH-1423 sim-gh1423 rc=0 
 GH-1423 fake-gh1423 rc=1 AssertionError: fixture: the attest commit did not land
-GH-1638 base rc=1 failed directory copy reported a successful seed (rc=0)
-GH-1638 sim-gh1638 rc=1 cp: <tmp>: Permission denied
-GH-1638 sim-gh1638-with-pkg rc=0 cp: <tmp>: Permission denied
-GH-1638 fake-gh1638 rc=1 failed directory copy reported a successful seed (rc=0)
-GH-1638 fake2-gh1638-overlay rc=1 cp: <tmp>: Permission denied
+GH-1638 base rc=1 uncleared checkout copy still reported a seed (rc=0, path=<tmp>
+GH-1638 sim-gh1638 rc=1 probe: refusing rm -rf <tmp>
+GH-1638 sim-gh1638-with-pkg rc=0 probe: refusing rm -rf <tmp>
+GH-1638 fake-gh1638 rc=1 uncleared checkout copy still reported a seed (rc=0, path=<tmp>
+GH-1638 fake2-gh1638-overlay rc=1 uncleared checkout copy still reported a seed (rc=0, path=<tmp>
+GH-1638 fake3-gh1638-rm-unchecked rc=1 uncleared checkout copy still reported a seed (rc=0, path=<tmp>
 # #1423 isolation: same, with a hostile inherited GIT_DIR=/nonexistent
 GH-1423 base GIT_DIR=/nonexistent rc=1
 GH-1423 sim-gh1423 GIT_DIR=/nonexistent rc=0

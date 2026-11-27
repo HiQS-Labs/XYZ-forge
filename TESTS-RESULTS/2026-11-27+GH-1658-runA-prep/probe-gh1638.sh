@@ -25,6 +25,7 @@ out="$(cd "$R" && TMPDIR="$T" bash -c '
   wt="$(rtl_worktree_begin)" || exit 4
   echo "$wt"' _ "$L" "$R")" || fail "rtl_worktree_begin failed on a readable tree (rc=$?)"
 wt="$(printf '%s\n' "$out" | tail -1)"
+[ -n "$wt" ] && [ -d "$wt" ] || fail "rtl_worktree_begin returned no usable worktree path"
 if [ -n "$wt" ] && [ -d "$wt" ]; then
   [ -z "$(find "$wt/seeded" -mindepth 1 -maxdepth 2 -name seeded)" ] || fail "nested copy under $wt/seeded"
   [ "$(cat "$wt/seeded/f.txt" 2>/dev/null)" = v2 ] || fail "seed did not carry the current content"
@@ -45,5 +46,18 @@ out2="$(cd "$R2" && TMPDIR="$T" bash -c '
 chmod 644 "$R2/seeded/f.txt" 2>/dev/null
 w2="$(printf '%s\n' "$out2" | tail -1)"; [ -n "$w2" ] && [ -d "$w2" ] && git -C "$R2" worktree remove --force "$w2" >/dev/null 2>&1
 git -C "$R2" worktree prune >/dev/null 2>&1
+# Arm 3: when the checkout copy of the directory cannot be cleared, the begin must fail with no path,
+# even though the source is readable (rm is shadowed to refuse only paths ending in /seeded).
+R3="$T/repo3"; mkrepo "$R3"
+echo v2 > seeded/f.txt
+out3="$(cd "$R3" && TMPDIR="$T" bash -c '
+  source "$1" >/dev/null 2>&1 || exit 3
+  rm() { case "${@: -1}" in */seeded) echo "probe: refusing rm $*" >&2; return 1 ;; esac; command rm "$@"; }
+  RTL_ROOT="$2"; RTL_ALLOW=("seeded")
+  wt="$(rtl_worktree_begin)" || exit 9
+  echo "$wt"' _ "$L" "$R3")"; rc3=$?
+[ "$rc3" -eq 9 ] && [ -z "$out3" ] || fail "uncleared checkout copy still reported a seed (rc=$rc3, path=${out3:-none})"
+w3="$(printf '%s\n' "$out3" | tail -1)"; [ -n "$w3" ] && [ -d "$w3" ] && git -C "$R3" worktree remove --force "$w3" >/dev/null 2>&1
+git -C "$R3" worktree prune >/dev/null 2>&1
 cd / && rm -rf "$T"
 exit $st

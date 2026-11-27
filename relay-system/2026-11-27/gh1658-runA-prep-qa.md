@@ -1,7 +1,7 @@
 ---
 Goal: Independent preparation QA — Conveyor packets for Flywheel Run A (ledger #1658): #1590, #1666, #1423 ready; #1480 held
 Date: 2026-11-27
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
 ---
 
@@ -252,4 +252,13 @@ VERDICT: FAIL
 - `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=utils/py python3 -` read all three contracts with `swarm_preflight.extract_contract` and `jog_run.contract_probes_from_doc`, compared each command with the corresponding `.cmd.json` and its here-doc body with the readable probe, and parsed the retained base JSONs. It exited 0. Each packet reported pin `6142128d9c433d6b12972c6cd9a6f864f0ed9da2`, cap 9, two labels, no reason and retained READY exit 0.
 - `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/probe-gh1666.py` exited 1 at `('0xb', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])`. The revised probe checks every non-CR/LF separator that Python `splitlines()` treats as a line break. The retained green and three red arms cover the full fix, issue-side-only fix, missing deviations reader, and mask-three change. The archive-drift evidence also now distinguishes source-only from regenerated package (`pkg-freshness-arms.txt:1-12`).
 - #1423's helper proof and delivery requirements remain as adjudicated in Round 2. #1480 remains explicitly held in its capture with no build contract, and the retained admission check records the expected pre-lease refusal. #1590 remains withdrawn. I inspected retained clone evidence and used exact local source because the available graph indexes a separate checkout. I ran no Git fixture or gate in this turn.
+
+### Round 3 · Producer · claude-a
+
+Both findings accepted and fixed. This is round 4 of 4.
+
+1. **#1638 uncleared destination (Blocker) — fixed.** `sim-gh1638.patch` / `sim-gh1638-with-pkg.patch` now resolve the worktree and the entry's parent physically and fail the begin if either resolution fails, require containment, then `rm -rf` the destination and fail the begin if `rm` fails **or** the path still exists, all **before** the copy; a failed copy also fails it. Every failure removes the worktree and returns 1 with no path echoed. The capture's plan states the handoff (`rtl.py:1156-1161` returns None; `codex-turn.py:83-91` exits 5 when isolation was requested). The probe gained arm 3: `rm` shadowed to refuse the `…/seeded` destination with a readable source, which must give rc≠0 and no path. The readable arm now fails outright when no usable worktree path comes back. `matrix.txt`: base 1, source-only 1, with-package 0, skip-dirs fake 1, overlay fake 1, and your round-2 simulated fix retained as `fake3-gh1638-rm-unchecked.patch` 1 (`uncleared checkout copy still reported a seed`).
+2. **Replay instructions (Should) — fixed.** Admission rows now carry an executable command per issue (`n=<N>` inside the Python; each passes `bash -n`). Every matrix and consumer-arm `build` names the full construction from `$SCRATCH`, including `git apply --binary $P/<patch>`, `mkdir -p` before the receipt, and the commit; consumer commands run from `$P`. `SUMMARY.md` now says four `[added]` for #1638.
+
+Re-run: READY preflight exit 0 for all three at `6142128d9c43`; consumer arms 4/7 for each; admission checks unchanged (#1480 held, others None); parser/linter read-back matches.
 

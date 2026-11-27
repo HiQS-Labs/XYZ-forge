@@ -1,6 +1,6 @@
 {
   "schema": "swarm-preflight/run-candidate@1",
-  "generated_at": "2026-11-27T22:08:41Z",
+  "generated_at": "2026-11-27T22:14:10Z",
   "mode": "project-doc",
   "candidate": {
     "slug": "gh-1666-acceptance-markdown-line-model"

@@ -1,6 +1,6 @@
 {
   "schema": "swarm-preflight/run-candidate@1",
-  "generated_at": "2026-11-27T22:08:46Z",
+  "generated_at": "2026-11-27T22:14:15Z",
   "mode": "project-doc",
   "candidate": {
     "slug": "gh-1423-relay-attest-gitignored"

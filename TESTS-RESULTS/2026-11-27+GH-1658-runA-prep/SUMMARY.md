@@ -14,7 +14,7 @@ PR's review, merge to `development`, and the exact-ref preflight recheck at the 
 |---|---|---|---|---|---|
 | [#1666](https://github.com/HiQS-Labs/XYZ-forge/issues/1666) | `PROJECT/1-INBOX/GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md` (new) | `bash test/gh400-acceptance-fidelity.sh` | 9 | exit 0, READY, fidelity `match`, probes unfixed/unfixed | 45/35/50/80 |
 | [#1423](https://github.com/HiQS-Labs/XYZ-forge/issues/1423) | `PROJECT/1-INBOX/GH-1423-RELAY-ATTEST-GITIGNORED.md` (existing capture from PR #1424, reused and completed) | `bash test/gh505-relay-attest.sh` | 9 | exit 0, READY, fidelity `match`, probes unfixed/unfixed | 40/35/50/75 (issue's proposal) |
-| [#1638](https://github.com/HiQS-Labs/XYZ-forge/issues/1638) | `PROJECT/1-INBOX/GH-1638-RELAY-SEED-DIR-NESTING.md` (new) | `bash test/worktree-isolation.sh` | 9 | exit 0, READY, fidelity advisory (no issue Acceptance heading; three `[added]`), probes unfixed/unfixed | 55/50/50/80 |
+| [#1638](https://github.com/HiQS-Labs/XYZ-forge/issues/1638) | `PROJECT/1-INBOX/GH-1638-RELAY-SEED-DIR-NESTING.md` (new) | `bash test/worktree-isolation.sh` | 9 | exit 0, READY, fidelity advisory (no issue Acceptance heading; four `[added]`), probes unfixed/unfixed | 55/50/50/80 |
 
 Preflight command (each item; `preflight-<N>.json/.err/.rc`):
 
@@ -53,12 +53,13 @@ Standalone probe exits (0 = fixed; `matrix.txt`):
 | simulated fix + `make-pkg.sh` (`sim-gh1638-with-pkg.patch`) | — | — | 0 |
 | fake fix (`fake-gh<N>.patch`) | 1 (issue side only) | 1 (`return True` before committing) | 1 (skip directory entries) |
 | second fake | 1 (`fake2-…-two-reader`: deviations reader left on `splitlines()`) | — | 1 (`fake2-…-overlay`: contents-only `cp -R src/.`, keeps a host-deleted child) |
-| third fake | 1 (`fake3-…-mask-three`: masks only U+0085/U+2028/U+2029) | — | — |
+| third fake | 1 (`fake3-…-mask-three`: masks only U+0085/U+2028/U+2029) | — | 1 (`fake3-…-rm-unchecked`: ignores a failed removal) |
 | #1423 with hostile inherited `GIT_DIR=/nonexistent` | — | base 1, simulated 0 | — |
 
 #1666's probe covers every non-CR/LF separator Python `splitlines()` breaks on (U+000B, U+000C,
 U+001C-U+001E, U+0085, U+2028, U+2029). #1638's probe also requires a host-deleted child to be
-absent, an ordinary file entry to seed, a failed directory copy to fail the begin, and the
+absent, an ordinary file entry to seed, a failed directory copy or an uncleared checkout copy to
+fail the begin with no worktree path, and the
 packaged `relay-pkg.tar.gz` member to equal the live library. `pkg-freshness-arms.txt`: on the
 source-only arm `bash test/relay-pkg-freshness.sh` exits 1 (drift: `relay-turn-lib.sh`); after
 `make-pkg.sh` it exits 0.
