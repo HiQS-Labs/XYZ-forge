@@ -1,0 +1,10 @@
+## before (jog_run.py @ cc6c73d9e)
+Traceback (most recent call last):
+  File "<stdin>", line 56, in <module>
+AssertionError
+## after (8f47703f5)
+B refused: driver lock owner is initializing: <home>/Documents/GH Repos/XYZ-forge-gh1653-jog-receipt-attempt-2026-11-27-verify/tmplvyos9e8/relay-driver.lock
+resume entered=True exit=0; wake entered=False exit=2
+## stale-lock control (8f47703f5)
+fresh empty lock: refused: driver lock owner is initializing
+stale empty lock (60s): reclaimed, acquired = True
