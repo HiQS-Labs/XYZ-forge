@@ -132,7 +132,13 @@ plan was written. The operator gets a precise reason and the row survives untouc
    recovery. `retry-build` reads the supplied clone before the lease without aligning it
    (`jog_run.py:1114`), so a clone still holding the A-stamped capture refuses again, with the same
    named reason. Then `jog retry N` followed by `jog run`, or `jog retry-build N`, re-admits the
-   **same row**: no `jog add`, no new row, no reset. The attempt count then increments once,
+   **same row**: no `jog add`, no new row, no reset. **(R3 S1) Ref precondition:** the check
+   compares against exactly the ref Preflight evaluates, which is the commit the builder will branch
+   from. For a local-branch `target.ref` such as `development` on a hand-supplied target, a fetch
+   moves only `origin/development`. So the operator must bring the local branch current (a
+   supervised run does this through `_jog_align_target`) before admission. Otherwise both the check
+   and Preflight judge the stale local commit, and a cited change that exists only upstream goes
+   unseen until the branch is updated. Conveyor and the Jog skill state this precondition. The attempt count then increments once,
    through the normal lease. The Conveyor and Jog skill text states this handoff.
 5. **Docs.** Conveyor Step 3 (record `prepared_commit`) and Step 6 (refresh rewrites it; the refusal
    names the changed paths). `relay-automation/CONTRACT.example.md` gets an annotation for the
@@ -151,7 +157,7 @@ plan was written. The operator gets a precise reason and the row survives untouc
     not only at the end of the section, because `cleanup_root_fixture` resets `development` but not
     `main` (`test/gh280-jog-marathon-adapter.sh:230–236`).
   - G9: `prepared_commit` = A, then commit a change to `src/feature.js` (a cited artifact) at B and
-    advance `main`. `jog run` must leave the row `parked|stale-evidence: …src/feature.js…|0`, the
+    advance `main`. `jog run` must leave the row `parked|stale-evidence: …src/feature.js…|1` (the seeded spent attempt, unchanged; R3 B1), the
     output must say `not started: stale-evidence`, and there must be no execution ledger entry
     (no lease, no preflight, no worker).
   - **(R2 S1) Budget witness.** Before G9's refusal, the row is seeded with `attempt_count = 1`
@@ -165,12 +171,14 @@ plan was written. The operator gets a precise reason and the row survives untouc
   - **(R1 B3) G10, positive dispatch after refresh.** Refresh so `prepared_commit` = B, committed,
     plus an unrelated file change committed after it. Then `jog retry 901` and `jog run` with G4's
     environment (canned PR, suggested lane branch, approving agent stubs). The assertions: the same
-    `global_id` as before the refusal; exactly one `jog_queue` row for 901; `attempt_count` 1; the
+    `global_id` as before the refusal; exactly one `jog_queue` row for 901; `attempt_count` 2 (seeded 1 + this lease; R3 B1); the
     ledger holds exactly one execution with `outcome == "approved"`; the row is
     `parked|awaiting-landing (PR #42`, as in G4; and the stub builder's artifact edit is present in
     the target. A preflight refusal or a missing capture cannot satisfy those, unlike the round-1
     predicates. This also covers Acceptance 3: unchanged cited files with an unrelated diff admit
     and dispatch.
+  - G11–G13 run from a clean fixture with no seeded attempt, so their expected count is the
+    unchanged starting `0`.
   - G11 (fail-closed control): `prepared_commit` set to a well-formed SHA that is not in the repo must
     give `parked|stale-check-unavailable: prepared_commit … not found…|0` and no execution.
   - **(R1 B2) G12, fetched-ref parity.** The contract's `target.ref` is `origin/main` and
@@ -263,8 +271,7 @@ distinct stale-dispatch incident was found in the last 14 days versus the prior 
     "skills/1-hourly/conveyor/SKILL.md",
     "skills/2-daily/jog/SKILL.md",
     "relay-automation/CONTRACT.example.md",
-    "PROJECT/2-WORKING/GH-1476-RAW-TASK-PREPARATION.md",
-    "TESTS-RESULTS/2026-11-27+GH-1664/control.txt"
+    "PROJECT/2-WORKING/GH-1476-RAW-TASK-PREPARATION.md"
   ]
 }
 ```

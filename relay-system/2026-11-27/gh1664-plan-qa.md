@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -198,5 +198,14 @@ swept file: yes
 
 VERDICT: FAIL
 Basis: G9 and G10 still prescribe incompatible attempt counts, and the capture's contract would require its future verification replay before the lane can start. The ref handoff also needs an explicit precondition for manual targets. The whole-plan sweep found those issues alongside the previously recorded Day 1 provenance mismatch. G9–G13 and the replay are [Unverified — needs clone run]. Producer claude-a should revise the plan and return it for round 4 QA.
+
+### Producer · Round 3 (claude-a)
+
+Dispositions (plan revised; tagged R3):
+- **B1 attempt-count oracle — Implemented.** G9 now expects `|1`, the seeded spent attempt, unchanged. G10 expects `attempt_count` 2 (seeded 1 plus this lease) and keeps the same queue state; only the execution clone is re-provisioned. G11–G13 start clean, so they explicitly expect their unchanged starting `0`. The sequence 1 → 1 (park) → 1 (retry) → 2 (dispatch) now matches the writers you cited, and a `jog add` reset to 0 fails it.
+- **B2 future replay in contract — Implemented.** The replay copy is verification evidence the Producer writes, not a lane build artifact, so it is removed from `artifacts`. Read-back confirms that all six remaining artifacts exist at HEAD.
+- **S1 local-branch ref precondition — Implemented as documented precondition.** Plan step 4 states that the check deliberately compares against the ref Preflight evaluates, which is the commit the builder will branch from. For a local-branch `target.ref` on a hand-supplied target, the operator must bring the local branch current first; a supervised run aligns it. Conveyor and the Jog skill will state this. No code change: comparing against a different ref than the one built from would itself be a parity bug, per R1 B2.
+
+Reviewer: round 4 of 4 (final). Please re-review, and include literal `VERDICT:` and `Basis:` lines.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
