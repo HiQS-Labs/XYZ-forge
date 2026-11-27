@@ -1,5 +1,5 @@
 # Marathon Phase gh-1423-relay-attest-gitignored
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1423-RELAY-ATTEST-GITIGNORED-TURN builder=codex reviewer=agy round-cap=9 -->
@@ -205,3 +205,22 @@ Verification: matched the live driver SHA-256 and checked the receipt's four com
 unverified: bash test/gh505-relay-attest.sh — designated harness gate.
 
 handing off to agy — agy, take your turn.
+
+### Round 3 · Reviewer · agy
+
+swept file: yes
+gate run: no — harness gate
+
+#### Re-verification & closure of Round 2 Blocker
+
+- **[Pass]** `utils/py/relay_drive.py:1-1708` (full-file sweep) and `commit_relay_file` (`utils/py/relay_drive.py:827-845`) remain unchanged from Rounds 1–2 (`shasum -a 256 utils/py/relay_drive.py` = `ec6c0af36ed3985402bf20893429b34c16255c6d3059c310cb0ec689abb06065`, matching `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md:20`). No pre-existing or introduced defects in the touched paths beyond the out-of-scope `--consult-verify` note recorded in Round 1 (`utils/py/relay_drive.py:1556-1557`).
+- **[Pass]** All 15 Preflight-inferred test/helper files (`test/gh115-round-cap.sh` through `test/lib/fixture-guard.sh`) are byte-identical to `/Users/noelsaw/flywheel-runA-exec` (`cmp -s` exited 0 across all 15 files), honoring `PROJECT/2-WORKING/GH-1423-RELAY-ATTEST-GITIGNORED.md:145` ("No new suite, no suite edits").
+- **[Pass]** Round 2 Blocker closed — `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md:1-37` (SHA-256 `96e2d8ec4bc22781bb0440ebdb3ed8238e68eb46fdc9e2b401c4286c48c607e1`) now satisfies all three acceptance criteria in `RELAY.md:31-33` and `PROJECT/2-WORKING/GH-1423-RELAY-ATTEST-GITIGNORED.md:43-45,145`:
+  - Baseline red control (`delivery.md:5-12,24,29`): records `T-1-base-ignored` exit 4 / `attest-publish-failed`, `git add` stderr (`The following paths are ignored by one of your .gitignore files:`), landed commit `3800d45` (`relay-drive: attest T-1-base-ignored approved by rev (reviewed e5d4c4c0a5b6)`), and absent record.
+  - Post-fix ignored and non-ignored controls (`delivery.md:16,25-26,29`): records `T-2-fixed-ignored` exit 0 (`10566e2` + trailer + `relay_attest.load` + `candidate_ok == (True, None)`) and `T-3-fixed-plain` exit 0 (`67d6bc3` + trailer + `relay_attest.load` + `candidate_ok == (True, None)`).
+  - Genuine commit failure control (`delivery.md:16,27`): records both the read-only `.git` helper failure (`Unable to create '.../.git/index.lock': Permission denied`) and the full-driver rejecting `pre-commit` hook arm (exit 4 / `attest-publish-failed`, stderr `fixture: pre-commit rejected the attestation`, HEAD unchanged at `88da43b`, no attestation commit/trailer/record).
+  - Stale "remains outstanding" disclaimer and future-tense expected table are removed; concise replay procedure and `bash test/gh505-relay-attest.sh` gate note are retained (`delivery.md:31-37`), and all relative links resolve to existing repository files (`ls -la` exited 0).
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
