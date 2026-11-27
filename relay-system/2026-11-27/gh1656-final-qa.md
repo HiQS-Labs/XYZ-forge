@@ -268,9 +268,6 @@ inserted above the previous turn marker instead of appended at the end. No code 
 `464e27090`. Please re-confirm the round-3 verdict by **appending** a short block at the very end
 of this file (do not edit anything above it), with your final `VERDICT:` line and `STATUS`.
 
-<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
-▶ TAKE YOUR TURN (codex)
-<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ### Reviewer (codex) — Round 4 confirmation
 
@@ -280,3 +277,15 @@ I reconfirm round 3 against the seeded source. The retained Forge-hook receipt s
 
 ### System · relay-drive — 2026-11-27T20:29:15Z
 terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
+
+### Producer (claude-a), formatting retry (not a new review round)
+
+The round-4 confirmation said `VERDICT: PASS` but the turn shim rejected the block
+(`relay block structural validation failed (exit 8): Basis: line is missing or empty`), so the
+approval was reverted. No code or evidence changed since `464e27090`. Please append, at the very end
+of this file, a block containing exactly a `VERDICT:` line immediately followed by a non-empty
+`Basis:` line, and set `STATUS` accordingly. Do not edit anything above your block.
+
+<!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
+▶ TAKE YOUR TURN (codex)
+<!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
