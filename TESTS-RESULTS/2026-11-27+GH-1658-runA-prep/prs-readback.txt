@@ -1,4 +1,4 @@
-1590 https://github.com/HiQS-Labs/XYZ-forge/issues/1590 PROJECT/1-INBOX/GH-1590-DAILY-GOALS-BACKTICKED-FOREIGN-LEAD.md Queue / parked intake 55/45/50/90 None
-1666 https://github.com/HiQS-Labs/XYZ-forge/issues/1666 PROJECT/1-INBOX/GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md Queue / parked intake 45/35/50/80 None
-1423 https://github.com/HiQS-Labs/XYZ-forge/issues/1423 PROJECT/1-INBOX/GH-1423-RELAY-ATTEST-GITIGNORED.md Queue / parked intake 40/35/50/75 None
-1480 https://github.com/HiQS-Labs/XYZ-forge/issues/1480 PROJECT/1-INBOX/GH-1480-MERGE-CLEANUP-DECOMPOSE.md Queue / parked intake 70/65/50/40 None
+1666 https://github.com/HiQS-Labs/XYZ-forge/issues/1666 PROJECT/1-INBOX/GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md Queue / parked intake 45/35/50/80 ovr None
+1423 https://github.com/HiQS-Labs/XYZ-forge/issues/1423 PROJECT/1-INBOX/GH-1423-RELAY-ATTEST-GITIGNORED.md Queue / parked intake 40/35/50/75 ovr None
+1638 https://github.com/HiQS-Labs/XYZ-forge/issues/1638 PROJECT/1-INBOX/GH-1638-RELAY-SEED-DIR-NESTING.md Queue / parked intake 55/50/50/80 ovr None
+1480 https://github.com/HiQS-Labs/XYZ-forge/issues/1480 PROJECT/1-INBOX/GH-1480-MERGE-CLEANUP-DECOMPOSE.md Queue / parked intake 70/65/50/40 ovr None

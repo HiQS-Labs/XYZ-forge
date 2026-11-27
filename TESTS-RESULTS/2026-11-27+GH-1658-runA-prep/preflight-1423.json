@@ -1,16 +1,16 @@
 {
   "schema": "swarm-preflight/run-candidate@1",
-  "generated_at": "2026-11-27T21:48:27Z",
+  "generated_at": "2026-11-27T22:01:00Z",
   "mode": "project-doc",
   "candidate": {
     "slug": "gh-1423-relay-attest-gitignored"
   },
   "provenance": {
     "source_docs": [
-      "/Users/noelsaw/flywheel-runA-prep/PROJECT/1-INBOX/GH-1423-RELAY-ATTEST-GITIGNORED.md"
+      "PROJECT/1-INBOX/GH-1423-RELAY-ATTEST-GITIGNORED.md"
     ],
     "issues": [],
-    "target_root": "/Users/noelsaw/flywheel-runA-proof",
+    "target_root": "<proof clone>",
     "branch": "development",
     "commit": "6142128d9c433d6b12972c6cd9a6f864f0ed9da2",
     "suggested_branch": "marathon/gh-1423-relay-attest-gitignored-2026-11-27",
@@ -44,7 +44,7 @@
     ],
     "remediation": {
       "source": "issue#1423",
-      "criteria": "commit_relay_file returns True when the file-scoped commit of a tracked relay file under a gitignored directory lands, still True in a repo without the ignore rule, and False when the commit genuinely fails. Change relay_drive.py only (commit_relay_file), keeping it callable with subprocess, os, relay_file, transcript_repo and eprint in scope. Record the manual repro (red exit 4 with the git add stderr, green after the fix, genuine-failure control) in TESTS-RESULTS/2026-11-27+GH-1423/delivery.md. No new suite, no suite edits."
+      "criteria": "commit_relay_file returns True when the file-scoped commit of a tracked relay file under a gitignored directory lands, still True in a repo without the ignore rule, and False when the commit genuinely fails. Change relay_drive.py only (commit_relay_file), keeping it callable with subprocess, os, relay_file, transcript_repo and eprint in scope. Record the manual repro (red exit 4 with the git add stderr, green after the fix, genuine-failure control) in TESTS-RESULTS/2026-11-27+GH-1423/delivery.md. Do not edit any Preflight-inferred lane path (for example test/_setup.sh); they are shared with other Run A packets. No new suite, no suite edits."
     },
     "lanes": {}
   },
@@ -52,7 +52,7 @@
     "fetch_ok": true,
     "upstream": "origin/development",
     "ahead": 0,
-    "behind": 0,
+    "behind": 30,
     "dirty": false,
     "stale_index_lock": false,
     "stale_index_lock_path": null,

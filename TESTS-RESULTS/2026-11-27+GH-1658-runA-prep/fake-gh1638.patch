@@ -1,0 +1,15 @@
+diff --git a/relay-automation/relay-turn-lib.sh b/relay-automation/relay-turn-lib.sh
+index ec24bd75b..4b283f1b6 100644
+--- a/relay-automation/relay-turn-lib.sh
++++ b/relay-automation/relay-turn-lib.sh
+@@ -779,7 +779,9 @@ rtl_worktree_begin() {
+       rtl_trace "rtl_worktree_begin: SKIP (archive-absolute) $a"
+       continue
+     fi
+-    if [[ -e "$RTL_ROOT/$a" ]]; then
++    if [[ -d "$RTL_ROOT/$a" ]]; then
++      rtl_trace "skip dir"
++    elif [[ -e "$RTL_ROOT/$a" ]]; then
+       mkdir -p "$wt/$(dirname "$a")"
+       cp -R "$RTL_ROOT/$a" "$wt/$a"
+       rtl_trace "rtl_worktree_begin: SEED $a"

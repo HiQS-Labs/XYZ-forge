@@ -7,7 +7,9 @@ for cp in (0x85, 0x2028, 0x2029):
     c = s.extract_acceptance_criteria(t)
     k = s.collect_inline_checklist(t)[0]
     assert i == c and len(i) == 2 and "Alpha" in i[0] and "beta" in i[0], (hex(cp), i, c)
-    assert len(k) == 2 and "beta" in " ".join([k[0][0], *k[0][1]]), (hex(cp), k)
+    assert len(k) == 2 and k[0][1] == ["- [ ] Alpha" + L + "beta"], (hex(cp), "raw checklist line", k)
+    v = s.extract_declared_deviations("## Acceptance — deviations from the issue\n- [added] Alpha" + L + "- [added] beta — reason: R\n")
+    assert len(v["added"]) == 1 and v["added"][0][0].startswith("Alpha") and not v["malformed"], (hex(cp), "deviations reader", v)
     f = "## Acceptance\n\n- [ ] Real\n\n~~~\n~~~" + L + "\n- example output\n~~~\n"
     assert s.extract_acceptance_criteria(f, plain_bullets=True) == ["Real"], (hex(cp), "fence control")
 assert s.extract_acceptance_criteria("## Acceptance\n\n- [ ] A\r\n- [ ] B\r- [ ] C\n") == ["A", "B", "C"], "CR/LF control"

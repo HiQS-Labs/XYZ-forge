@@ -1,0 +1,13 @@
+diff --git a/utils/py/swarm_preflight.py b/utils/py/swarm_preflight.py
+index 5816d47aa..985813bb4 100644
+--- a/utils/py/swarm_preflight.py
++++ b/utils/py/swarm_preflight.py
+@@ -612,7 +612,7 @@ def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -
+     """
+     if not text:
+         return None
+-    lines = text.splitlines()
++    lines = re.split(r'\r\n|\r|\n', text) if plain_bullets else text.splitlines()
+     start: int | None = None
+     level: int | None = None
+     for i, line in enumerate(lines):

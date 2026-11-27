@@ -1,0 +1,12 @@
+diff --git a/relay-automation/relay-turn-lib.sh b/relay-automation/relay-turn-lib.sh
+index ec24bd75b..f0b0aea99 100644
+--- a/relay-automation/relay-turn-lib.sh
++++ b/relay-automation/relay-turn-lib.sh
+@@ -781,6 +781,7 @@ rtl_worktree_begin() {
+     fi
+     if [[ -e "$RTL_ROOT/$a" ]]; then
+       mkdir -p "$wt/$(dirname "$a")"
++      rm -rf "$wt/$a"
+       cp -R "$RTL_ROOT/$a" "$wt/$a"
+       rtl_trace "rtl_worktree_begin: SEED $a"
+     else

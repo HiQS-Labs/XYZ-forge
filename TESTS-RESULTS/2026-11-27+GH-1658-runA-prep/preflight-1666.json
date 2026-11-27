@@ -1,16 +1,16 @@
 {
   "schema": "swarm-preflight/run-candidate@1",
-  "generated_at": "2026-11-27T21:45:55Z",
+  "generated_at": "2026-11-27T22:00:56Z",
   "mode": "project-doc",
   "candidate": {
     "slug": "gh-1666-acceptance-markdown-line-model"
   },
   "provenance": {
     "source_docs": [
-      "/Users/noelsaw/flywheel-runA-prep/PROJECT/1-INBOX/GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md"
+      "PROJECT/1-INBOX/GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md"
     ],
     "issues": [],
-    "target_root": "/Users/noelsaw/flywheel-runA-proof",
+    "target_root": "<proof clone>",
     "branch": "development",
     "commit": "6142128d9c433d6b12972c6cd9a6f864f0ed9da2",
     "suggested_branch": "marathon/gh-1666-acceptance-markdown-line-model-2026-11-27",
@@ -27,7 +27,7 @@
     "fix_probes": [
       {
         "type": "command",
-        "cmd": "env PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'\nimport sys; sys.path.insert(0, \"utils/py\")\nimport swarm_preflight as s\nfor cp in (0x85, 0x2028, 0x2029):\n    L = chr(cp)\n    t = \"## Acceptance\\n\\n- [ ] Alpha\" + L + \"beta\\n- [ ] Gamma\\n\"\n    i = s.extract_acceptance_criteria(t, plain_bullets=True)\n    c = s.extract_acceptance_criteria(t)\n    k = s.collect_inline_checklist(t)[0]\n    assert i == c and len(i) == 2 and \"Alpha\" in i[0] and \"beta\" in i[0], (hex(cp), i, c)\n    assert len(k) == 2 and \"beta\" in \" \".join([k[0][0], *k[0][1]]), (hex(cp), k)\n    f = \"## Acceptance\\n\\n- [ ] Real\\n\\n~~~\\n~~~\" + L + \"\\n- example output\\n~~~\\n\"\n    assert s.extract_acceptance_criteria(f, plain_bullets=True) == [\"Real\"], (hex(cp), \"fence control\")\nassert s.extract_acceptance_criteria(\"## Acceptance\\n\\n- [ ] A\\r\\n- [ ] B\\r- [ ] C\\n\") == [\"A\", \"B\", \"C\"], \"CR/LF control\"\nPY",
+        "cmd": "env PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'\nimport sys; sys.path.insert(0, \"utils/py\")\nimport swarm_preflight as s\nfor cp in (0x85, 0x2028, 0x2029):\n    L = chr(cp)\n    t = \"## Acceptance\\n\\n- [ ] Alpha\" + L + \"beta\\n- [ ] Gamma\\n\"\n    i = s.extract_acceptance_criteria(t, plain_bullets=True)\n    c = s.extract_acceptance_criteria(t)\n    k = s.collect_inline_checklist(t)[0]\n    assert i == c and len(i) == 2 and \"Alpha\" in i[0] and \"beta\" in i[0], (hex(cp), i, c)\n    assert len(k) == 2 and k[0][1] == [\"- [ ] Alpha\" + L + \"beta\"], (hex(cp), \"raw checklist line\", k)\n    v = s.extract_declared_deviations(\"## Acceptance \u2014 deviations from the issue\\n- [added] Alpha\" + L + \"- [added] beta \u2014 reason: R\\n\")\n    assert len(v[\"added\"]) == 1 and v[\"added\"][0][0].startswith(\"Alpha\") and not v[\"malformed\"], (hex(cp), \"deviations reader\", v)\n    f = \"## Acceptance\\n\\n- [ ] Real\\n\\n~~~\\n~~~\" + L + \"\\n- example output\\n~~~\\n\"\n    assert s.extract_acceptance_criteria(f, plain_bullets=True) == [\"Real\"], (hex(cp), \"fence control\")\nassert s.extract_acceptance_criteria(\"## Acceptance\\n\\n- [ ] A\\r\\n- [ ] B\\r- [ ] C\\n\") == [\"A\", \"B\", \"C\"], \"CR/LF control\"\nPY",
         "expect_nonzero": true
       },
       {
@@ -45,7 +45,7 @@
     ],
     "remediation": {
       "source": "issue#1666",
-      "criteria": "extract_acceptance_criteria (both sides), extract_declared_deviations and collect_inline_checklist split lines on \\r\\n, \\r and \\n only; a criterion containing U+0085/U+2028/U+2029 is read whole and identically on both sides, fences and CR/LF behave as today. Add one case to test/gh400-acceptance-fidelity.sh. Record the probe's before/after output in TESTS-RESULTS/2026-11-27+GH-1666/delivery.md. Leave the frozen Bash twin and #1665 alone. No new suite."
+      "criteria": "extract_acceptance_criteria (both sides), extract_declared_deviations and collect_inline_checklist split lines on \\r\\n, \\r and \\n only; a criterion containing U+0085/U+2028/U+2029 is read whole and identically on both sides, fences and CR/LF behave as today. Add one case to test/gh400-acceptance-fidelity.sh. Record the probe's before/after output in TESTS-RESULTS/2026-11-27+GH-1666/delivery.md. Leave the frozen Bash twin and #1665 alone. Do not edit any Preflight-inferred lane path (for example test/_setup.sh); they are shared with other Run A packets. No new suite."
     },
     "lanes": {}
   },
@@ -53,7 +53,7 @@
     "fetch_ok": true,
     "upstream": "origin/development",
     "ahead": 0,
-    "behind": 0,
+    "behind": 30,
     "dirty": false,
     "stale_index_lock": false,
     "stale_index_lock_path": null,
