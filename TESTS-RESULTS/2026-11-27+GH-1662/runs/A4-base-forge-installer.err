@@ -1,0 +1,5 @@
+merge-cleanup: ERROR — PR #101: pre-merge ledger gate RED — not merged:
+merge-cleanup: ERROR —   - ledger three-way read failed: releases.sql is missing at HEAD
+merge-cleanup: ERROR —   - releases check: exit 2: /Library/Developer/CommandLineTools/usr/bin/python3: can't open file '<TMP>/merge-cleanup-XXXX/pr-101-8b1ad336-XXXX/repo/utils/py/releases_app.py': [Errno 2] No such file or directory
+merge-cleanup: ERROR —   - roadmap reconcile-state --dry-run: exit 2: /Library/Developer/CommandLineTools/usr/bin/python3: can't open file '<TMP>/merge-cleanup-XXXX/pr-101-8b1ad336-XXXX/repo/utils/py/releases_app.py': [Errno 2] No such file or directory
+merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.

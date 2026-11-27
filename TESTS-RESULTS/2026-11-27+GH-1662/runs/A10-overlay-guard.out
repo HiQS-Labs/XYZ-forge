@@ -1,0 +1,4 @@
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: <FX>/primary
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+merge-cleanup: ERROR — REFUSING --standalone: it declares a repository without the XYZ overlay, but the primary has releases.sql. Skipping the ledger gate and reconcile there would land PRs the ledger never saw; run without --standalone (default mode).

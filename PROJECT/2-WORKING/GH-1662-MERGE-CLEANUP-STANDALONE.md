@@ -34,7 +34,7 @@ goal: "On a repository with no XYZ-forge overlay, `merge_cleanup.py --standalone
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex on round 3 (round 1 FAIL six Should; round 2 FAIL one Should; both answered). Implemented; manual check A1-A15 recorded under `TESTS-RESULTS/2026-11-27+GH-1662/`; existing suites run in a disposable clone. | Final Codex QA, qualification gate and push from a disposable clone, ready PR. Merge is the operator's. |
+| Plan approved by Codex on round 3 (round 1 FAIL six Should; round 2 FAIL one Should; both answered). Implemented; manual check A1-A17 recorded under `TESTS-RESULTS/2026-11-27+GH-1662/`; existing suites run in a disposable clone. | Final Codex QA, qualification gate and push from a disposable clone, ready PR. Merge is the operator's. |
 
 ## Contract (binding: the "Contract decision" comment on #1661)
 
@@ -135,7 +135,7 @@ Manual check, `TESTS-RESULTS/2026-11-27+GH-1662/` (`provenance.jsonl`, `runs/`, 
 | A5 | standalone `--execute` lands 101, 109, 106, 107 in order; primary equals origin and clean; origin has only fixture-author and stand-in commits (no tool push); sweep verdict recorded |
 | A8-A12 | prerequisites before the first clone; scan roots; overlay guard; forecast labels; pushes stay gated |
 | A16 | fork heads are not stacked parents (final QA R1 F1, R2 F2): no edge between two fork `main` PRs, a selected fork PR kept and previewed, a genuine stack still ordered and deferred; a landed fork PR issues zero `pr edit` retargets (also in the production shape) while a same-repository parent still issues exactly one; the mutants without each guard reproduce the defects |
-| A13 | existing suites green at `217845ee1`: phase B 39, phase C 111, gh645 8, gh674 6, gh436 227 (disposable full clone, test venv first on PATH, identity unchanged) |
+| A13 | existing suites green at the merged head `0f48b76de`: phase B 52, phase C 111, gh645 8, gh674 6, gh436 240 (disposable full clone, test venv first on PATH, identity unchanged; the counts moved with the 87 base commits) |
 | A15 | the runbook's commands and rules reproduce the script's order, 20 conflict pairs, alone-conflict and fold stop |
 
 **Not verified:** real GitHub (checks, protection, merge queue, rate limits, real squash effect on a stacked child); Python below 3.9 at runtime; A15 shares an author with the script and the runbook (finds drift, not independent review). One recorded correction: A1's first attempt (stack present, #106/#107 unlisted) differed in the order of two `not in --prs` log lines because D9 reorders the unlisted stacked pair; A1 now uses a `--no-stack` fixture, and that order change is the accepted D9 semantics.
