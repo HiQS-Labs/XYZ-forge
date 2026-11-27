@@ -1,5 +1,17 @@
 # GH-1626 preparation evidence (2026-11-27)
 
+## Current proof: after review round 1 (`probe-proof-r1/`, GitHub origin)
+
+| State | Evaluated `development` (proof clone) | Jog lint | Preflight `--dry-run` | Probe |
+|---|---|---|---|---|
+| 1 Unfixed, prepared commit | `db8a09385` | 0 | 0 READY | 1 unfixed |
+| 2 Simulated fix + `delivery.md` (proof clone only) | `ed06a9254` | 0 | 4 STALE (landed) | 0 |
+| 3 Comment-only edit (proof clone only) | `af570e01b` | 0 | 0 READY | 1 unfixed |
+
+Issue fetched in every state: OPEN, acceptance fidelity `unknown / no-issue-section` (advisory). The probe change matrix is in `review-round1-fixes/` (README + `matrix`/variant outputs). The `delivery.md` `path_absent` probe means a fix without its delivery receipt is still read as unfixed.
+
+## Round 0 history (`probe-proof/`, before review)
+
 Preparation only: this records a probe, not an implementation. Run in a disposable full clone (`~/flywheel-day3-proof`) of the preparation branch. Baseline: `origin/development` at `cf04c03b4`. The seam is byte-identical to `76808a53b`, where the bug was first reproduced.
 
 | State | Commit (proof clone) | Jog lint | Preflight `--dry-run` | Probe |
