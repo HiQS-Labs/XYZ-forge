@@ -183,7 +183,9 @@ RD1=0; RD2=9
 RD_ESCALATION_REASON=""; [ "$CASE" != cap-stalled ] || RD_ESCALATION_REASON=cap-stalled; export RD_ESCALATION_REASON
 [ "$CASE" != no-progress ] || RD1=3
 if [ "$CASE" = stale-reason ]; then   # an old reason from an earlier run that cannot be removed (macOS immutable flag)
-  mkdir -p "$FT/.relay-scratch" && printf 'cap-stalled\n' > "$FT/.relay-scratch/escalation-reason" && chflags uchg "$FT/.relay-scratch/escalation-reason"
+  mkdir -p "$FT/.relay-scratch" && printf 'cap-stalled\n' > "$FT/.relay-scratch/escalation-reason" \
+    && chflags uchg "$FT/.relay-scratch/escalation-reason" \
+    || { echo "ASSERT case=$CASE NOT-RUN (could not make the old reason immutable)"; exit 2; }
   trap 'chflags nouchg "$FT/.relay-scratch/escalation-reason" 2>/dev/null; printf "Fixture retained: %s\n" "$WORK"' EXIT
 fi
 end_epoch="$(python3 -c 'import time; print(int(time.time())+900)')"
@@ -212,12 +214,12 @@ if [ "$CASE" = exhausted ]; then
 fi
 
 # expectations: successor dispatch count, and that row 1 is never re-dispatched (0 calls for exhausted/hold,
-# at most 1 for the others) and ends in a non-pending, non-completed state
+# exactly 1 for the worker-driven others) and ends in a non-pending, non-completed state
 case "$CASE" in shared|refusal|no-progress|cap-mismatch|stale-reason) want_succ=0 ;; *) want_succ=1 ;; esac
 want_succ="${EXPECT_SUCC:-$want_succ}"
 ok=1
 [ "$c2" = "$want_succ" ] || ok=0
-case "$CASE" in exhausted|hold|refusal) [ "$c1" = 0 ] || ok=0 ;; *) [ "$c1" -le 1 ] || ok=0 ;; esac
+case "$CASE" in exhausted|hold|refusal) [ "$c1" = 0 ] || ok=0 ;; *) [ "$c1" = 1 ] || ok=0 ;; esac  # worker-driven cases must actually run the worker once
 case "$CASE" in exhausted) [ "$r1" = parked ] && [ "$hist" = yes ] || ok=0 ;; *) case "$r1" in parked|failed) ;; *) ok=0 ;; esac ;; esac
 [ "$CASE" != hold ] || { [ "$a1" = 0 ] && case "$r1reason" in "hold: capture body HELD: marker"*) true ;; *) false ;; esac || ok=0; }
 if [ "$ok" = 1 ]; then printf 'ASSERT case=%s successor_calls=%s PASS (row1=%s: %s)\n' "$CASE" "$c2" "$r1" "$r1reason"
