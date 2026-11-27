@@ -1,6 +1,6 @@
 # Marathon Phase gh-1666-acceptance-markdown-line-model
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL-TURN builder=codex reviewer=agy round-cap=9 -->
 
@@ -120,3 +120,13 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- `utils/py/swarm_preflight.py` now uses a shared Markdown line splitter for issue and capture criteria, declared deviations, and packet checklists. Issue-side fence detection uses the same lines directly.
+- `test/gh400-acceptance-fidelity.sh` adds the shortened U+2028 copy and covers all eight extra Python separators across the readers, with mixed CRLF/CR/LF boundaries. The existing positive U+2028 fidelity cases remain in the suite.
+- The local GH-1666 issue document supplied the packet's truncated second criterion. The prepared manual probe failed before the change with `('0xb', ['Alpha', 'Gamma'], ['Alpha', 'Gamma'])` and passed afterward. Direct fidelity calls returned `match` for the U+2028 fence-closer input and verbatim copy, and `diverged` for the shortened copy. Packet rendering retained U+2028. Shell and Python syntax checks passed. See `TESTS-RESULTS/2026-11-27+GH-1666/delivery.md`.
+
+unverified: `bash test/gh400-acceptance-fidelity.sh` — the relay reserves this fixture-writing gate for harness execution.
+
+handing off to agy — agy, take your turn.
