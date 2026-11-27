@@ -494,6 +494,13 @@ progress under #1476: no OL-10 credit.
 **Not claimed.** No OL-10 credit, no reviewed-source binding, no stale-source detection, no
 attempt-budget change, no PR in this window.
 
+**Stale-evidence refusal (2026-11-27, #1664).** The stale half of the OL-10 admission refusal is
+built separately: `stale_evidence_refusal` sits beside `hold_refusal` at the same two pre-lease
+points. It refuses a packet whose contract-recorded `prepared_commit` predates a change to a cited
+path, and a Conveyor refresh plus `jog retry` re-admits the same row. See
+[GH-1664-STALE-EVIDENCE-ADMISSION.md](GH-1664-STALE-EVIDENCE-ADMISSION.md). OL-10 scoreboard credit
+remains the #1400 owner's call.
+
 
 ## Merge evidence
 

@@ -166,7 +166,13 @@ releases jog drop <GH-NUM> --reason "<text>" [--force]
     Mark a task as dropped with an auditable reason. Refuses already-completed items without --force.
 
 releases jog retry <GH-NUM>
-    Reset a failed, parked, or dropped task back to pending.
+    Reset a failed, parked, or dropped task back to pending (same row; attempt count kept).
+    GH-1664: this is the recovery for a `stale-evidence:` refusal. Admission parks a packet
+    whose contract records `prepared_commit` when a cited path (artifacts, non-command probe
+    paths) changed between that commit and `target.ref`, fetched as Preflight fetches it. It
+    names the paths and takes no lease. After Conveyor republishes the refreshed capture,
+    bring the execution clone current, including a local-branch target.ref (supervised runs
+    align it), then `jog retry N` + `jog run`. retry-build does not promote a 1-INBOX capture.
 
 releases jog skip <GH-NUM> [--reason "<text>"]
     Park the current head task and advance to the next item.
