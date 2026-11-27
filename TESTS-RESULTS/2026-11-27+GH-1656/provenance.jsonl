@@ -1,0 +1,4 @@
+{"label": "red-base", "code_rev": "52813e56f0abd76cd3ba277602cc3e7fdf1e6f90", "command": "python3 test/gh534_phase_b_tests.py TestGh1656NonLedgerConflict", "rc": 1, "log": "red-base.log", "date": "2026-11-27"}
+{"label": "green-focused", "code_rev": "c620786b72883c8dc337be48133601be7847ff14", "command": "python3 test/gh534_phase_b_tests.py TestGh1656NonLedgerConflict", "rc": 0, "log": "green-focused.log", "date": "2026-11-27"}
+{"label": "focused-suites", "code_rev": "c620786b72883c8dc337be48133601be7847ff14", "command": "gh436 / gh534 phase B, C / gh645 / gh674 in a disposable verify clone", "rc": 0, "log": "focused-suites.log", "date": "2026-11-27"}
+{"label": "smoke", "code_rev": "c620786b72883c8dc337be48133601be7847ff14", "command": "python3 -I TESTS-RESULTS/2026-11-27+GH-1656/smoke.py <verify clone>", "rc": 0, "log": "smoke.log", "verdict": "PASS", "date": "2026-11-27"}

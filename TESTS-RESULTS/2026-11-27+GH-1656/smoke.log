@@ -1,0 +1,28 @@
+
+===== main path, dry run: rc=0 :: merge_cleanup.py $TMPDIR/gh534b.u_v4fntn/primary --root $TMPDIR/gh534b.u_v4fntn/no-roots --strategy merge --prs 1
+merge-cleanup: PR #1: pre-merge ledger gate green on c7dee78386 + origin/development
+merge-cleanup: PR #1: required checks: no required checks
+merge-cleanup: [DRY RUN] PR #1: GitHub reports CONFLICTING but the local merge is clean — --execute would land it through the local-merge rung (GH-1656)
+merge-cleanup: WARNING — PRE-FLIGHT: 19.3 GB free under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T (below 20 GB); landing and check clones may fill the disk
+merge-cleanup: WARNING — PRE-FLIGHT: no required status checks are reported for this repository's PRs; the script will not wait for CI
+
+===== main path, --execute: rc=0 :: merge_cleanup.py $TMPDIR/gh534b.u_v4fntn/primary --root $TMPDIR/gh534b.u_v4fntn/no-roots --strategy merge --prs 1 --execute
+merge-cleanup: PR #1: pre-merge ledger gate green on c7dee78386 + origin/development
+merge-cleanup: PR #1: required checks: no required checks
+merge-cleanup: PR #1: local-merge rung published 25a468e8d6 to origin/development; waiting for GitHub to confirm
+merge-cleanup: ✅ PR #1 is MERGED as 25a468e8d6 through the local-merge rung (GH-1656)
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private$TMPDIR/gh534b.u_v4fntn/primary...
+merge-cleanup: PR #1: already published at origin/development; no push needed
+merge-cleanup: ✅ PR #1 committed; primary is clean at origin/development
+
+PR #1 state=MERGED mergeCommit=25a468e8d68d0e065180b67976b6bad80495866e
+pr merge calls for #1: []
+parents: ['711103ab4279586766a523d12d5e01e6a0a95628', 'c7dee783867ad96e0c506b5bc02d534a54d910d9'] expected: ['711103ab4279586766a523d12d5e01e6a0a95628', 'c7dee783867ad96e0c506b5bc02d534a54d910d9']
+origin/development: 25a468e8d68d0e065180b67976b6bad80495866e
+pre-push hook runs: ['pre-push ran XYZ_SKIP_PREPUSH=unset']
+
+===== adjacent path, dry run re-run on the landed state: rc=0 :: merge_cleanup.py $TMPDIR/gh534b.u_v4fntn/primary --root $TMPDIR/gh534b.u_v4fntn/no-roots --strategy merge
+
+origin unchanged by the re-run: True
+
+SMOKE VERDICT: PASS
