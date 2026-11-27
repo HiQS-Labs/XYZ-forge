@@ -51,8 +51,12 @@ Batch: item 2 of #1657.
    deeper than the current criterion's. Otherwise it is not classified at all and falls through to
    the existing continuation branch unchanged (raw-indent fold or skip), so it gets exactly the
    result the doc side gives the same verbatim line, including mixed tab/space indents.
-   Lines inside a fenced code block (``` or ~~~ toggles, tracked only when `plain_bullets` is true)
-   are never classified as plain bullets; checkbox handling inside fences is unchanged.
+   Fenced code (tracked only when `plain_bullets` is true, i.e. issue side): an opener is a line
+   whose stripped text starts with 3+ backticks or 3+ tildes; it closes only on a line of the same
+   character, at least as long, with nothing else on it (CommonMark rule). Inside a fence a line is
+   never classified as a plain bullet, and a literal heading or rule does not end the Acceptance
+   section. Checkbox matching and continuation folding inside fences are unchanged. Outside fences,
+   and on the capture side, the boundary checks are unchanged.
    Checkbox lines still match `ACC_BULLET_RE` first, including `-  [ ]` with extra spacing (an empty
    one is dropped by the existing blank filter), so the plain branch never sees a task marker.
 3. `check_acceptance_fidelity` passes `plain_bullets=True` for the issue body only.
@@ -100,7 +104,10 @@ sub-bullet into its own criterion and diverge from a verbatim copy, which folds 
       matches a full checkbox copy and diverges with `dropped=['Second']` when `Second` is omitted.
 - [ ] Whitespace control: `-  [ ]` (empty, padded task) plus `- First` yields only `First`.
 - [ ] Fence control: `- [ ] First` followed by a fenced block containing `- example output` matches a
-      capture holding only `First`.
+      capture holding only `First`; same with a literal `~~~` (or shorter backtick run) inside a
+      ```` ``` ```` (or longer) fence.
+- [ ] Fence boundary control: a fenced block containing `## sample output` (or `---`) followed by
+      `- Second` keeps `Second` as a criterion (full copy `match`, partial `dropped=['Second']`).
 - [ ] Tab control: verbatim `  - [ ] First` / `\t- detail` / `- [ ] Last` on both sides still matches.
 - [ ] All existing cases in `test/gh400-acceptance-fidelity.sh` and
       `test/gh557-unknown-blocks-manifest.sh` still pass.

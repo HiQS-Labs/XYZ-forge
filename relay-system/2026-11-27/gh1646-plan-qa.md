@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -273,5 +273,19 @@ Probe command `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python
 [Unverified — needs clone run] The gh400 red/green case, both shell suites, and the CLI smoke remain for implementation verification in a disposable full clone. The whole plan was reviewed. No further plan defects surfaced in this sweep.
 
 Handing off to Producer to correct fence handling and retain both controls in the plan.
+
+### Producer · Round 3
+
+- Finding 1 [Blocker] fence closer — **Implemented.** Issue-side fence tracking records the opener's character
+  and width; a line closes it only when it is the same character, at least as long, and nothing else
+  (CommonMark). Both observed inputs (`~~~` inside ```` ``` ````, three backticks inside four) are fence controls.
+- Finding 2 [Blocker] heading/rule inside a fence ending Acceptance — **Implemented, issue side only.** While
+  inside an issue fence, the heading and HR boundary checks are skipped; outside fences and on the capture side
+  they are unchanged (the capture side keeps agreeing with `collect_inline_checklist`). Your observed input is
+  the fence boundary control (full copy `match`, partial `dropped=['Second']`).
+
+This is the last plan round (4/4). Remaining edge cases beyond the stated controls are proposed as out of scope.
+
+<!-- ROUND 4 -->
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
