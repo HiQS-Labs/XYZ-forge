@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -196,5 +196,62 @@ Dispositions (fix commit `fc02e445d`):
 - Green after fixes: `suite/green-full-fc02e445d.log` → 244 pass, 0 fail. Provenance was appended with sha256 for each new file.
 
 Reviewer: round 2. Please include literal `VERDICT:` and `Basis:` lines.
+
+### Reviewer · Round 2 (codex)
+
+swept file: yes
+
+- **[Should] Use Preflight's heading detection for the admission check.** Observed input: the seeded packet with the heading preceded by “Preparation notes” and U+2028 LINE SEPARATOR. Preflight's `splitlines()` recognizes the heading and parses the stamp (`utils/py/swarm_preflight.py:96–114,132–153`). Jog's whole-text `re.MULTILINE` precheck skips that same capture (`utils/py/jog_run.py:1761–1774`). The controlled probe below changes only the separator and exits 1. With LF it prints `separator=0x000a stamp=aaaaaaaaaaaa calls=5` and names `utils/py/jog_run.py` in `stale-evidence:`. With U+2028 it prints `separator=0x2028 stamp=aaaaaaaaaaaa calls=0 reason=None`, then `AssertionError: None`. Affected scope: stamped captures Preflight accepts when a heading starts after a separator recognized by `str.splitlines()` but absent from Python's multiline anchors. A `None` return leaves both callers free to acquire a lease (`utils/py/jog_run.py:1114–1121,3161–3177`). Falsifier: the same probe should name the changed path with either separator, while existing no-contract and legacy handling stays intact. Reuse the parser's heading detection so the two checks consume the same line boundaries.
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 -B - <<'PY'
+import io, json, subprocess, sys
+from pathlib import Path
+from unittest.mock import patch
+sys.path.insert(0, "utils/py")
+import jog_run, swarm_preflight
+
+doc = Path("PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md")
+packet = swarm_preflight.extract_contract(str(doc))
+a, b = "a" * 40, "b" * 40
+packet["prepared_commit"] = a
+packet["artifacts"] = ["utils/py/jog_run.py"]
+body = "## Swarm Preflight Contract\n```json\n" + json.dumps(packet) + "\n```\n"
+def fake_process(argv, **kwargs):
+    args = argv[3:]
+    if args[0] == "fetch":
+        out, rc = "", 0
+    elif args[0] == "rev-parse":
+        out, rc = (a if args[-1].startswith(a) else b) + "\n", 0
+    elif args[0] == "config":
+        out, rc = "", 1
+    else:
+        assert args[0] == "diff" and ":(literal)utils/py/jog_run.py" in args, args
+        out, rc = "utils/py/jog_run.py\n", 0
+    return subprocess.CompletedProcess(argv, rc, out, "")
+
+for sep in ("\n", "\u2028"):
+    markdown = "Preparation notes" + sep + body
+    with patch.object(jog_run, "_admission_captures", return_value=[str(doc)]), \
+         patch.object(Path, "read_text", return_value=markdown), \
+         patch.object(swarm_preflight, "open", lambda *a, **k: io.StringIO(markdown), create=True), \
+         patch.object(jog_run, "_jog_process", side_effect=fake_process) as process:
+        parsed = swarm_preflight.extract_contract(str(doc))["prepared_commit"]
+        reason = jog_run.stale_evidence_refusal(".", 1664)
+        print(f"separator={ord(sep):#06x} stamp={parsed[:12]} calls={process.call_count} reason={reason!r}")
+        assert reason and reason.startswith("stale-evidence:"), reason
+PY
+```
+
+- **[Pass] Round 1 malformed-ref and deadline findings are closed.** The NUL-ref probe from Round 1 (`python3 -B -`, using the retained `probe1-nul-ref.sh` Python body with `print(repr(reason))` before the assertion) passed locally with `"stale-check-unavailable: target.ref 'development\\x00' does not resolve in ."`, whereas the retained before output ends with `ValueError: embedded null byte` (`TESTS-RESULTS/2026-11-27+GH-1664/final-qa-r1/probe1-before.out:41`). Jog now maps launch errors to completed failures (`utils/py/jog_run.py:1754–1759,1791–1795`). Supervised run forwards its deadline before the lease (`:3161–3177`), and the reused runner raises on timeout (`:2833–2848`). The exact retained clone probe (`TESTS-RESULTS/2026-11-27+GH-1664/final-qa-r1/probe2-deadline.sh:9–31`) sets a four-second child and one-second deadline. The clone result is exit 0 and `elapsed=1.11s` with the process-group stop reason (`final-qa-r1/probe2-after.out:1`, `provenance.jsonl:16`, relative to the evidence directory).
+- **[Pass] Round 1 G12 behavioral evidence is closed.** The G12-only base cut reaches Preflight and dispatches with attempt 1, then reports `suite exit=1` (`TESTS-RESULTS/2026-11-27+GH-1664/suite/red-base-g12-only-cut.log:122,162–167`). The revision and cut are in `provenance.jsonl:13`. The post-fix suite instead refuses at B with no execution (`suite/green-full-fc02e445d.log:134–137`). The exact base invocation is absent from the provenance row.
+- **[Pass] The ordinary fixture still witnesses all four acceptance cases.** G9 names the changed file, parks with the seeded attempt intact and records no execution. G10 preserves row identity and dispatches once after refresh, with the approved execution and artifact write. G4 covers unstamped dispatch (`TESTS-RESULTS/2026-11-27+GH-1664/suite/green-full-fc02e445d.log:105–110,122–137,248`). The inbox replay records refusal and retry at attempt 1 and one worker call at attempt 2 under the same ID (`replay/green-stale-evidence-run.log:4–10,35–45`). Base G9, G11, G12 and G13 and the replay reject the unfixed behavior (`provenance.jsonl:3,6–8,13`).
+- **[Pass] Capture union, legacy behavior and scope on the ordinary path.** Union and hold handling remain shared, with holds evaluated first and simulation exempt (`utils/py/jog_run.py:1114–1121,1664–1678,1699–1732,3161–3177`). Legacy captures skip individually, with a notice and no new fetch on their behalf. The stamped path uses the execution root, strips artifacts, preserves probe spelling, and uses case-insensitive pathspecs when configured (`:1754–1759,1777–1816`; `TESTS-RESULTS/2026-11-27+GH-1664/icase-manual-check.txt:1–10`). The two callers still use the existing queue writer (`utils/py/jog_run.py:1114–1121,3164–3177`). G9–G13 live in the existing adapter suite (`test/gh280-jog-marathon-adapter.sh:727–847`), and the persisted rating matches the plan (`releases.sql:1072`, `PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md:280–287`). The documented retry-build limitation for inbox-only captures remains pre-existing (`skills/2-daily/jog/SKILL.md:168–176`, `utils/py/jog_run.py:1114–1125,3185–3197`). The bounded sweep found no additional pre-existing defect.
+- **[Pass] Receipt hashes.** The Round 1 `python3 -B -c` SHA-256 command, run unchanged, exited 0 and printed `16 nonempty evidence files match provenance SHA-256` (`TESTS-RESULTS/2026-11-27+GH-1664/provenance.jsonl:1–16`).
+
+VERDICT: FAIL
+Basis: The three Round 1 behavioral findings are resolved. A stamped capture that Preflight accepts can still skip admission entirely because the heading checks disagree. The graph generation predates the seeded implementation and its trace call required unavailable approval, so the sweep cites the worktree source. This turn used read-only probes and retained clone results for the suite and deadline. Producer claude-a should align heading detection and return the passing probe and regression evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
