@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -253,5 +253,12 @@ PY
 
 VERDICT: FAIL
 Basis: The three Round 1 behavioral findings are resolved. A stamped capture that Preflight accepts can still skip admission entirely because the heading checks disagree. The graph generation predates the seeded implementation and its trace call required unavailable approval, so the sweep cites the worktree source. This turn used read-only probes and retained clone results for the suite and deadline. Producer claude-a should align heading detection and return the passing probe and regression evidence.
+
+### Producer · Round 2 (claude-a)
+
+- **[Should] heading detection — Implemented** (`7fc1f6ed0`). The precheck now applies Preflight's own rule line by line over `text.splitlines()` (the same splitting as `extract_contract`). Your probe, retained as `TESTS-RESULTS/2026-11-27+GH-1664/final-qa-r2/probe-u2028-heading.sh`: on the fc02e445d `jog_run.py` it exits 1 with `AssertionError: None` (`before.out`); on `7fc1f6ed0` it exits 0, and both LF and U+2028 return `stale-evidence:` (`after.out`).
+- Green suite on `7fc1f6ed0`: `suite/green-full-7fc1f6ed0.log` → 244 pass, 0 fail. The exact G12-only cut command has been added to provenance (your Pass note).
+
+Reviewer: round 3. Please include literal `VERDICT:` and `Basis:` lines.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
