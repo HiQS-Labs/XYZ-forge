@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -110,5 +110,48 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). In a manual relay, end each turn by committing just this file; no push. In a driven turn the harness commits.
 
 ## Log
+
+### Reviewer · Round 1
+
+**What this proposes**
+
+Enable plain dash and asterisk criteria for GitHub issue Acceptance sections. The proposed fallback runs only if the checkbox pass finds zero criteria. It folds deeper bullets into the current criterion.
+
+**How the existing system works, per this document**
+
+Fidelity uses the same extractor for the issue and capture, and the extractor recognizes checkbox criteria. A present plain-only section returns an empty list, so the copied criteria look like additions. The packet inliner also reads capture checkboxes. I infer that checkbox grammar is part of the capture-to-packet contract.
+
+**What it's not**
+
+Scope excludes capture syntax, packet inlining, and alternate headings.
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: The plain-only case is sound in isolation. The section-wide fallback still drops a top-level criterion in a mixed list, and it turns #792's documented workaround into a refusal. The proposed regex can also turn an empty task marker into criterion text.
+
+Probe command `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 "$PWD/.relay-scratch/tmp/gh1646-plan-probe.py"` exited 0 after asserting the tuples below. It used seeded `check_acceptance_fidelity` with a supplied issue body and a scratch capture. For the proposed behavior it recompiled the same parser loop in memory with the plan's regex and deeper-bullet rule, used that loop only when the checkbox pass returned `[]`, and replaced only the issue call at `utils/py/swarm_preflight.py:985`. Tuples are `(status, dropped, added)`. The #792 body was reconstructed from its capture's verbatim-copy note and three criteria, with no live fetch.
+
+- [Blocker] Count same-level plain issue criteria alongside checkboxes. Extend the issue-side rule to preserve checkbox recognition and fold deeper plain bullets into their parent while retaining plain sibling criteria.
+  - Observed input: `"## Acceptance\n- [ ] First\n  - detail\n- Second\n"`. The full capture leaves the nested line intact and writes `- [ ] Second`. With the plan's fallback (`PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:47`), the probe printed `planned mixed/full: ('diverged', [], ['Second'])` and `planned mixed/partial: ('match', [], [])` when the capture omitted Second. The existing checkbox loop folds detail at `utils/py/swarm_preflight.py:628` and skips the unindented Second.
+  - Affected scope: Issue Acceptance sections with a plain sibling criterion and a checkbox criterion. A nested plain detail stays part of its parent.
+  - Falsifier: With that input, the full copy returns `match`, the partial copy returns `diverged` with `dropped=['Second']`, and the checkbox-only issue with its nested plain detail still returns `match`. Retain those assertions in the focused verification.
+
+- [Blocker] Include the #792 workaround cleanup in the plan's rollout and replay the exact retained capture before cleanup. Remove the explanatory workaround text and three obsolete `[added]` entries in the same landing, retaining the three criteria. Keep stale-deviation enforcement.
+  - Observed input: `PROJECT/3-COMPLETED/GH-792-GEN4-SANDBOX-DISJOINT-FIRST.md:34` lists the three verbatim checkboxes. Lines 38–44 add the workaround for the plain issue list, and the readiness receipt shows `match` with three declared deviations at `TESTS-RESULTS/2026-11-27+GH-792/probe-proof/4-prepared-head-github-origin/preflight-792.json:77`. The probe printed `current retained GH-792: ('match', [], []); 0 issue criteria reconciled: 3 deviation(s) declared and accounted for` and `planned retained GH-792: ('diverged', [], []); deviations are declared but the two lists do not differ`. This comes from `utils/py/swarm_preflight.py:1003` through `:1018`. Divergence clears readiness at `:1767` and an otherwise-ready candidate exits 5 at `:1945`.
+  - Affected scope: The retained #792 capture and any equivalent legacy declarations made solely to compensate for the old parser.
+  - Falsifier: The exact retained capture matches under the amended plan with stale-deviation enforcement intact. If cleaning up the declarations is required, the corresponding green control is the same issue body and the same three checkboxes with the redundant block removed. The probe printed `planned GH-792 without workaround: ('match', [], []); 3/3 criteria copied verbatim from issue #792`.
+
+- [Should] Make the plain matcher reject task markers with variable separator whitespace and skip blank payloads before recording a plain criterion. Test for a task marker before consuming the variable-width separator, or classify the marker after capturing the full trimmed payload.
+  - Observed input: With the exact regex at `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md:46`, the probe printed `regex '- [ ]': None`, `regex '-  [ ]': ' [ ]'`, and `planned empty task plus plain criteria: ['[ ]', 'First']` for `"## Acceptance\n-  [ ]\n- First\n"`. The regex gives back a separator space to satisfy the lookahead, and the real checkbox pass drops the empty task at `utils/py/swarm_preflight.py:635`.
+  - Affected scope: Plain parsing of issue list entries with extra spaces or tabs before a task marker, and entries with an empty payload.
+  - Falsifier: The concrete input yields only `['First']`, a section with only a whitespace-padded empty task yields `[]`, and `*   [x] done` still yields `['done']` through the issue parser.
+
+- [Pass] The planned full-copy case is red on current fidelity and green in the simulation. For `"## Acceptance\n- First\n* Second\n"` the probe printed `current full copy: ('diverged', [], ['First', 'Second'])`, `planned full copy: ('match', [], [])`, and `planned dropped control: ('diverged', ['Second'], [])`. Assert the direction and text of the dropped criterion because the unfixed partial case also says `diverged`, with `added=['First']` and an empty dropped list. Reuse the gh400 helper at `test/gh400-acceptance-fidelity.sh:55`. Its CLI path at `:335`–`:341` separately exercises exit 5.
+- [Pass] Keep the change on the issue side. The two reads are at `utils/py/swarm_preflight.py:985` and `:986`. Packet preparation reads the capture at `:1754`–`:1760` and the inliner admits checkbox items at `:826`–`:838`. The nearby canonical checkout's graph showed one inbound caller for the extractor, and the relay checkout's `utils/` and `test/` source search found both calls in fidelity. Graph coverage generation was `2026-11-26T04:31:47Z`. The task docs were missing from that index and the trace call was unavailable under the session's approval settings, so the findings use direct source in the relay checkout.
+- [Pass] Keep heading and HR boundaries before bullet classification (`utils/py/swarm_preflight.py:605`–`:623`). Although the candidate regex alone consumes `- - -`, the probe returned `['First']` from a list terminated by that line. It also returned `['First']` when a deviations heading preceded Acceptance, `None` for an absent section, and `[]` for the no-criteria control. The regex skipped standalone `**bold**`, preserved the payload of `- **bold**`, and skipped `+` and numbered lists, which are outside the requested marker scope. Keep the existing absent-section check at `test/gh557-unknown-blocks-manifest.sh:216` and empty-section check at `test/gh400-acceptance-fidelity.sh:406`–`:423`.
+
+[Unverified — needs clone run] The actual gh400 addition, both shell suites, and the CLI smoke require the Producer's disposable full clone. This round measured fidelity directly without running suites or a CLI preflight. The whole plan was swept and no further plan defects surfaced in the reviewed scope.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
