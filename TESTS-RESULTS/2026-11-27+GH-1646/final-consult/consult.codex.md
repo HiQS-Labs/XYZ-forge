@@ -1,0 +1,9 @@
+**ANSWER — APPROVE.** GH-1646 meets the approved acceptance criteria, and the final candidate resolves the round-four mypy blocker.
+
+**FINDINGS**
+
+1. **[Pass] Scope.** Plain `-` and `*` issue bullets count, checkbox matching retains priority, and deeper plain bullets use the existing continuation logic. The deviations heading, horizontal-rule boundaries, and `None` versus `[]` behavior are preserved. Capture extraction and packet inlining still use checkbox parsing. (`utils/py/swarm_preflight.py:575–582, 613–672, 845–875, 1022–1038`)
+2. **[Pass] Red then green.** C20 supplies the issue body and reads a real capture file through production `check_acceptance_fidelity`, asserting the status and both diff lists. The base run fails seven cases, including an omitted mixed-list criterion that incorrectly returns `match`, and the final candidate passes all 41. I independently replayed the committed nested fixture from `diverged` to `match` and verified that an extra issue criterion is reported as dropped. (`test/gh400-acceptance-fidelity.sh:514–529, 553–562`; `TESTS-RESULTS/2026-11-27+GH-1646/red-gh400-unfixed.txt:30–45`, `green-gh400.txt:29–44`, `provenance.jsonl:1–3`)
+3. **[Pass] Readiness.** I found no introduced defect that warrants blocking the PR. The final guard explicitly narrows `ml`, and the retained receipts show mypy going from exit 1 to exit 0 and the Python layer passing 21 tests. I used those receipts for the suite results. (`utils/py/swarm_preflight.py:650–656`; `relay-system/2026-11-27/gh1646-final-qa.md:423–429`; `TESTS-RESULTS/2026-11-27+GH-1646/provenance.jsonl:6–8`)
+
+**RECOMMENDATION — APPROVE the ready PR for GH-1646.**

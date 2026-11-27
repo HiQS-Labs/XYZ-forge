@@ -1,0 +1,7 @@
+# test/test_python_layer.py (uv: pytest + mypy==1.14.1)
+collected 21 items
+
+test/test_python_layer.py .....................                          [100%]
+
+============================= 21 passed in 33.14s ==============================
+exit=0 (21 passed)

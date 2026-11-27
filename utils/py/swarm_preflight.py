@@ -575,6 +575,11 @@ ACC_HEADING_RE = re.compile(
 ACC_DEVIATIONS_HEADING_RE = re.compile(r'^(#{2,6})\s*acceptance\s*[-—–]{1,2}\s*deviations\b', re.IGNORECASE)
 ACC_BULLET_RE = re.compile(r'^([ \t]*)[-*]\s*\[[ xX]\]\s*(.*)$')
 ACC_HR_RE = re.compile(r'^\s*([-*_])\s*(\1\s*){2,}$')
+# GH-1646: issue-side only. A plain `- ` / `* ` bullet with a non-blank payload.
+ACC_PLAIN_BULLET_RE = re.compile(r'^([ \t]*)[-*][ \t]+(\S.*)$')
+# A fence marker (CommonMark §4.5): at most 3 spaces of indent; a backtick fence's info string
+# cannot hold a backtick, so "```code```" is an inline span, not a fence.
+ACC_FENCE_RE = re.compile(r'^ {0,3}(`{3,}(?=[^`]*$)|~{3,})')
 ANY_HEADING_RE = re.compile(r'^(#{1,6})\s')
 
 def normalize_criterion(text: str | None) -> str:
@@ -586,7 +591,7 @@ def normalize_criterion(text: str | None) -> str:
     """
     return re.sub(r'\s+', ' ', (text or "")).strip()
 
-def extract_acceptance_criteria(text: str | None) -> list[str] | None:
+def extract_acceptance_criteria(text: str | None, plain_bullets: bool = False) -> list[str] | None:
     """Criteria under the first Acceptance heading, or None when the document has no such section.
 
     Continuation-aware: a hard-wrapped criterion continues on an INDENTED follow-on line. The
@@ -596,6 +601,14 @@ def extract_acceptance_criteria(text: str | None) -> list[str] | None:
 
     Returns None (no section) rather than [] (section present but empty) — the caller treats those
     two cases differently, and collapsing them would let a doc dodge the gate by emptying its list.
+
+    GH-1646: `plain_bullets=True` (the ISSUE side only) also reads plain `- ` / `* ` bullets, the
+    common GitHub style, so a verbatim checkbox copy of a plain-bullet issue list matches. A plain
+    bullet indented deeper than the current criterion is not classified and takes the continuation
+    path below, exactly as the capture side treats the same copied line. Fenced code is tracked only
+    so a literal example line is never read as a plain criterion; boundaries, checkboxes and
+    continuations behave as before. The capture side keeps the checkbox-only grammar that
+    `collect_inline_checklist` inlines into the packet.
     """
     if not text:
         return None
@@ -613,15 +626,39 @@ def extract_acceptance_criteria(text: str | None) -> list[str] | None:
         return None
     assert level is not None
 
+    # Fence markers are judged on whole Markdown lines (CR/LF only). `splitlines()` also breaks on
+    # U+0085/U+2028/U+2029, which Markdown keeps as line content; the shared line stream above is
+    # left as is (#1666), and a fragment that does not start a Markdown line is never a marker.
+    marker_lines: list[str | None] = []
+    if plain_bullets:
+        physical, at_start = iter(re.split(r'\r\n|\r|\n', text)), True
+        for frag in text.splitlines(keepends=True):
+            marker_lines.append(next(physical) if at_start else None)
+            at_start = frag.endswith(('\r', '\n'))
+
     criteria: list[str] = []
     indents: list[int] = []
-    for line in lines[start:]:
+    fence: str | None = None
+    for idx, line in enumerate(lines[start:], start):
         heading = ANY_HEADING_RE.match(line)
         if heading and len(heading.group(1)) <= level:
             break
         if ACC_HR_RE.match(line):
             break
+        in_fence = fence is not None
+        if plain_bullets:
+            ml = marker_lines[idx]
+            f = ACC_FENCE_RE.match(ml) if ml is not None else None
+            if fence is None and f:
+                fence, in_fence = f.group(1), True
+            elif fence is not None and f and ml is not None and f.group(1)[0] == fence[0] \
+                    and len(f.group(1)) >= len(fence) and not ml[f.end():].strip(' \t'):
+                fence = None
         bullet = ACC_BULLET_RE.match(line)
+        if not bullet and plain_bullets and not in_fence:
+            plain = ACC_PLAIN_BULLET_RE.match(line)
+            if plain and (not criteria or len(plain.group(1).expandtabs(4)) <= indents[-1]):
+                bullet = plain
         if bullet:
             criteria.append(bullet.group(2).strip())
             indents.append(len(bullet.group(1).expandtabs(4)))
@@ -982,7 +1019,7 @@ def check_acceptance_fidelity(
                          "offline) — acceptance fidelity NOT verified")
         return res
 
-    issue_acc = extract_acceptance_criteria(body)
+    issue_acc = extract_acceptance_criteria(body, plain_bullets=True)  # GH-1646
     doc_acc = extract_acceptance_criteria(doc_text)
 
     if issue_acc is None:

@@ -900,6 +900,128 @@ case "$QS" in
   *) fail "G8 unexpected row state: $QS" ;;
 esac
 
+# G9–G13 (GH-1664, OL-10): a packet whose cited evidence changed since its recorded
+# `prepared_commit` is refused BEFORE the lease (row parked, attempt_count unchanged, no execution);
+# a Conveyor refresh (new prepared_commit) re-admits the SAME row via `jog retry` + `jog run`.
+# `main` is the contract's target.ref here: each case moves it and restores it to INIT_HEAD_R
+# (cleanup_root_fixture resets development only).
+G9_CAP="$FR/PROJECT/2-WORKING/$CAPTURE_DOC_NAME"
+set_contract() {  # <capture> <prepared_commit> [<target.ref>] [<artifact string>] — Conveyor's stamp
+  python3 - "$@" <<'PY'
+import json, re, sys
+p, sha = sys.argv[1], sys.argv[2]
+ref = sys.argv[3] if len(sys.argv) > 3 else "main"
+art = sys.argv[4] if len(sys.argv) > 4 else "src/feature.js"
+s = open(p).read()
+head, rest = s.split("```json\n", 1)
+body, tail = rest.split("```", 1)
+c = json.loads(body)
+c["target"]["ref"], c["prepared_commit"], c["artifacts"] = ref, sha, [art]
+open(p, "w").write(head + "```json\n" + json.dumps(c, indent=2) + "\n```" + tail)
+PY
+}
+commit_fr() { git -C "$FR" add -A >/dev/null 2>&1; git -C "$FR" commit -qm "$1" >/dev/null 2>&1; }
+no_exec() {  # no execution ledger entry for the row (no lease, no preflight, no worker)
+  [ ! -f "$FR/.tick/jog/$GID/state.json" ] \
+    || python3 -c 'import json,sys; sys.exit(0 if not json.load(open(sys.argv[1])).get("executions") else 1)' "$FR/.tick/jog/$GID/state.json"
+}
+jog_run_direct() {  # jog run against the CURRENT execution clone (no re-clone)
+  ( cd "$FR" && PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" \
+    python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" \
+      --executor marathon --builder codex --reviewer agy < /dev/null 2>&1 )
+}
+
+# G9: prepared at A (artifact listed padded, as Preflight strips it), cited artifact changed at B,
+# one prior spent attempt seeded → refused before the lease with the count still 1.
+cleanup_root_fixture
+GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+sqlite3 "$FR/releases.db" "UPDATE jog_queue SET attempt_count = 1 WHERE gh_number = 901;"
+G9_A="$(git -C "$FR" rev-parse HEAD)"
+set_contract "$G9_CAP" "$G9_A" main " src/feature.js "
+commit_fr "conveyor: prepared at A"
+printf 'module.exports = 3\n' > "$FR/src/feature.js"; commit_fr "cited artifact changed at B"
+git -C "$FR" branch -f main HEAD
+G9_OUT="$(jog_run_root --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+QS="$(queue_status "$FR")"
+case "$QS" in
+  "parked|stale-evidence: cited paths changed since prepared_commit ${G9_A:0:12}"*"src/feature.js"*"|1")
+    pass "G9 stale cited evidence refused before the lease (names src/feature.js, attempt_count stays 1)" ;;
+  *) fail "G9 unexpected row state: $QS" ;;
+esac
+has "$G9_OUT" "GH-901 not started: stale-evidence" && pass "G9 refusal printed before any dispatch" || fail "G9 output: $G9_OUT"
+no_exec && pass "G9 no execution recorded (no lease, no preflight, no worker)" || fail "G9 an execution was recorded"
+python3 "$FR/utils/py/releases_app.py" --root "$FR" jog retry 901 >/dev/null 2>&1
+has "$(queue_status "$FR")" "pending||1" && pass "G9 jog retry keeps the same row's spent attempt (1)" || fail "G9 retry row: $(queue_status "$FR")"
+
+# G10: Conveyor refresh at B (prepared_commit := B) plus a later unrelated commit → the SAME row
+# admits and dispatches through the real chain (G4's approving stubs); attempt 1 → 2.
+G9_B="$(git -C "$FR" rev-parse HEAD)"
+set_contract "$G9_CAP" "$G9_B"
+commit_fr "conveyor: refreshed at B"
+printf 'unrelated\n' > "$FR/unrelated-note.txt"; commit_fr "unrelated change"
+git -C "$FR" branch -f main HEAD
+prepare_execution_target "$FR" "$FT"
+G10_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
+  env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-jog-lane-g10" \
+  PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
+  python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" \
+    --executor marathon --builder codex --reviewer agy < /dev/null 2>&1)"; rc=$?
+[ "$(sqlite3 "$FR/releases.db" "SELECT COUNT(*) || '|' || MIN(global_id) FROM jog_queue WHERE gh_number = 901;")" = "1|$GID" ] \
+  && pass "G10 one jog_queue row for GH-901 with the same global_id (no jog add)" || fail "G10 row identity changed"
+QS="$(queue_status "$FR")"
+case "$QS" in
+  "parked|awaiting-landing (PR #42"*"|2") pass "G10 refreshed packet admitted on the same row and dispatched (attempt 1 → 2)" ;;
+  *) fail "G10 refreshed packet not dispatched: $QS ($G10_OUT)" ;;
+esac
+jassert "$FR/.tick/jog/$GID/state.json" 'len(d["executions"])==1 and d["executions"][0]["outcome"]=="approved"' "G10 exactly one approved execution after refresh"
+grep -q 'module.exports = 2' "$FT/src/feature.js" && pass "G10 stub builder ran on the refreshed packet" || fail "G10 artifact not built"
+git -C "$FR" branch -f main "$INIT_HEAD_R"
+
+# G11: a recorded prepared_commit that cannot be checked refuses (fail-closed), never a pass.
+# G11–G13 start from a clean fixture with no seeded attempt: the unchanged count is 0.
+cleanup_root_fixture
+set_contract "$G9_CAP" "0123456789abcdef0123456789abcdef01234567"
+commit_fr "conveyor: unknown prepared commit"
+git -C "$FR" branch -f main HEAD
+G11_OUT="$(jog_run_root --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+case "$(queue_status "$FR")" in
+  "parked|stale-check-unavailable: prepared_commit 0123456789ab not found"*"|0")
+    pass "G11 unresolvable prepared_commit refuses before the lease" ;;
+  *) fail "G11 unexpected row state: $(queue_status "$FR") ($G11_OUT)" ;;
+esac
+no_exec && pass "G11 no execution recorded" || fail "G11 an execution was recorded"
+git -C "$FR" branch -f main "$INIT_HEAD_R"
+
+# G12/G13: target.ref is the tracking ref origin/main. The execution clone is provisioned at A;
+# the cited change lands at B on the fixture remote only (no re-clone). G13 first: a failed fetch
+# must refuse rather than compare a cached A. G12: with the remote restored, the check fetches as
+# Preflight does, sees origin/main at B and refuses.
+cleanup_root_fixture
+G12_A="$(git -C "$FR" rev-parse HEAD)"
+set_contract "$G9_CAP" "$G12_A" origin/main
+commit_fr "conveyor: prepared at A (tracking ref)"
+git -C "$FR" branch -f main HEAD
+prepare_execution_target "$FR" "$FT"
+printf 'module.exports = 4\n' > "$FR/src/feature.js"; commit_fr "cited artifact changed at B (remote only)"
+git -C "$FR" branch -f main HEAD
+git -C "$FT" config gh280.fixtureRemote "$WORK/no-such-fixture-remote"
+G13_OUT="$(jog_run_direct)"
+case "$(queue_status "$FR")" in
+  "parked|stale-check-unavailable: fetch failed"*"|0") pass "G13 failed fetch refuses before the lease (no cached-ref pass)" ;;
+  *) fail "G13 unexpected row state: $(queue_status "$FR") ($G13_OUT)" ;;
+esac
+no_exec && pass "G13 no execution recorded" || fail "G13 an execution was recorded"
+git -C "$FT" config gh280.fixtureRemote "$FR"
+python3 "$FR/utils/py/releases_app.py" --root "$FR" jog retry 901 >/dev/null 2>&1
+G12_OUT="$(jog_run_direct)"
+case "$(queue_status "$FR")" in
+  "parked|stale-evidence: cited paths changed since prepared_commit ${G12_A:0:12} (target.ref origin/main"*"src/feature.js"*"|0")
+    pass "G12 fetched tracking ref at B refuses (same revision Preflight evaluates)" ;;
+  *) fail "G12 unexpected row state: $(queue_status "$FR") ($G12_OUT)" ;;
+esac
+no_exec && pass "G12 no execution recorded" || fail "G12 an execution was recorded"
+git -C "$FR" branch -f main "$INIT_HEAD_R"
+
 # ═══ H. Phase 2 vendored: jog run --executor marathon from a foreign cwd ══════════════════════
 H_CWD="$WORK/foreign-cwd"; mkdir -p "$H_CWD"
 GIDV="$(sqlite3 "$FV/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"

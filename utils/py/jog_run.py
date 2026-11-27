@@ -1141,8 +1141,9 @@ def _jog_retry_build_locked(root, gh_num, args):
     finally:
         conn.close()
 
-    held = hold_refusal(_execution_root(root, getattr(args, "target_root", None)), gh_num)
-    if held:  # GH-1476 (holds only): same refusal as `jog run`, before the lease and any dispatch
+    exec_root = _execution_root(root, getattr(args, "target_root", None))
+    held = hold_refusal(exec_root, gh_num) or stale_evidence_refusal(exec_root, gh_num)
+    if held:  # GH-1476 holds / GH-1664 stale evidence: same refusal as `jog run`, before the lease
         jog_set_status(root, gh_num, "parked", failure_reason=held)
         print(f"jog: retry-build GH-{gh_num} → parked — {held}")
         return 0
@@ -1829,6 +1830,23 @@ def _gh_issue_json(target, number, fields):
     return value if isinstance(value, dict) else None
 
 
+def _admission_captures(target, gh_num):
+    """Every capture this issue's admission could execute, sorted (shared by the pre-lease checks).
+
+    Preflight (`swarm_preflight.py` --gh-issue) takes the first GH-N-*.md in 2-WORKING, the
+    resolver may prefer another capture when several declare the issue: include every capture
+    either could execute (any inbox copy Jog would promote, and the canonical find_issue_doc pick),
+    so a refusal in any of them refuses. Raises on an unreadable tree; callers refuse.
+    """
+    from wave_reconcile import find_issue_doc_candidates
+    docs = set(find_issue_doc_candidates(target, gh_num, ("2-WORKING", "1-INBOX")))
+    docs |= set(glob.glob(os.path.join(target, "PROJECT", "2-WORKING", f"GH-{gh_num}-*.md")))
+    selected = find_issue_doc(target, gh_num)  # the canonical selector also reaches 3-COMPLETED/4-MISC
+    if selected:
+        docs.add(selected)
+    return sorted(docs)
+
+
 def hold_refusal(target, gh_num):
     """GH-1476 (holds only): why this task must not start, or None when no hold applies.
 
@@ -1853,19 +1871,9 @@ def hold_refusal(target, gh_num):
     if (not isinstance(issue.get("body"), str) or not isinstance(issue.get("labels"), list)
             or not all(isinstance(lab, dict) and isinstance(lab.get("name"), str) for lab in issue["labels"])):
         return "hold-check-unavailable: live issue response incomplete"
-    # Preflight (`swarm_preflight.py` --gh-issue) takes the first GH-N-*.md in 2-WORKING, the
-    # resolver may prefer another capture when several declare the issue: check every capture
-    # either could execute (any inbox copy Jog would promote, and the canonical find_issue_doc pick),
-    # so a hold in any of them refuses.
     captures = []
     try:
-        from wave_reconcile import find_issue_doc_candidates
-        docs = set(find_issue_doc_candidates(target, gh_num, ("2-WORKING", "1-INBOX")))
-        docs |= set(glob.glob(os.path.join(target, "PROJECT", "2-WORKING", f"GH-{gh_num}-*.md")))
-        selected = find_issue_doc(target, gh_num)  # the canonical selector also reaches 3-COMPLETED/4-MISC
-        if selected:
-            docs.add(selected)
-        for doc in sorted(docs):
+        for doc in _admission_captures(target, gh_num):
             text = Path(doc).read_text(encoding="utf-8")
             if text.startswith("---") and len(text.split("---", 2)) >= 3:
                 text = text.split("---", 2)[2]
@@ -1890,6 +1898,93 @@ def hold_refusal(target, gh_num):
                 return f"hold: capture {reason}"
     except Exception as exc:
         return f"hold-check-unavailable: hold rules failed ({type(exc).__name__})"
+    return None
+
+
+def stale_evidence_refusal(target, gh_num, deadline=None):
+    """GH-1664 (OL-10): why a prepared packet's cited evidence is stale, or None when it is not.
+
+    A capture's Swarm Preflight Contract may record `prepared_commit`: the full SHA of the
+    integration ref its recon and probes were grounded at (Conveyor writes it; a refresh rewrites
+    it). Cited evidence is the contract's stripped `artifacts` plus every non-command
+    `fix_probes[].path` (literal, as Preflight reads them). If any changed between `prepared_commit`
+    and `target.ref` — resolved in `target` after the same fetch Preflight runs — admission refuses
+    and names the paths. Every capture `_admission_captures` lists is checked. A capture recording no
+    `prepared_commit` makes no freshness claim and is skipped with a note (legacy captures admit as
+    before). A recorded one that cannot be checked refuses: "stale-check-unavailable: ...".
+    Git runs through `_jog_process`, so a supervised `deadline` bounds it the way it bounds Preflight
+    (ContractError at the deadline, before any lease).
+    """
+    try:
+        docs = _admission_captures(target, gh_num)
+    except Exception:
+        return "stale-check-unavailable: capture document unreadable"
+
+    def git(*args):
+        try:
+            return _jog_process(["git", "-C", target, *args], deadline=deadline,
+                                capture_output=True, text=True)
+        except (OSError, ValueError) as exc:  # e.g. a NUL byte in a contract-supplied ref or path
+            return subprocess.CompletedProcess(args, 125, "", f"{type(exc).__name__}: {exc}")
+
+    fetched = False
+    for doc in docs:
+        rel = os.path.relpath(doc, target)
+        try:
+            text = Path(doc).read_text(encoding="utf-8")
+        except OSError:
+            return f"stale-check-unavailable: capture {rel} unreadable"
+        # Same heading rule and line splitting as swarm_preflight.extract_contract (splitlines).
+        if not any(re.match(r'^#{1,6}\s+.*preflight\s+contract', line, re.IGNORECASE)
+                   for line in text.splitlines()):
+            continue  # no contract: Preflight refuses it after the lease, as before
+        try:
+            from swarm_preflight import extract_contract
+            contract = extract_contract(doc)
+        except (SystemExit, Exception):
+            continue  # malformed contract: Preflight's exit 3 parks it, as before
+        if not isinstance(contract, dict):
+            continue
+        if "prepared_commit" not in contract:
+            print(f"jog: GH-{gh_num} stale-evidence check skipped for {rel}: no prepared_commit recorded")
+            continue
+        prepared = contract["prepared_commit"]
+        if not isinstance(prepared, str) or not re.fullmatch(r"[0-9a-f]{40}", prepared):
+            return f"stale-check-unavailable: {rel} prepared_commit is not a full 40-hex commit SHA"
+        tgt = contract.get("target")
+        ref = tgt.get("ref") if isinstance(tgt, dict) else None
+        if not isinstance(ref, str) or not ref.strip():
+            return f"stale-check-unavailable: {rel} has no contract target.ref"
+        if not fetched:  # Preflight fetches before resolving target.ref; a failed fetch is its BLOCKED
+            if git("fetch", "--prune", "--quiet").returncode != 0:
+                return f"stale-check-unavailable: fetch failed in {target}"
+            fetched = True
+        ref_commit = git("rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}").stdout.strip()
+        if not ref_commit:
+            return f"stale-check-unavailable: target.ref {ref!r} does not resolve in {target}"
+        if git("rev-parse", "--verify", "--quiet", f"{prepared}^{{commit}}").returncode != 0:
+            return f"stale-check-unavailable: prepared_commit {prepared[:12]} not found in {target}"
+        paths = []
+        for a in contract.get("artifacts") or []:
+            a = a.strip() if isinstance(a, str) else ""
+            if a and a not in paths:
+                paths.append(a)
+        for probe in contract.get("fix_probes") or []:
+            p = probe.get("path") if isinstance(probe, dict) and probe.get("type") != "command" else None
+            if isinstance(p, str) and p and p not in paths:
+                paths.append(p)
+        if not paths:
+            continue
+        icase = git("config", "--bool", "core.ignorecase").stdout.strip() == "true"
+        magic = ":(literal,icase)" if icase else ":(literal)"
+        diff = git("diff", "--name-only", prepared, ref_commit, "--", *(magic + p for p in paths))
+        if diff.returncode != 0:
+            return f"stale-check-unavailable: git diff failed in {target}"
+        changed = sorted({line for line in diff.stdout.splitlines() if line.strip()})
+        if changed:
+            shown = ", ".join(changed[:10]) + (f" (+{len(changed) - 10} more)" if len(changed) > 10 else "")
+            return (f"stale-evidence: cited paths changed since prepared_commit {prepared[:12]} "
+                    f"(target.ref {ref} at {ref_commit[:12]}) in {rel}: {shown}")
     return None
 
 
@@ -3236,8 +3331,9 @@ def jog_run_main(args=None):
 
             # GH-1476 (holds only): a hold in the issue or capture, or unfinished work it comes
             # after, refuses BEFORE the lease (no attempt), promotion and any execution record.
-            # --simulate starts no worker, so it is not gated.
-            held = None if simulate else hold_refusal(target, gh_num)
+            # --simulate starts no worker, so it is not gated. GH-1664: so does stale cited evidence.
+            held = None if simulate else (hold_refusal(target, gh_num)
+                                          or stale_evidence_refusal(target, gh_num, deadline=deadline))
             if held:
                 print(f"jog: GH-{gh_num} not started: {held}; parking item.")
                 jog_set_status(root, gh_num, "parked", failure_reason=held)

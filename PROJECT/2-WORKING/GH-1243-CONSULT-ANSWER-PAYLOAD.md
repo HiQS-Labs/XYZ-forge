@@ -101,3 +101,7 @@ GitHub closed issue1243 through PR1406's closing reference at08:42:52Z. The pare
 ## Live acceptance — authorized todo-list follow-up
 
 The actual Codex + agy comparison passed on source089eac1b9: answer-only neutral payloads, separate diagnostics and no false citation warning for cited Codex output. Committed evidence, blind verdict and measured correction: `TESTS-RESULTS/2026-11-10+GH-1243/live-acceptance-215704/`. This later result supersedes the earlier pending-live statement above. No engine restart, production change or repair-cap reset occurred. The historical no-publication trial constraint remains historical; subsequent operator authorization covers source delivery and this evidence publication. Native issue remains open for owner closeout.
+
+## Merge evidence
+
+- PR #1668 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

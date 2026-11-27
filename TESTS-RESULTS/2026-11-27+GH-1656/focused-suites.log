@@ -1,0 +1,8 @@
+# Disposable verify clone of the task branch at c620786b72883c8dc337be48133601be7847ff14 (HEAD unchanged after the run, tree clean)
+0 :: bash test/gh436-merge-cleanup.sh :: Ran 240 tests in 411.205s  OK
+0 :: python3 test/gh534_phase_b_tests.py :: Ran 52 tests in 337.593s  OK
+0 :: python3 test/gh534_phase_c_tests.py :: Ran 111 tests in 537.480s  OK
+0 :: bash test/gh645-merge-cleanup-xyz-tools.sh :: Ran 8 tests in 0.066s  OK
+0 :: bash test/gh674-merge-cleanup-hosted-lookup.sh :: exit 0
+# Mutation control (Codex plan QA r4 [Should]): with the rung-only merged_head argument removed,
+# TestGh1656NonLedgerConflict.test_confirmed_rung_reconciles_candidate FAILS (rc 1); restored, it passes.

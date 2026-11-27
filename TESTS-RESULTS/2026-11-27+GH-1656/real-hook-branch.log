@@ -1,0 +1,17 @@
+githooks: INSTALLED — $TMPDIR/gh1656-real-hook.q9hgXi/landing/.git/hooks/pre-push is the gate stub (executable)
+  + gh217-gate-env-plan-outside.sh
+  + gh378-gate-requires-green-suite.sh
+  + gh491-gate-only-refire.sh
+  + lane-attempt-cap.sh
+  + gh379-canary-uses-validate.sh
+  + gh544-pre-push-gate.sh
+  + gh365-validate-telemetry.sh
+  + gh648-l4-285-revalidate.sh
+  + gh784-marathon-qa-gate.sh
+  + ci-route.sh
+  + gh509-gate-evidence.sh
+  + gh425-gate-provenance-pr.sh
+  + gh353-vendored-router-audit.sh
+  + gh205-gate-idempotency.sh
+pre-push: full gate GREEN in 1438s — pushing.
+shape=branch push_rc=0 base=95f2d61db7de7d5264e3449eda65fd0c2fc10791 candidate=743758e0fd077eafa6ea89565ded7e68467af7f0 origin=743758e0fd077eafa6ea89565ded7e68467af7f0 published=yes

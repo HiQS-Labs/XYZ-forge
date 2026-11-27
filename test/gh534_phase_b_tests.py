@@ -71,8 +71,26 @@ def mergeable(st, pr):
     git(probe, "fetch", "-q", "origin")
     r = git(probe, "merge-tree", "--write-tree", "origin/" + st["base"], "origin/" + pr["headRefName"])
     return "MERGEABLE" if r.returncode == 0 else ("CONFLICTING" if r.returncode == 1 else "UNKNOWN")
+def infer_merged(st, pr):
+    """GH-1656: GitHub marks an OPEN PR MERGED once its head is reachable from the base (a direct
+    push). Opt-in per test (`infer_merged`), from real origin ancestry only; `confirm_lag` N skips
+    the inference N times, `confirm_withheld` never infers, `confirm_oid` reports another commit."""
+    if not st.get("infer_merged") or pr["state"] != "OPEN" or st.get("confirm_withheld"):
+        return
+    probe = st["probe"]
+    head = git(probe, "rev-parse", "origin/" + pr["headRefName"]).stdout.strip()
+    if not head or git(probe, "merge-base", "--is-ancestor", head, "origin/" + st["base"]).returncode != 0:
+        return
+    if st.get("confirm_lag", 0) > 0:  # counts only reads made after the head reached the base
+        st["confirm_lag"] -= 1
+        save(st)
+        return
+    merges = git(probe, "rev-list", "--ancestry-path", "--merges", "--reverse", f"{head}..origin/{st['base']}").stdout.split()
+    pr.update(state="MERGED", headRefOid=head, mergeCommit=st.get("confirm_oid") or (merges[0] if merges else head))
+    save(st)
 def view(st, pr):
     git(st["probe"], "fetch", "-q", "origin")
+    infer_merged(st, pr)
     head = git(st["probe"], "rev-parse", "origin/" + pr["headRefName"]).stdout.strip() if pr["state"] == "OPEN" else pr.get("headRefOid")
     d = {"number": pr["number"], "state": pr["state"], "headRefName": pr["headRefName"], "baseRefName": st["base"],
          "isDraft": pr.get("isDraft", False), "labels": [{"name": l} for l in pr.get("labels", [])], "headRefOid": head or pr.get("headRefOid"),
@@ -142,6 +160,9 @@ if a[:2] == ["pr", "view"]:
 if a[:2] == ["pr", "merge"]:
     pr = st["prs"][a[2]]
     if st.get("merge_lies"): sys.exit(0)
+    if st.get("force_mergeable", {}).get(a[2]) == "CONFLICTING":  # GH-1656: GitHub refuses what it calls CONFLICTING
+        print(f"X Pull request example/repo#{a[2]} is not mergeable: the merge commit cannot be cleanly created.", file=sys.stderr)
+        sys.exit(1)
     w = tempfile.mkdtemp(prefix="ghstub-merge.")
     try:
         assert subprocess.run(["git", "clone", "-q", st["origin"], w]).returncode == 0
@@ -752,6 +773,284 @@ class TestE6Gate(LedgerFixture):
         self.assertEqual(rc, 4)  # GH-1064: landed, QA pending
         self.assertEqual(len(seen), 2)
         self.assertIn("'200'", seen[1], "PR 2's gate did not run against a tree containing PR 1's landing")
+
+
+class TestGh1656NonLedgerConflict(LedgerFixture):
+    """GH-1656: GitHub reads CONFLICTING but the conflict is not in the ledger. A clean local merge
+    lands through the gated local-merge rung (merge strategy); anything else stops BEFORE
+    `gh pr merge`. The stub refuses `pr merge` for a forced-CONFLICTING PR, as GitHub does, and infers
+    MERGED only from real origin ancestry after a direct push."""
+
+    def setUp(self):
+        super().setUp()
+        self.st["infer_merged"] = True
+        self.save()
+        sl = mock.patch.object(merge_cleanup, "_sleep", lambda s: None)
+        sl.start()
+        self.addCleanup(sl.stop)
+
+    def land(self, execute=True, extra=("--strategy", "merge")):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rc = self.run_main(execute=execute, extra=list(extra))
+        self.out = out.getvalue()
+        return rc
+
+    def conflicting_pr(self, number=1, name="feat/a", two_commits=False):
+        """A non-ledger PR cut from the current base (its simulation is up to date, no MERGE_HEAD)
+        that GitHub nevertheless reports CONFLICTING."""
+        def fn(r):
+            (r / "docs").mkdir(exist_ok=True)
+            if two_commits:
+                (r / "docs" / f"pr{number}-1.md").write_text("first\n")
+                commit_all(r, f"PR {number} first")
+            (r / "docs" / f"pr{number}.md").write_text(f"pr {number}\n")
+        head = self.branch(name, number, fn)
+        self.st.setdefault("force_mergeable", {})[str(number)] = "CONFLICTING"
+        self.save()
+        return head
+
+    def merge_calls(self, n):
+        return [c for c in self.load()["calls"] if c[:3] == ["pr", "merge", str(n)]]
+
+    def git_origin(self, *a):
+        _git(self.probe, "fetch", "-q", "origin")
+        return _git(self.probe, *a).stdout.strip()
+
+    def push_child_of_origin(self, tag):
+        w = self.clone(f"child-{tag}-{len(os.listdir(self.tmp))}")
+        _git(w, "checkout", "-q", "development")
+        (w / f"{tag}.txt").write_text(tag + "\n")
+        sha = commit_all(w, tag)
+        _git(w, "push", "-q", "origin", "development")
+        return sha
+
+    def issue_body(self):
+        bodies = list((self.load().get("issues") or {}).values())
+        return bodies[-1] if bodies else ""
+
+    # --- R1 / R4 -----------------------------------------------------------------------------------
+
+    def test_clean_conflicting_lands_through_rung(self):
+        base = self.origin_dev()
+        pin = self.conflicting_pr(1)
+        self.branch("feat/b", 2, lambda r: (r / "b.txt").write_text("b\n"))
+        rc = self.land()
+        self.assertEqual(rc, 4, self.err)  # landed, QA pending (GH-1064)
+        st = self.load()
+        self.assertEqual({p["state"] for p in st["prs"].values()}, {"MERGED"}, self.err)
+        self.assertEqual(self.merge_calls(1), [], "a CONFLICTING PR reached `gh pr merge`")
+        self.assertTrue(self.merge_calls(2))
+        mc = st["prs"]["1"]["mergeCommit"]
+        self.assertEqual(self.git_origin("rev-parse", f"{mc}^1"), base, "first parent is not the gated base")
+        self.assertEqual(self.git_origin("rev-parse", f"{mc}^2"), pin, "second parent is not the pin")
+        self.assertIn("local-merge rung", self.out)
+        self.assertIn("merged (local-merge rung)", self.issue_body())
+
+    def test_rung_label_survives_recovery(self):
+        import batch_record
+        rec = {"planned": [{"pos": 1, "pr": 1, "title": "t", "hard": [], "soft": {}}], "outcomes": {}}
+        rec["outcomes"]["1"] = {"status": "merged", "merge_oid": "c" * 40, "rung": "local-merge", "rung_oid": "c" * 40}
+        self.assertIn("merged (local-merge rung)", batch_record.script_block(rec))
+        rec["outcomes"]["1"]["merge_oid"] = "d" * 40
+        block = batch_record.script_block(rec)
+        self.assertNotIn("local-merge rung", block)
+
+    # --- publication safety ------------------------------------------------------------------------
+
+    def test_rejecting_hook_leaves_origin_unchanged(self):
+        self.conflicting_pr(1)
+        before = self.origin_dev()
+        real = merge_cleanup.prepare_landing_clone
+
+        def with_hook(*a, **k):
+            prep = real(*a, **k)
+            hook = Path(prep["clone"]) / ".git" / "hooks" / "pre-push"
+            hook.write_text('#!/bin/sh\n[ "${XYZ_SKIP_PREPUSH:-0}" != "0" ] && exit 0\n'
+                            'echo "rejected by the GH-1656 test hook" >&2\nexit 1\n')
+            hook.chmod(0o755)
+            return prep
+        with mock.patch.object(merge_cleanup, "prepare_landing_clone", with_hook), \
+             mock.patch.dict(os.environ, {"XYZ_SKIP_PREPUSH": "1"}):
+            rc = self.land()
+        self.assertEqual(rc, 2, self.err)
+        self.assertEqual(self.origin_dev(), before, "the push bypassed the hook")
+        self.assertEqual(self.load()["prs"]["1"]["state"], "OPEN")
+        self.assertIn("rejected by the GH-1656 test hook", self.err)
+
+    def test_moved_base_refused(self):
+        pin = self.conflicting_pr(1, two_commits=True)
+        first = self.git_origin("rev-parse", f"{pin}^1")  # reachable through the pinned parent
+        fired = []
+
+        def advance(clone, install=False):
+            if not install and not fired:
+                fired.append(1)
+                _git(self.probe, "push", "-q", "origin", f"{first}:refs/heads/development")
+            return ""
+        with mock.patch.object(merge_cleanup, "gate_unwired_reason", advance):
+            rc = self.land()
+        self.assertTrue(fired)
+        self.assertEqual(rc, 2, self.err)
+        self.assertEqual(self.origin_dev(), first, "the lease did not hold the gated base")
+        self.assertEqual(self.load()["prs"]["1"]["state"], "OPEN")
+
+    def test_pr_closed_or_retargeted_before_push_stops(self):
+        for n, field, value in ((1, "state", "CLOSED"), (3, "baseRefName", "main")):
+            with self.subTest(field=field):
+                self.load()
+                self.st["prs"].clear()
+                self.st.pop("force_mergeable", None)
+                self.save()
+                self.conflicting_pr(n, name=f"feat/{field}")
+                before = self.origin_dev()
+                real = merge_cleanup._final_eligibility_veto
+
+                def mutate(live, _f=field, _v=value):
+                    live[_f] = _v
+                    return real(live)
+                with mock.patch.object(merge_cleanup, "_final_eligibility_veto", mutate):
+                    rc = self.land()
+                self.assertEqual(rc, 2, self.err)
+                self.assertEqual(self.origin_dev(), before)
+                self.assertEqual(self.merge_calls(n), [])
+
+    def test_confirmation_lag_then_tail_once(self):
+        self.conflicting_pr(1)
+        self.st["confirm_lag"] = 2
+        self.save()
+        real = merge_cleanup.run_post_merge_reconcile
+        with mock.patch.object(merge_cleanup, "run_post_merge_reconcile", side_effect=real) as rec:
+            rc = self.land()
+        self.assertEqual(rc, 0, self.err)
+        self.assertEqual(self.load()["prs"]["1"]["state"], "MERGED")
+        self.assertEqual(self.load().get("confirm_lag"), 0, "confirmation never lagged")
+        self.assertEqual(rec.call_count, 1)
+
+    def test_confirmed_rung_reconciles_candidate(self):
+        self.conflicting_pr(1)
+        self.st["confirm_lag"] = 1
+        self.save()
+        pushed = []
+        seen = []
+
+        def sleep(_s):
+            if not pushed:
+                pushed.append(self.push_child_of_origin("descendant"))
+
+        def hosted(merged_head, repo, branch, pr_head=None):
+            seen.append((merged_head, pr_head))
+            return "fallback"
+        with mock.patch.object(merge_cleanup, "_sleep", sleep), \
+             mock.patch.object(merge_cleanup, "wait_for_hosted_reconcile", hosted), \
+             mock.patch.dict(os.environ, {merge_cleanup.USE_HOSTED_ENV: "1"}):
+            rc = self.land()
+        self.assertEqual(rc, 0, self.err)
+        self.assertTrue(pushed, "the descendant was never published during confirmation")
+        mc = self.load()["prs"]["1"]["mergeCommit"]
+        self.assertEqual(len(seen), 1, seen)
+        self.assertEqual(seen[0][0], mc, "hosted lookup did not receive the rung's candidate")
+        self.assertNotEqual(_git(self.primary, "rev-parse", "HEAD").stdout.strip(), mc)
+
+    def test_confirmation_withheld_stops_without_reconcile(self):
+        for a, b, knob, word in ((1, 2, {"confirm_withheld": True}, "has not confirmed"),
+                                 (3, 4, {"confirm_oid": "e" * 40}, "investigate")):
+            with self.subTest(knob=knob):
+                self.st = {k: v for k, v in self.load().items() if k not in ("confirm_withheld", "confirm_oid")}
+                self.st["prs"] = {}
+                self.st.pop("force_mergeable", None)
+                self.st.update(knob)
+                self.save()
+                tag = list(knob)[0]
+                pin = self.conflicting_pr(a, name=f"feat/a-{tag}")
+                self.branch(f"feat/b-{tag}", b, lambda r, t=tag: (r / f"b-{t}.txt").write_text("b\n"))
+                real = merge_cleanup.run_post_merge_reconcile
+                with mock.patch.object(merge_cleanup, "run_post_merge_reconcile", side_effect=real) as rec:
+                    rc = self.land()
+                self.assertEqual(rc, 2, self.err)
+                self.assertEqual(rec.call_count, 0)
+                self.assertEqual(self.git_origin("rev-parse", "origin/development^2"), pin, "the candidate was not published")
+                self.assertEqual(self.load()["prs"][str(b)]["state"], "OPEN", "the queue continued past an unconfirmed landing")
+                self.assertIn(word, self.err)
+                if "confirm_withheld" in knob:  # the printed recovery is a runnable, correctly quoted argv
+                    import shlex
+                    line = next(l for l in self.err.splitlines() if "--reconcile-pr" in l)
+                    argv = shlex.split(line.split("`")[1])
+                    self.assertEqual(Path(argv[argv.index("--primary") + 1]).resolve(), self.primary.resolve())
+                    self.assertEqual(argv[argv.index("--reconcile-pr") + 1], str(a))
+                    self.assertIn("--execute", argv)
+                    self.assertTrue(Path(argv[1]).is_file(), argv[1])
+                body = self.issue_body()
+                self.assertIn("stopped: ", body)
+                self.assertIn("local-merge rung published", body)
+                self.assertNotIn("merged (local-merge rung)", body)
+
+    def test_push_acknowledgement_lost(self):
+        for n, descendant in ((1, False), (3, True)):
+            with self.subTest(descendant=descendant):
+                self.load()
+                self.st["prs"].clear()
+                self.st.pop("force_mergeable", None)
+                self.save()
+                self.conflicting_pr(n, name=f"feat/ack-{descendant}")
+                real = merge_cleanup._net_git
+                pushes = []
+
+                def lossy(cwd, args, *a, **k):
+                    r = real(cwd, args, *a, **k)
+                    if args and args[0] == "push" and any(x.startswith("--force-with-lease") for x in args):
+                        pushes.append(r.returncode)
+                        if descendant:
+                            self.push_child_of_origin(f"after-ack-{len(pushes)}")
+                        return subprocess.CompletedProcess(args, 124, stdout="", stderr="timed out")
+                    return r
+                with mock.patch.object(merge_cleanup, "_net_git", lossy):
+                    rc = self.land()
+                self.assertEqual(len(pushes), 1, "the rung pushed more than once")
+                self.assertEqual(pushes[0], 0, "the real push itself failed")
+                self.assertEqual(rc, 0, self.err)
+                self.assertEqual(self.load()["prs"][str(n)]["state"], "MERGED")
+
+    # --- R2 ----------------------------------------------------------------------------------------
+
+    def test_clean_conflicting_under_squash_stops(self):
+        self.conflicting_pr(1)
+        before = self.origin_dev()
+        with mock.patch.object(merge_cleanup, "_protect_stacked_dependents") as stack:
+            rc = self.land(extra=())
+        self.assertEqual(rc, 2, self.err)
+        self.assertIn("non-ledger conflict; local merge clean", self.err)
+        self.assertEqual(self.merge_calls(1), [])
+        self.assertEqual(self.origin_dev(), before)
+        stack.assert_not_called()
+
+    def test_dirty_non_ledger_conflict_message(self):
+        self.branch("feat/a", 1, lambda r: (r / "README.md").write_text("from the PR\n"))
+        (self.seed / "README.md").write_text("from development\n")
+        commit_all(self.seed, "base edits README")
+        _git(self.seed, "push", "-q", "origin", "development")
+        rc = self.land()
+        self.assertEqual(rc, 3, self.err)  # the existing B1 handoff exit
+        self.assertIn("non-ledger conflict; local merge dirty: README.md", self.err)
+        self.assertEqual(self.merge_calls(1), [])
+
+    # --- R3 ----------------------------------------------------------------------------------------
+
+    def test_dry_run_conflicting_clean_previews_rung(self):
+        self.conflicting_pr(1)
+        rc = self.land(execute=False)
+        self.assertEqual(rc, 0, self.err)
+        self.assertNotIn("Would merge PR #1", self.out)
+        self.assertIn("local-merge rung", self.out)
+
+    def test_dry_run_unknown_never_previews_merge(self):
+        self.branch("feat/a", 1, lambda r: (r / "a.txt").write_text("a\n"))
+        self.st["force_mergeable"] = {"1": "UNKNOWN"}
+        self.save()
+        rc = self.land(execute=False)
+        self.assertEqual(rc, 2, self.err)
+        self.assertNotIn("Would merge PR #1", self.out)
+        self.assertIn("GitHub has not decided", self.err)
 
 
 class TestGh736AwaitMergeable(unittest.TestCase):

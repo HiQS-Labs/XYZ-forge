@@ -16,6 +16,12 @@ Per-field annotations:
   lanes        Optional artifact assignments for agent capabilities. Keep sensitive/shared paths
                under orchestrator_only; leave agy_safe empty when no special routing is needed.
 
+  prepared_commit
+               Optional (GH-1664). The full 40-hex SHA of the integration ref the preparation's recon
+               and probes were grounded at. When present, Jog refuses admission before the lease if
+               any cited path (artifacts, non-command fix_probes paths) changed between this commit and
+               target.ref; a Conveyor refresh rewrites it. Omit it and no staleness check applies.
+
   fix_probes   (CRITICAL FIELD) A list of probes that determine whether the fix is still required.
                POLARITY: Probes detect the **bug**, NOT the fix.
                - path_absent: The required file is missing (it should exist after the fix).

@@ -1,0 +1,10 @@
+GH-1664 consult C1 manual check (macOS, case-insensitive filesystem), 2026-11-27.
+Scratch repo: capture records prepared_commit=A; probe {"type":"grep_absent","path":"SRC/Feature.js"};
+src/feature.js changes at B; target.ref main; real utils/py/jog_run.stale_evidence_refusal called.
+Observed:
+core.ignorecase=true -> stale-evidence: cited paths changed since prepared_commit 8e99f8f19b8e (target.ref main at d14fa4d18bfd) in PROJECT/2-WORKING/GH-7-T.md: src/feature.js
+core.ignorecase=false -> None
+Verdict: PASS. With the clone's default core.ignorecase=true the :(literal,icase) pathspec sees the
+change Preflight would read through the case-insensitive filesystem; forcing case-sensitive mode
+reproduces the miss Codex reported (control). Not a suite case: CI's case-sensitive fixture cannot
+express it (GH-831: no new machinery).
