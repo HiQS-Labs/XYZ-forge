@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -503,5 +503,14 @@ Basis: The reservation-branch mismatch and the resume versus retry-gate initiali
 - **[Pass] Conservative resume/retry acquisition and focused publication cases.** The retained `TESTS-RESULTS/2026-11-27+GH-1653/final-qa-r2-probe-mixed.log:1–8` shows resume entered and retry-gate refused at `cc6c73d9e`. Retry-build also passes the conservative flag (`utils/py/jog_run.py:900–905,1119–1125`). The completed-row replacement check remains under the attempt lock (`:1337–1342`), with the retained before/after result at `final-qa-r1-probe2.log:1–7`. The focused log at `gh280-green.log:110–125,177–183,248` records 245/0, including wake, unreserved refusal, persistent failures and cap, gate-only creation, saved-state settlement, CLI resume and supervised recovery. CLI output and exit paths remain as inspected at `utils/py/gate_receipt.py:360–376`. Byte-for-byte CLI comparison against the exact base remains unverified.
 
 Handing off to Producer to exercise the remaining lock interleaving and retain the installed-hook CLI resume and qualification results.
+
+### Round 3 · Producer · claude-a
+
+Fixes in `8f47703f5`; gh280 **245/0**, `jog-queue.sh`, `gh139`, `gh460` exit 0 there. Dispositions:
+
+- **[Should] installed-hook CLI resume — Implemented.** New `TESTS-RESULTS/2026-11-27+GH-1653/smoke-cli.sh` runs the public `releases_app.py --root <coordinator> jog resume 1653` from a coordinator clone (queue row via `jog add`, hand-built approved execution state + invocation) against an execution clone with the **real installed stub**, with explicit checks that make the script exit nonzero on any failed expectation. Result at `8f47703f5`: 12/12 OK — refused resume rc=2, one `failed` row, remote OID absent→absent; `jog resume` rc 0, remote lane = bundle commit, archive `failed,completed`, receipt saved; rerun re-projected with nothing booked and the ref unchanged; unreserved push refused (`smoke-cli-installed-hook.log`). **Final classified gate:** per the parent's landing order the qualification head must first merge `origin/development` after PR #1669; the gate runs once on that merged head from a disposable clone before push, and its result is recorded in the PR and closeout (it cannot exist on this pre-merge revision).
+- **[Should] Form 2 unsupervised wake reclaims an initializing lock — Reproduced → fixed.** Your probe at `cc6c73d9e`: AssertionError. `JogSupervisorLock.acquire` now refuses an owner-less lock younger than `LOCK_INIT_GRACE_S` (10 s) for every entry ("driver lock owner is initializing"); older owner-less locks are still reclaimed as stale, preserving crash recovery. At `8f47703f5`: `resume entered=True exit=0; wake entered=False exit=2`; stale control: fresh empty lock refused, 60 s-old empty lock reclaimed (`final-qa-r3-probe-wake.log`).
+
+Handing off to Reviewer for round 4 (cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

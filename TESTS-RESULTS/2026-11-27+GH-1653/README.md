@@ -9,7 +9,7 @@ All runs in disposable full clones, never the primary.
 
 | Check | Command | Result |
 |---|---|---|
-| Focused suite, fix | `bash test/gh280-jog-marathon-adapter.sh` at `cc6c73d9e` (final QA r2 fixes) | **245 pass, 0 fail** (`gh280-green.log`); 245/0 at `4f83f0b45`, 242/0 at `e9127b18` |
+| Focused suite, fix | `bash test/gh280-jog-marathon-adapter.sh` at `8f47703f5` (final QA r3 fixes) | **245 pass, 0 fail** (`gh280-green.log`); `test/jog-queue.sh`, `gh139`, `gh460` exit 0; 245/0 at `cc6c73d9e`/`4f83f0b45`, 242/0 at `e9127b18` |
 | Red control, base runtime | same suite with `utils/py/jog_run.py` + `gate_receipt.py` from `52813e56f`, `TEST_SOFT_FAIL=1` | **225 pass, 17 fail** (`gh280-red-base-runtime.log`): wake (G4), gate-only retry (K2) and retry-build (K4) each refused with `gate-attempt: REFUSED — task qualification has no attempt reservation`, the Day 3 string |
 | Two-resume probe (plan QA R1-S5) | reviewer's script inserted temporarily after G4-retry's first failed push (`two-resume-probe-fragment.sh`) | `resume A exit=2 B exit=4 rows_while_A_held=2 total_rows=2` — B refused by the supervisor lock, exactly one added row (A's failure is the fixture's receipt-push sentinel) (`two-resume-probe.log`) |
 | Smoke, real installed hook (GH-1088) | `bash smoke.sh <task clone> <empty dir>` | main path: `published`, remote lane subject `jog: publish gh1653-smoke1 approved execution receipts`, one completed row archived; adjacent rerun: `receipt already published ...; no attempt booked`, rows unchanged; control: unreserved push refused by the installed stub (`smoke-installed-hook.log`) |
@@ -17,6 +17,9 @@ All runs in disposable full clones, never the primary.
 | Final QA r1 Form 2 probes (reviewer's scripts) | `final-qa-r1-probe1.sh` (resume lock initialization race), `final-qa-r1-probe2.sh` (completed-row archive vs replacement budget) | both **reproduced** at `e9127b18` (AssertionError) and **fixed** at `4f83f0b45`: probe1 `A entered=True exit=0; B entered=False exit=2` (B refused: owner initializing); probe2 replacement active row survives at the live path (`final-qa-r1-probe*.log`) |
 
 | Final QA r2 probes (reviewer's scripts) | `final-qa-r2-probe-branch.py` (saved-receipt settlement vs another branch's active row), `final-qa-r2-probe-mixed.sh` (resume initializing vs retry-gate) | both **reproduced** at `4f83f0b45` (AssertionError) and **fixed** at `cc6c73d9e`: `finish called=False; archive=False`; `resume entered=True exit=0; retry-gate entered=False exit=2` (`final-qa-r2-probe-*.log`) |
+
+| CLI `jog resume` smoke, real installed hook | `bash smoke-cli.sh <task clone> <empty dir>` at `8f47703f5` | **0 expectations failed (12 OK)**: refused resume rc=2, one `failed` row, remote OID `absent`→`absent`; `jog resume` rc 0, remote lane = bundle commit, subject `jog: publish gh1653-cli1 approved execution receipts`, archive `failed,completed`, receipt saved; rerun rc 0 re-projected, nothing booked, ref unchanged; unreserved push refused (`smoke-cli-installed-hook.log`) |
+| Final QA r3 probe (reviewer's script) + stale control | `final-qa-r3-probe-wake.sh` (resume initializing vs unsupervised wake) | **reproduced** at `cc6c73d9e`, **fixed** at `8f47703f5`: `resume entered=True exit=0; wake entered=False exit=2`; a fresh owner-less lock is refused, an owner-less lock aged 60s is still reclaimed (`final-qa-r3-probe-wake.log`) |
 
 ## What the cases assert (gh280)
 
