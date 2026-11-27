@@ -2,6 +2,8 @@ import ast, os, shutil, subprocess, tempfile, textwrap
 src = open("utils/py/relay_drive.py", encoding="utf-8").read()
 fn = [n for n in ast.walk(ast.parse(src)) if isinstance(n, ast.FunctionDef) and n.name == "commit_relay_file"]
 assert len(fn) == 1, "commit_relay_file not found exactly once"
+for _k in [k for k in os.environ if k.startswith("GIT_")]: del os.environ[_k]
+os.environ.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull)
 d = tempfile.mkdtemp(prefix="gh1423-probe-")
 try:
     g = lambda *a: subprocess.run(["git", "-C", d, *a], capture_output=True, text=True)

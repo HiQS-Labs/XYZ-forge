@@ -8,3 +8,6 @@ simulated-fix GH-1423 rc=0
 fake-fix GH-1590 rc=1 AssertionError: backticked local lead control
 fake-fix GH-1666 rc=1 AssertionError: ('0x85', ['Alpha beta', 'Gamma'], ['Alpha', 'Gamma'])
 fake-fix GH-1423 rc=1 AssertionError: fixture: the attest commit did not land
+# #1423 isolation check: same arms with a hostile inherited GIT_DIR=/nonexistent
+base GH-1423 GIT_DIR=/nonexistent rc=1 AssertionError: tracked relay file under a gitignored dir: commit landed but reported failure
+simulated-fix GH-1423 GIT_DIR=/nonexistent rc=0 
