@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -260,5 +260,18 @@ Basis: The three Round 1 behavioral findings are resolved. A stamped capture tha
 - Green suite on `7fc1f6ed0`: `suite/green-full-7fc1f6ed0.log` → 244 pass, 0 fail. The exact G12-only cut command has been added to provenance (your Pass note).
 
 Reviewer: round 3. Please include literal `VERDICT:` and `Basis:` lines.
+
+### Reviewer · Round 3 (codex)
+
+swept file: yes
+
+- **[Pass] Round 2 heading finding closed.** Jog and Preflight now split the text into the same lines before applying the same heading rule (`utils/py/jog_run.py:1764–1775`, `utils/py/swarm_preflight.py:96–104`). The retained before output shows U+2028 returning `calls=0 reason=None` and `AssertionError: None`; the after output names `utils/py/jog_run.py` for both separators (`TESTS-RESULTS/2026-11-27+GH-1664/final-qa-r2/before.out:1–5`, `final-qa-r2/after.out:1–2`, `provenance.jsonl:17–18`). I reran the Round 2 inline `python3 -B -` heading probe above (same seeded packet and mocked Git) against this worktree. Exit 0. Both `separator=0x000a` and `separator=0x2028` printed `stamp=aaaaaaaaaaaa calls=5` and returned `stale-evidence: … utils/py/jog_run.py`.
+- **[Pass] Acceptance 1–3.** Both callers park via the existing status writer before the lease (`utils/py/jog_run.py:1114–1125,3163–3179`). The retained G9 result names `src/feature.js` and witnesses attempt 1 unchanged, with zero executions. G10 witnesses one row with the same global ID, one approved execution and the artifact write, with the next dispatch taking the count from 1 to 2. The unrelated commit above the refreshed stamp exercises unchanged cited files, and G4 covers an unstamped dispatch (`test/gh280-jog-marathon-adapter.sh:758–801`, `TESTS-RESULTS/2026-11-27+GH-1664/suite/green-full-7fc1f6ed0.log:105–110,122–129`). The inbox replay leaves the capture intact and shows attempts 1→1→2 and worker calls 0→1 on the same row; the retry-build smoke also parks with attempts 1→1 and calls 0 (`replay/green-stale-evidence-run.log:4–10,35–45`, `replay/green-stale-evidence-retry-build.log:4–8`, paths relative to the evidence directory). The replay uses a worker stub that exits 9 after dispatch. G10 supplies the approved receipt.
+- **[Pass] Acceptance 4 and the base-delivery control.** The existing adapter suite rejects the unfixed implementation at G9 and G11 because it spends an attempt, and at G13 because it spends an attempt and records a Preflight refusal. The G12-only red cut spends attempt 1 and dispatches with the remote reachable, then exits 1; its exact invocation is now recorded. The base replay also fails with one worker call. The candidate passes G9–G13 and reports 244 pass, 0 fail, exit 0 at `7fc1f6ed0` (`test/gh280-jog-marathon-adapter.sh:727–847`, `TESTS-RESULTS/2026-11-27+GH-1664/provenance.jsonl:3,6–8,13,19–20`, `suite/red-base-g12-only-cut.log:122,162–167`, `suite/green-full-7fc1f6ed0.log:122–137,248–250`). The packet's `grep_absent` probe looks for the implementation marker, so the base cannot satisfy the already-delivered result via that probe (`PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md:289–305`, `utils/py/swarm_preflight.py:278–282,302–305`).
+- **[Pass] Admission scope and compatibility.** The extracted capture union retains the candidate scan, the working glob and the canonical pick. Holds still short-circuit first, simulation skips the checks, and an unstamped capture emits its notice and continues without a fetch on its behalf. A stamped capture uses the execution root, fetches once before ref resolution, refuses malformed or unknown stamps and failed fetches, strips artifacts, preserves literal probe spelling and skips empty pathspec diffs (`utils/py/jog_run.py:644–647,1114–1125,1647–1650,1664–1819,3163–3179`). The retained case test shows detection with `core.ignorecase=true` and the miss when forced false (`TESTS-RESULTS/2026-11-27+GH-1664/icase-manual-check.txt:1–10`). The Round 1 malformed-ref and deadline fixes remain present (`jog_run.py:1754–1759,1793–1797,2835–2850,3166–3167`; `final-qa-r1/probe2-after.out:1`). The recovery docs direct inbox captures through `jog retry` and `jog run` with a current execution clone, preserving the pre-existing retry-build inbox limitation (`skills/2-daily/jog/SKILL.md:168–176`, `skills/1-hourly/conveyor/SKILL.md:105–109`, `utils/py/jog_run.py:1120–1125,3187–3199`). The existing contract and queue own the stamp and parking. The existing suite owns G9–G13, and the persisted 70/55/50/65 remains consistent with the bounded change (`relay-automation/CONTRACT.example.md:19–23`, `utils/py/releases_app.py:4963–4974,5124–5138`, `test/gh280-jog-marathon-adapter.sh:727–847`, `releases.sql:1072`, `PROJECT/2-WORKING/GH-1664-STALE-EVIDENCE-ADMISSION.md:280–287`).
+- **[Pass] Evidence integrity.** The Round 1 inline `python3 -B -c` SHA-256 command above exited 0 and printed `20 nonempty evidence files match provenance SHA-256`, counting the source archive and repeated G12 log reference (`TESTS-RESULTS/2026-11-27+GH-1664/provenance.jsonl:1–20`).
+
+VERDICT: PASS
+Basis: All four acceptance criteria have retained evidence, and the fixes close the prior findings. The whole admission-helper and call-site sweep found no additional pre-existing defects. The nearest graph predates the seeded implementation and its trace call was denied, so the sweep uses worktree source. Approval covers final relay QA on the seeded artifact. The full push-hook gate remains a separate delivery step in the plan at lines 27 and 232–233. This turn used read-only probes and retained clone evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
