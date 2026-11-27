@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -174,5 +174,55 @@ No finding declined. Handing off to Reviewer (codex), round 2: confirm F1 and th
 
 ### ROUND 2 INSTRUCTIONS (read first)
 - Bold labels inside your block, no markdown heading lines. No new paraphrase. The questions of round 1 stand; focus on F1's closure, the sweep, and anything the revised diff introduces.
+
+### Reviewer · Round 2
+
+**Source-backed review**
+
+swept file: yes
+
+Read all six implementation/document files in full (7,278 lines), the seeded artifact, refreshed diff, receipts and the previous turns. This includes pre-existing code, not only changed hunks. One pre-existing execution defect is established below; no other required runtime fix is established by this sweep. No git, suite, executable fixture, network or external-service probe ran this turn.
+
+- [Pass] **F1 ordering/selection closure.** `toposort_prs.py:33-35,115-124` requests `isCrossRepository` and excludes fork heads from the parent map; `merge_cleanup.py:2515-2519` applies the same exclusion to preview heads. The retained candidate/mutant comparison is `TESTS-RESULTS/2026-11-27+GH-1662/runs/A16-fork-probe.json`, with its receipt at `provenance.jsonl:21`. A fresh import-only probe (environment `PYTHONDONTWRITEBYTECODE=1`, `TMPDIR="$PWD/.relay-scratch/tmp"`) using those same input dictionaries exited 0 and printed `fork order/deps: [(1, []), (2, [])]`, `fork listed 1: [1]`, `stack order/deps: [(1, []), (2, [1])]`, `stack listed 2: []`. Thus the observed sorter failure is fixed and genuine stacks retain their hard edge. Execution-side identity remains incomplete (F2).
+
+- [Should] **F2 — a fork landing retargets an unrelated upstream stack.** The acknowledged short-name match is an actual wrong-write decision, not merely a theoretical limit. `merge_cleanup.py:641-658` ignores the parent's repository identity; the execute path calls it at `:2548-2550` using the live `info`. That live reader does not request `isCrossRepository` (`:590-596`), even though discovery now has it. A fork PR #10 from `fork:feat/parent` into upstream `main` is unrelated to PR #12 from upstream `feat/child` into upstream `feat/parent`. Nevertheless, landing #10 schedules `gh pr edit 12 --base main`, changing #12's reviewed base before its real upstream parent lands. Unlisted PRs are exposed too because the helper receives all open PRs (`:3097-3099`). The same input now correctly has no stacked edge in the sorter, so preview/ordering and execution disagree.
+  **Observed input:** Form 1, the following narrow command ran here, exit **0**. It intercepts `_gh` in memory and performs no GitHub mutation or git call:
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PROBE'
+  import sys, subprocess
+  from pathlib import Path
+  sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+  import merge_cleanup as mc
+  calls = []
+  mc._gh = lambda args, *a, **kw: (calls.append(args) or subprocess.CompletedProcess(args, 0, '', ''))
+  fork = dict(number=10, headRefName='feat/parent', baseRefName='main', isCrossRepository=True)
+  child = dict(number=12, headRefName='feat/child', baseRefName='feat/parent', isCrossRepository=False)
+  mc._protect_stacked_dependents(fork, [fork, child], Path('.'), 'main')
+  print('fork retarget calls:', calls)
+  PROBE
+  ```
+  Decisive output: `merge-cleanup: PR #10: retargeted open stacked PR #12 from 'feat/parent' to 'main' before merging the base PR` and `fork retarget calls: [['pr', 'edit', '12', '--base', 'main']]`.
+  **Affected scope:** in either mode, a landed fork PR whose short head name equals another open PR's non-integration upstream base. That other PR need not be listed or depend on the fork. This is pre-existing code within the required whole-file review, and the fork support added by F1 makes the inconsistency especially visible.
+  **Falsifier:** for the concrete fork/child dictionaries above, capture **zero** edit calls; replacing the parent with an actual same-repository parent must still capture exactly `['pr', 'edit', '12', '--base', 'main']`. Exercise the real caller shape as well: `refresh_pr` currently omits the identity field, so a helper-only guard on `info.get('isCrossRepository')` would not fix production.
+  **Concrete fix:** carry repository identity through the live PR read and prevent cross-repository parents from retargeting upstream dependents, consistent with the new sorter/preview rule. Keep genuine upstream-stack retargeting. Retain the before/after negative and positive controls in the existing manual evidence; no new suite. Update D9's acknowledged exception and the A16 limit when resolved.
+
+- [Pass] **Prior runbook wording closed.** `STANDALONE.md:130` now says **stop and report** for a wrong live base, matching `merge_cleanup.py:2233-2234` and the runbook's stop conditions at `:146`. The same-repository stacked rule is present at `STANDALONE.md:92`.
+
+**Answers to the standing questions**
+
+1. **Acceptance.** A1-A15 have retained passing receipts, plus A16 (`provenance.jsonl:4-27`); they establish their stated fixture predicates, not arbitrary GitHub queues. Rechecked three retained outputs: `runs/A2-cand-standalone-clean-dry-py39.out:105-121` has four Would-merge lines and the child preview; `runs/A5-exec.out:89-120` has all four remote MERGED witnesses and clean/equal-primary confirmations; `runs/A10-overlay-guard.out:4` names `releases.sql` and refuses. A3 tests loss of the specific refusal diagnostic (`run_controls.py:210-220`); A2-mut removes the preview and requires the wrong-base stop (`:165-169`); A6 compares second-run readiness with the no-ignore mutant (`:338-346`); A7 retains changed ordering/dependency fields in `runs/A7-sorter-probe.json`. These are discriminating controls. None tests F2.
+2. **Declaration/pushes.** The explicit-flag/absent-installer conjunction remains at `merge_cleanup.py:1134-1140`; the marker refusal is at `:2887-2893`. Clone and primary push owners still check the gate (`:1204-1208`, `:1805-1811`). No ungated push path was established. Flag effects are roots, prerequisites/exclusion, forecast classification, landing clone preparation, B1 handoff, ledger-gate skip and reconcile skip. The finalization pdda block remains guarded by file presence (`:2625-2640`); in the declared overlay-free input it has no script to run. This is source/retained-evidence review, not a fresh clone qualification.
+3. **Forge defaults.** Empty kwargs preserve default calls at `merge_cleanup.py:815,852-856,2161-2162,2258,2419,2578-2581,3127-3128`; the four-positional stubs remain at `test/gh436-merge-cleanup.py:477` and `test/gh534_phase_a_tests.py:581`. Only standalone forecasts get a new key (`ledger_merge.py:980-981`). The supplied diff otherwise keeps Forge defaults apart from accepted D9/D10 and PRE-FLIGHT diagnostics. F2 is a pre-existing defect, not a claim of a new Forge regression.
+4. **Correctness/Python.** The helpers and all branches were swept. Handoff retains clones, records `failed` and feeds exit 3 (`merge_cleanup.py:2273-2282,2650-2668`); scan-root selection preserves the existing origin-filter mechanism (`scan_clones.py:86-97,1335-1359`). No new 3.10+ requirement was established; dual-runtime compile/dry-run receipts remain `provenance.jsonl:5-6`. Below-3.9 runtime remains unverified. No concurrency guarantee is claimed beyond D5's accepted duplicate exclude line.
+5. **Runbook.** Ordering, skips, polling, forecast/hubs, pin recheck, remote witnessing, fast-forward and stop conditions are covered at `STANDALONE.md:74-150`. Conflict pushes require a hook, and hand teardown is prohibited (`:141,154`). Its restricted authorized-queue retarget instruction at `:130` does not justify F2's unrelated upstream retarget. No additional required runbook fix was established.
+6. **SKILL/parity.** The mode section remains compact (`SKILL.md:49-55`), table row/option are present (`:648,656`), and the existing parity reader checks its required capability set rather than rejecting added rows (`test/gh534_phase_c_tests.py:584-605`). Phase C's retained receipt reports 111 passing at `cc2a0d83c` (`provenance.jsonl:24`); this turn did not execute it.
+7. **Scope/rating/duplicates.** The diff names only SKILL.md, STANDALONE.md, ledger_merge.py, merge_cleanup.py, scan_clones.py and toposort_prs.py (diff headers `:1,56,216,275,654,677`). No new suite/registry, overlay writer, ci-optimize edit or duplicate landing subsystem appears there. `40/40/60/35` remains reasonable for the feature's bounded value/effort; it is not readiness evidence. Existing owners are extended.
+8. **Honesty.** The seeded artifact's **Not verified** paragraph discloses real GitHub/checks/protection/merge queue/rate limits/squash-stack behavior, below-3.9 runtime and A15's shared authorship. The A16 receipt explicitly acknowledges the residual name match (`provenance.jsonl:21`); F2 now measures its wrong command. Retained A13 suite receipts at `:23-27` belong to `cc2a0d83c`; no full qualification or later gate is assumed by this review.
+
+VERDICT: FAIL
+Basis: The ordering fix and prior wording are closed, and the whole-file sweep is complete. F2 remains a concrete unrelated-PR retarget decision in the execute path; approval requires its disposition and discriminating evidence.
+
+Handing off to Producer (claude) — address F2 with live identity propagation and retain fork-negative/genuine-stack-positive manual evidence, then return for round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
