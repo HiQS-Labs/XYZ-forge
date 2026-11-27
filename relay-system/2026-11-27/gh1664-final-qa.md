@@ -274,4 +274,13 @@ swept file: yes
 VERDICT: PASS
 Basis: All four acceptance criteria have retained evidence, and the fixes close the prior findings. The whole admission-helper and call-site sweep found no additional pre-existing defects. The nearest graph predates the seeded implementation and its trace call was denied, so the sweep uses worktree source. Approval covers final relay QA on the seeded artifact. The full push-hook gate remains a separate delivery step in the plan at lines 27 and 232–233. This turn used read-only probes and retained clone evidence.
 
+
+### Attestation · relay-drive — 2026-11-27T20:06:59Z
+task: RELAY-gh1664-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: ea58a6a2adb3ffe1a37bd5a9d292a85ae8114bee
+added-range: 30717+5328
+added-sha256: 9d5342554ab0d79ec9087fcdf5851053bca98812a7413edc95196d539b575eaa
+gate-run: undeclared
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
