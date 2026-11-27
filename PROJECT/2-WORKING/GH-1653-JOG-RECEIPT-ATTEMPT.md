@@ -29,7 +29,7 @@ goal: "A Jog wake (and jog resume / gate-only retry) that publishes an approved 
 
 | What was just completed | What's next |
 |---|---|
-| Recon and plan written (this document). | Codex plan QA (cap 4 rounds, consult tie-break at the cap), then build, focused suite, smoke in a disposable clone. |
+| Plan QA ran 4 Codex rounds (cap, all findings dispositioned; consult tie-break single-model PROCEED). Built (`8164e2ec1`, `e9127b18`); gh280 242/0, base-runtime red control 17 fails, two-resume probe and installed-hook smoke green (`TESTS-RESULTS/2026-11-27+GH-1653/`). | Final Codex relay QA, then exact-commit qualification and ready PR. |
 
 ## Observed problem (base `52813e56f`)
 
