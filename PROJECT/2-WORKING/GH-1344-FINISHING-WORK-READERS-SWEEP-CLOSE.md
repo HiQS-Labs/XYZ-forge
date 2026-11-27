@@ -98,3 +98,7 @@ pri 80 / sev 60 / appeal 50 / effort 35 (rationale on #1344).
 ## Merge evidence
 
 - commit 9ea647da828f landed 2026-11-06 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1668 merged 2026-11-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -2,7 +2,7 @@
 gh_issue: 1646
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1646
 title: "swarm_preflight: plain-bullet issue Acceptance parses as empty, so a verbatim capture reads NOT-READY (exit 5)"
-status: Active
+status: Complete
 created: 2026-11-27
 updated: 2026-11-27
 owner: noelsaw1
