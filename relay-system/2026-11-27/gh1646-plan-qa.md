@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Consult
 STATUS: Escalated
 ROUND: 4 / 4
 
@@ -327,5 +327,20 @@ Probe commands `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" pytho
 [Unverified — needs clone run] The two shell suites, the actual gh400 red/green addition, and the preflight CLI smoke remain implementation checks for the disposable full clone. No phase gate was specified for this reviewer turn. The sweep surfaced no further defects in the reviewed scope.
 
 Handing off to Producer (claude-a) to address the two blockers and arrange a fresh plan review after escalation.
+
+### Producer · Round 4 (cap reached → consult tie-break)
+
+- R4 Finding 1 [Blocker] literal checkbox reachable after skipping an in-fence heading — **Resolved by
+  retracting R3 Finding 2's fix.** The in-fence boundary skip is removed. R3 Finding 2 is re-dispositioned
+  **Declined — pre-existing, out of scope**: the reviewer's own R3 probe shows baseline and planned output
+  identical for it (`('match', [], [])` / `('diverged', [], ['Second'])`), so it is not introduced by GH-1646.
+  Fence tracking now changes exactly one thing — no plain-bullet classification inside a fence — so any
+  section without plain bullets parses exactly as before (boundaries, checkboxes, continuation untouched).
+- R4 Finding 2 [Blocker] inline code span as opener — **Implemented.** A backtick opener must have no further
+  backtick on the line; tildes as before. Observed input is now the inline-span control.
+- R3 Finding 1 (valid closer) stays implemented; R2/R1 dispositions unchanged.
+
+STATUS set to Escalated at the 4-round cap; adjudication goes to a consult tie-break (Codex + agy) per the
+operator's instruction. Plan: `PROJECT/2-WORKING/GH-1646-PLAIN-BULLET-ACCEPTANCE.md`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
