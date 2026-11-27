@@ -1,5 +1,5 @@
 diff --git a/skills/2-daily/merge-cleanup/SKILL.md b/skills/2-daily/merge-cleanup/SKILL.md
-index c955f8c2e..1031d1a7f 100644
+index c955f8c2e..69755e54c 100644
 --- a/skills/2-daily/merge-cleanup/SKILL.md
 +++ b/skills/2-daily/merge-cleanup/SKILL.md
 @@ -44,6 +44,15 @@ When the operator speaks naturally:
@@ -32,7 +32,7 @@ index c955f8c2e..1031d1a7f 100644
  - Runs only after Phase 0 has reported. The PR sequence is advice until the primary can receive it.
  - Fetches open PRs via GitHub API (`gh pr list`). The discovery call is bounded in time and retried on transient network failures (GH-623): a FAILED discovery is an error, never an empty queue — after three transient retries it exits 2 before Phase 6, because rolling into teardown on a false "no PRs" would report success while the queue was silently skipped.
 -- Extracts explicit dependency references (`depends on #N`, `blocked by #N`, `after #N`) as **hard** edges.
-+- Extracts explicit dependency references (`depends on #N`, `blocked by #N`, `after #N`) as **hard** edges. A **stacked base** (a PR whose base branch is another open PR's head branch) is a hard edge too (GH-1662): it cannot land on the integration branch before its base PR does. A dry run previews such a child as `would be retargeted ... once that PR lands`; `--execute` retargets it when its base lands.
++- Extracts explicit dependency references (`depends on #N`, `blocked by #N`, `after #N`) as **hard** edges. A **stacked base** (a PR whose base branch is the head branch of another open PR in the same repository, never a fork's) is a hard edge too (GH-1662): it cannot land on the integration branch before its base PR does. A dry run previews such a child as `would be retargeted ... once that PR lands`; `--execute` retargets it when its base lands.
  - Analyzes touched file sets to detect unannotated file collisions and orders shared-file PRs chronologically as **soft** edges: they decide sequence only, never eligibility (GH-623).
  - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
  - **`--prs` allowlist (GH-1226).** The PRs a run may land are fixed when it starts, never discovered at merge time:
@@ -55,7 +55,7 @@ index c955f8c2e..1031d1a7f 100644
  
 diff --git a/skills/2-daily/merge-cleanup/STANDALONE.md b/skills/2-daily/merge-cleanup/STANDALONE.md
 new file mode 100644
-index 000000000..865305654
+index 000000000..aa91687cf
 --- /dev/null
 +++ b/skills/2-daily/merge-cleanup/STANDALONE.md
 @@ -0,0 +1,154 @@
@@ -129,7 +129,7 @@ index 000000000..865305654
 +### 1. Inventory
 +
 +```bash
-+gh pr list --state open --limit 1000 --json number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url > prs.json
++gh pr list --state open --limit 1000 --json number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url,isCrossRepository > prs.json
 +```
 +
 +A listing that fails is an error, not an empty queue. `files` can be cut off for a very large PR (the listing returns a bounded number of files): for any PR showing exactly 100, read `gh api repos/{owner}/{repo}/pulls/<N>/files --paginate --jq '.[].filename'`. Record, per PR: number, head SHA, base branch, draft, labels, checks, mergeable, created time, files, body.
@@ -140,7 +140,7 @@ index 000000000..865305654
 +|---|---|---|
 +| draft | `isDraft` | skipped; hard dependents wait |
 +| held | a label whose lowercase name contains `hold`, `do not merge`, `do-not-merge`, `blocked` or `wip`; or a title word `hold`, `wip`, `dnm`, `blocked`, `do not merge`, `no merge` | skipped; hard dependents wait |
-+| wrong base | `baseRefName` is neither `<B>` nor another open PR's head branch | stop: it does not land on the branch you verified |
++| wrong base | `baseRefName` is neither `<B>` nor the head branch of another open, same-repository PR | stop: it does not land on the branch you verified |
 +| conflicting | `mergeable` is `CONFLICTING` | not landed; hand off (step 8) |
 +| checks | `gh pr checks <N> --required --json name,bucket`: `fail`/`cancel` is failing, `pending` is pending, `pass`/`skipping` is ok, and `no required checks reported` is none | failing: not landed, dependents wait. pending: wait (bounded), then defer. unreadable: defer |
 +| mergeable unknown | `UNKNOWN` | re-read every 15 s up to 6 times; still unknown: stop, never guess |
@@ -150,7 +150,7 @@ index 000000000..865305654
 +A **hard edge** `A -> B` means B waits for A and is never attempted if A did not land:
 +
 +- the PR title or body says `depends on`, `blocked by`, `after`, `requires` or `prerequisite` followed by `#N` or a pull-request URL (case-insensitive), or `part of wave after #N`, and #N is an **open** PR in this inventory (a merged, closed or external number is ignored);
-+- **stacked base:** B's `baseRefName` equals A's `headRefName` for another open PR A. B cannot land on `<B>` until A has, because it targets A's branch.
++- **stacked base:** B's `baseRefName` equals A's `headRefName` for another open PR A **whose head branch is in this repository** (`isCrossRepository` is false: two forks' `main` are not one branch, and not this repository's `main`). B cannot land on `<B>` until A has, because it targets A's branch.
 +
 +### 4. File-overlap matrix (edges that decide sequence only)
 +
@@ -188,7 +188,7 @@ index 000000000..865305654
 +
 +For each PR in order, **re-read it live first** (`gh pr view <N> --json state,isDraft,mergeable,headRefOid,baseRefName,labels,mergeCommit,title`):
 +
-+1. Not `OPEN`, now a draft, now held, or `baseRefName != <B>`: skip it, record why, and treat it as not landed for its hard dependents. (A stacked child's base becomes `<B>` once the operator or you retarget it with `gh pr edit <N> --base <B>`; retarget a child **before** merging its base PR, never after, and only for PRs in the authorized queue.)
++1. Not `OPEN`, now a draft or now held: skip it, record why, and treat it as not landed for its hard dependents. If `baseRefName != <B>`: **stop and report** (a stacked child must already have been retargeted: do that with `gh pr edit <N> --base <B>` **before** merging its base PR, never after, and only for PRs in the authorized queue; a child whose base PR did not land is blocked, step 3).
 +2. Head moved from the SHA you recorded: do not merge it; re-do the forecast for the queue and re-confirm.
 +3. Re-simulate against the base **now** (`git fetch origin <B>`, then step 6's "alone" command at the new tip). Conflict: hand off (step 8) and continue with the PRs that do not depend on it.
 +4. Checks per step 2. Then `gh pr merge <N> --squash --match-head-commit <recorded sha>` (use `--merge` or `--rebase` if the project's policy file says so; never choose by guess).
@@ -273,7 +273,7 @@ index 11ff4e85c..388070afd 100644
 +        result["standalone"] = True
 +    return result
 diff --git a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
-index a81b9e285..1685f4cc8 100644
+index a81b9e285..7aaa11c87 100644
 --- a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
 +++ b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
 @@ -31,6 +31,7 @@ from scan_clones import (
@@ -558,7 +558,7 @@ index a81b9e285..1685f4cc8 100644
  
              if dry_run:
                  log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy}`")
-+                if pr.get("headRefName"):
++                if pr.get("headRefName") and not pr.get("isCrossRepository"):
 +                    landing_heads.add(pr["headRefName"])
                  continue
              live = refresh_pr_with_retry(p_num, primary_repo)
@@ -675,17 +675,29 @@ index 9c3ce3b89..c01af0249 100644
      """True only if child is STRICTLY inside parent (rejects child == parent)."""
      if child == parent:
 diff --git a/skills/2-daily/merge-cleanup/scripts/toposort_prs.py b/skills/2-daily/merge-cleanup/scripts/toposort_prs.py
-index 3ac02f3fe..0e2b2728d 100644
+index 3ac02f3fe..78cd20c8f 100644
 --- a/skills/2-daily/merge-cleanup/scripts/toposort_prs.py
 +++ b/skills/2-daily/merge-cleanup/scripts/toposort_prs.py
-@@ -107,6 +107,16 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
+@@ -32,7 +32,7 @@ def fetch_open_prs(repo_path: Optional[str] = None) -> List[Dict[str, Any]]:
+     cmd = [
+         os.environ.get("MERGE_CLEANUP_GH_BIN") or "gh", "pr", "list",
+         "--state", "open", "--limit", "1000",  # GH-1226: the default 30 would hide a listed --prs PR
+-        "--json", "number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
++        "--json", "number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url,isCrossRepository"
+     ]
+     cwd = repo_path or "."
+     try:
+@@ -107,6 +107,19 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
                  # Dependency is either already merged, closed, or external issue
                  pass
  
 +    # 1b. Stacked bases are HARD (GH-1662): a PR whose base branch is another open PR's head cannot land
 +    #     on the integration branch before that PR does (the landing loop stops on a base that is not the
 +    #     integration branch, and retargets a stacked child only when its base PR lands first).
-+    heads = {pr.get("headRefName"): pr["number"] for pr in prs if pr.get("headRefName")}
++    # A fork's head branch is not a branch of this repository (two forks' `main` are not one branch, and neither
++    # is the upstream `main`), so a cross-repository PR is never a stacked parent.
++    heads = {pr.get("headRefName"): pr["number"] for pr in prs
++             if pr.get("headRefName") and not pr.get("isCrossRepository")}
 +    for pr in prs:
 +        parent = heads.get(pr.get("baseRefName") or "")
 +        if parent is not None and parent != pr["number"]:

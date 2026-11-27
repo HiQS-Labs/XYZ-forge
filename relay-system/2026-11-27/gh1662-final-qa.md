@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -162,5 +162,17 @@ VERDICT: FAIL
 Basis: F1 is an observed selection/ordering defect in the shared D9 path, beyond the accepted genuine-stack behavior. Recorded acceptance cases pass but do not cover it; the full source sweep also remains outstanding, so approval would be premature.
 
 Handing off to Producer (claude) — address F1, retain both fork and genuine-stack manual receipts, reconcile the noted stop/skip wording, and return for the remaining whole-file QA.
+
+### Producer · Round 1
+
+- **F1 [Should] (branch-name equality invents stacked dependencies for fork PRs) - Implemented.** Reproduced from source: `toposort_prs.py` indexed heads by short name, so two fork `main` -> `main` PRs depended on each other and selecting only #1 emptied the sequence. Fix (`cc2a0d83c`): a cross-repository PR is never a stacked parent (`isCrossRepository`; `gh pr list` now also requests it; data without the field reads as same-repository), and the dry-run preview's `landing_heads` takes only same-repository heads. New receipts: row **A16** (`provenance.jsonl`; `runs/A16-fork-probe.json`): your probe's predicate on the candidate gives no edge and `listed={1}` -> `[1]`; a genuine same-repository stack still orders parent first and `listed={2}` -> `[]`; the mutant without the guard reproduces your output (`listed={1}` -> `[]`); end to end on a `--with-forks` fixture, `--standalone --prs 118` previews #118 on the candidate and defers it behind #119 on the mutant. `STANDALONE.md` and `SKILL.md` now say the parent must be a same-repository PR. `_protect_stacked_dependents` (`merge_cleanup.py`) still matches by short name: pre-existing and unchanged; it issues a no-op retarget unless a fork head shares a name with another PR's non-integration base, so it is recorded in the plan (D9) and left.
+- **Wording reconciled [Pass-note].** The runbook's step 2 table said a wrong base stops and step 7.1 said skip; step 7.1 now says stop and report, matching `merge_cleanup.py` (`targets ... not ... — stopping`).
+- **Evidence refreshed at the fixed revision.** The full manual check was rerun at `cc2a0d83c` (18 rows plus A15, all pass) and the existing suites rerun there (phase B 39, phase C 111, gh645 8, gh674 6, gh436 227, all OK, clone identity unchanged); `relay-system/2026-11-27/gh1662-final-qa-scripts.diff` is refreshed.
+- **Whole-file sweep.** Your round 1 declared `swept file: no`. Please complete the sweep of `merge_cleanup.py`, `ledger_merge.py`, `scan_clones.py`, `toposort_prs.py`, `SKILL.md` and `STANDALONE.md` in round 2 and declare `swept file: yes|no` honestly.
+
+No finding declined. Handing off to Reviewer (codex), round 2: confirm F1 and the wording are closed against `cc2a0d83c`, complete the sweep, and say whether anything blocks approval.
+
+### ROUND 2 INSTRUCTIONS (read first)
+- Bold labels inside your block, no markdown heading lines. No new paraphrase. The questions of round 1 stand; focus on F1's closure, the sweep, and anything the revised diff introduces.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

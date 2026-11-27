@@ -130,7 +130,8 @@ Manual check, `TESTS-RESULTS/2026-11-27+GH-1662/` (`provenance.jsonl`, `runs/`, 
 | A3, A2-mut, A6, A7 (mutants) | "never inferred" mutant loses the GH-1576 diagnostic; no-preview mutant stops the stacked child; no-`.tick`-ignore mutant reads NOT READY on run 2; no-sorter-edge mutant stops `--execute` at the child |
 | A5 | standalone `--execute` lands 101, 109, 106, 107 in order; primary equals origin and clean; origin has only fixture-author and stand-in commits (no tool push); sweep verdict recorded |
 | A8-A12 | prerequisites before the first clone; scan roots; overlay guard; forecast labels; pushes stay gated |
-| A13 | existing suites green: phase B 39, phase C 111, gh645 8, gh674 6, gh436 227 (disposable full clone, test venv first on PATH, identity unchanged) |
+| A16 | fork heads are not stacked parents (final QA R1 F1): no edge between two fork `main` PRs, a selected fork PR kept and previewed, a genuine stack still ordered and deferred; the mutant without the guard defers the fork PR behind the other |
+| A13 | existing suites green at `cc2a0d83c`: phase B 39, phase C 111, gh645 8, gh674 6, gh436 227 (disposable full clone, test venv first on PATH, identity unchanged) |
 | A15 | the runbook's commands and rules reproduce the script's order, 20 conflict pairs, alone-conflict and fold stop |
 
 **Not verified:** real GitHub (checks, protection, merge queue, rate limits, real squash effect on a stacked child); Python below 3.9 at runtime; A15 shares an author with the script and the runbook (finds drift, not independent review). One recorded correction: A1's first attempt (stack present, #106/#107 unlisted) differed in the order of two `not in --prs` log lines because D9 reorders the unlisted stacked pair; A1 now uses a `--no-stack` fixture, and that order change is the accepted D9 semantics.

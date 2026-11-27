@@ -86,7 +86,7 @@ merge-cleanup: PR #101: standalone — landing clone has no githooks/install.sh;
 merge-cleanup: PR #101: standalone — pre-merge ledger gate skipped (no ledger in this repository)
 merge-cleanup: PR #101: required checks: 1 required check(s) green
 merge-cleanup: Merging PR #101 via `gh pr merge 101 --squash --match-head-commit af133bb74cd97d39add8f2ee9585ae3fe8ee05ad`...
-merge-cleanup: ✅ PR #101 is MERGED as 89e5250576
+merge-cleanup: ✅ PR #101 is MERGED as d71145a416
 merge-cleanup: PR #101: standalone — post-merge reconcile (wave_reconcile, releases check, pdda, Jog) skipped
 merge-cleanup: PR #101: already published at origin/main; no push needed
 merge-cleanup: ✅ PR #101 committed; primary is clean at origin/main
