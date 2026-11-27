@@ -2,7 +2,7 @@
 gh_issue: 1664
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1664
 title: "GH-1664: Jog refuses a prepared packet whose cited evidence changed (OL-10 stale-evidence admission)"
-status: "Captured; plan QA at cap (4 rounds), consult tie-break pending"
+status: "In progress (plan QA cap + consult tie-break: GO with amendments)"
 created: 2026-11-27
 updated: 2026-11-27
 doc_type: bug
@@ -24,7 +24,7 @@ Parent: [#1476](https://github.com/HiQS-Labs/XYZ-forge/issues/1476) (admission p
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA rounds 1–4 (Codex) FAIL at the 4-round cap; every finding folded in (R1–R4). | Consult tie-break at the cap, then build in `utils/py/jog_run.py` beside `hold_refusal`. |
+| Plan QA rounds 1–4 (Codex) FAIL at the 4-round cap; every finding folded in (R1–R4). | Build (consult tie-break: agy GO, Codex NO-GO on case-insensitive paths; amendment folded in, orchestrator GO) in `utils/py/jog_run.py` beside `hold_refusal`. |
 
 ## Acceptance
 
@@ -109,7 +109,10 @@ plan was written. The operator gets a precise reason and the row survives untouc
    - **(R1 S2) The cited paths use the consumer's literal semantics.** They are `artifacts`
      (which includes the `artifacts_new` subset) plus every non-`command` `fix_probes[].path`,
      deduplicated. Each is passed as a `:(literal)<path>` pathspec, normalized the way Preflight
-     reads it. **(R2 B2)** Artifact strings are `.strip()`ped, as Preflight does before its
+     reads it. **(Consult C1)** When the execution clone has `core.ignorecase=true` (macOS default),
+     the pathspec is `:(literal,icase)<path>`, because Preflight opens probe paths through a
+     case-insensitive filesystem there. A mixed-case probe path would otherwise miss a change that
+     Preflight still reads. **(R2 B2)** Artifact strings are `.strip()`ped, as Preflight does before its
      existence check (`swarm_preflight.py:1586–1593`); blank results are dropped. Probe paths are
      kept literal and unstripped, as `eval_probes` reads them (`swarm_preflight.py:257–282`).
      Command probes cite no path field, so they are out
@@ -156,7 +159,7 @@ plan was written. The operator gets a precise reason and the row survives untouc
 
 ### Verification (existing suites only; no new suite or registry entry, GH-831)
 
-- **Suite proof (red then green):** `test/gh280-jog-marathon-adapter.sh` gets cases G9–G11 after G8,
+- **Suite proof (red then green):** `test/gh280-jog-marathon-adapter.sh` gets cases G9–G13 after G8,
   reusing its fixture, `prepare_execution_target`, `jog_run_root` and `queue_status`. AGENTS.md *No
   new tests* allows editing an existing suite. The issue's Acceptance requires the proof in an
   existing Jog suite, so this is a case inside one, not a new file.
@@ -228,6 +231,20 @@ plan was written. The operator gets a precise reason and the row survives untouc
   refresh.
 - **Final gate:** the classified route for a `utils/py` + `test/` change, i.e. the full gate through
   the push hook from a disposable qualification clone.
+
+### Consult tie-break at the cap (2026-11-27)
+
+Receipts: `TESTS-RESULTS/2026-11-27+GH-1664/consult/` (agy `RECOMMENDATION: GO`; Codex
+`RECOMMENDATION: NO-GO`). Orchestrator disposition (cap override, recorded):
+- Codex [Blocker] case-insensitive probe paths: **accepted**, folded in as C1 (`icase` when
+  `core.ignorecase=true`). It is witnessed by a manual macOS check in the smoke receipt, not a new
+  suite case: CI's case-sensitive fixture cannot express it, and GH-831 bars adding machinery for it.
+- Codex [Should] inbox recovery witness: **accepted**. The replay copy uses the archived control's
+  inbox-only capture setup, and recovery is `jog retry` + `jog run` (promotion through the run loop).
+- agy [Should] replay duplicates G9–G10: **declined**. The operator explicitly asked for a
+  disposable replay that doubles as Run A's labelled stale witness.
+- Nits (both): applied at implementation: key-presence test, `^{commit}` verification, one fetch per
+  call, no empty pathspec list, and the label G9–G13.
 
 ### Non-goals
 
