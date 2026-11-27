@@ -1235,12 +1235,16 @@ def land_via_local_merge(info: Dict[str, Any], clone: Path, primary_repo: Path, 
     if got != (base, pin, tree):
         return "refused", "", (f"the base-first merge is not what was gated (parents {got[0][:10]}/{got[1][:10]}, "
                                f"tree {got[2][:10]}; gated {base[:10]}/{pin[:10]}, tree {tree[:10]}) — nothing pushed")
+    # Publish from the local integration branch, as commit_and_push_phase5_writes does from the primary:
+    # the pre-push gate admits a commit on an administrative branch, never a detached task head.
+    if git("checkout", "--quiet", "-B", branch, cand).returncode or git("rev-parse", "HEAD").stdout.strip() != cand:
+        return "refused", "", f"could not put local {branch} at the candidate {cand[:10]} — nothing pushed"
     unwired = gate_unwired_reason(clone)
     if unwired:
         return "refused", "", f"push refused before pushing: {unwired}"
     env = {k: v for k, v in os.environ.items() if k != "XYZ_SKIP_PREPUSH"}  # the hook is the gate; never bypassed
-    push = _net_git(clone, ["push", f"--force-with-lease=refs/heads/{branch}:{base}", "origin", f"HEAD:refs/heads/{branch}"],
-                    timeout=PUSH_GATE_TIMEOUT_S, env=env)
+    push = _net_git(clone, ["push", f"--force-with-lease=refs/heads/{branch}:{base}", "origin",
+                            f"refs/heads/{branch}:refs/heads/{branch}"], timeout=PUSH_GATE_TIMEOUT_S, env=env)
     if push.returncode:
         # Rejected, or the acknowledgement was lost (rc 124). Read the destination before deciding.
         fetched = _net_git(clone, ["fetch", "--quiet", "origin", branch])
@@ -2523,7 +2527,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                                 "else — do not re-land")
                     else:
                         nxt = ("investigate before reconciling" if outcome == "mismatch" else
-                               f"once it reads MERGED with that merge commit and head, run --reconcile-pr {p_num}")
+                               f"once GitHub reads PR #{p_num} MERGED into {branch} at head {pinned[:10]} with merge "
+                               f"commit {cand[:10]}, run `merge_cleanup.py --primary {primary_repo} --integration-branch "
+                               f"{branch} --reconcile-pr {p_num} --execute`")
                         log_err(f"PR #{p_num}: {LOCAL_MERGE_RUNG} rung published {cand} to origin/{branch} "
                                 f"(pin {pinned}); {why} — {nxt}; do not re-land")
                     keep_workdir = True

@@ -56,17 +56,25 @@ try:
     mc = st["prs"]["1"].get("mergeCommit")
     print(f"\nPR #1 state={st['prs']['1']['state']} mergeCommit={mc}")
     print("pr merge calls for #1:", [c for c in st["calls"] if c[:3] == ["pr", "merge", "1"]])
-    if mc:
-        print("parents:", b._git(fx.probe, "rev-parse", f"{mc}^1", f"{mc}^2").stdout.split(), "expected:", [base, pin])
+    parents = b._git(fx.probe, "rev-parse", f"{mc}^1", f"{mc}^2").stdout.split() if mc else []
+    print("parents:", parents, "expected:", [base, pin])
+    # The gated tree is the plain merge of base and pin; the published commit must carry exactly it.
+    gated = b._git(fx.probe, "merge-tree", "--write-tree", base, pin).stdout.split()[0]
+    tree = b._git(fx.probe, "rev-parse", f"{mc}^{{tree}}").stdout.strip() if mc else ""
+    print("tree:", tree, "gated:", gated)
     print("origin/development:", fx.origin_dev())
     print("pre-push hook runs:", hooklog.read_text().splitlines() if hooklog.exists() else [])
+    hooks = hooklog.read_text().splitlines() if hooklog.exists() else []
+    before = fx.origin_dev()
     d2 = run("adjacent path, dry run re-run on the landed state", [])
     after = fx.origin_dev()
-    print("origin unchanged by the re-run:", after == fx.origin_dev())
+    print("origin before/after the re-run:", before, after)
     ok = (d1.returncode == 0 and "local-merge rung" in d1.stdout and "Would merge PR #1" not in d1.stdout
           and ex.returncode == 0 and st["prs"]["1"]["state"] == "MERGED"
           and not [c for c in st["calls"] if c[:3] == ["pr", "merge", "1"]]
-          and d2.returncode == 0 and "Would merge PR #1" not in d2.stdout)
+          and parents == [base, pin] and tree == gated
+          and hooks == ["pre-push ran XYZ_SKIP_PREPUSH=unset"]
+          and d2.returncode == 0 and "Would merge PR #1" not in d2.stdout and before == after)
     print("\nSMOKE VERDICT:", "PASS" if ok else "FAIL")
     sys.exit(0 if ok else 1)
 finally:

@@ -1,6 +1,6 @@
 # GH-1656 final QA — non-ledger GitHub conflict: local-merge rung or a precise stop
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: claude-a (Producer)
 
 ## Context
 
@@ -62,3 +62,71 @@ the relay worktree. Set `STATUS: Approved` only if it is ready to publish.
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Log
+
+### Reviewer (codex) — Round 1
+
+**Verdict: Changes requested.** The actual Forge hook rejects the detached candidate before it reaches the pre-push suites. The bare-origin fixture and the smoke both use substitute hooks, so their green results do not clear R1 for Forge.
+
+1. **[Blocker] Make the local merge candidate eligible for the existing Forge hook.**
+
+   **Observed input:** `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1122–1126` installs the landing clone's Forge hook. The rung detaches at the gated base, creates a new candidate there, then pushes `HEAD:refs/heads/development` without reserving a qualification attempt (`1223–1243`). The installed stub forwards the push's source ref, candidate SHA and destination to `gate_receipt.py admit` before it delegates to the actual gate (`githooks/install.sh:153–160,178–190`). The source is `HEAD` and the checkout has no current branch, so the administrative-branch exemption cannot apply. The detached integration-tip exemption only admits a SHA already named by one of the local or origin administrative refs. At pre-push time those refs still point at the base or another older commit, while detached HEAD is the newly created candidate (`utils/py/gate_receipt.py:92–129`). Admission exits 2 on refusal (`339,368–370`), leaving origin unchanged.
+
+   The following narrow read-only probe ran against the seeded admission function, supplying the detached-branch and admin-ref readbacks in memory, with no Git calls.
+
+   ```sh
+   python3 -B -c 'import sys; from unittest.mock import patch; sys.path.insert(0, "utils/py"); import gate_receipt as g; c="c"*40; git=lambda _,*a: "" if a[0]=="branch" else c if a[1]==c+"^{commit}" else "b"*40; exec("with patch.dict(g.os.environ, {}, clear=True), patch.object(g, \"attempt_git\", git):\n g.attempt_admission(\".\", c, \"HEAD\", destination_ref=\"refs/heads/development\")")'
+   ```
+
+   Exit 1. Decisive output: `ValueError: task qualification has no attempt reservation; use gate_receipt.py attempt-start` at `gate_receipt.py:129`.
+
+   **Affected scope:** R1 with the repository's installed hook and an ordinary operator environment. Use the existing administrative publication path in the disposable landing clone or another existing admission path that covers this exact candidate. Preserve the tree and parent checks, exact-base lease, one push and full hook enforcement. The fixture stubs wiring at `test/gh534_phase_b_tests.py:225–232`. Its rejecting-hook test uses a shell replacement (`861–879`), and `TESTS-RESULTS/2026-11-27+GH-1656/smoke.py:20–32` installs a hook that logs the environment then exits 0. Both prove their stated seams, while the rejection in Forge's admission code needs a real-hook witness.
+
+   **Falsifier:** In a disposable full clone, the rung with the installed Forge hook admits the exact candidate under a clean environment and reaches the normal gate. With that gate green, bare origin advances from the captured base to the exact candidate. The lease and rejecting-hook controls still hold.
+
+   **Clone probe:** Run the following from a disposable full clone of the candidate with the normal gate toolchain. The current implementation is expected to fail before the suites with the missing-reservation diagnostic and the final line showing the old base at origin. After the fix, replay the rung's actual publication shape using the real installer and retain the gate and ref evidence. [Unverified — needs clone run]
+
+   ```bash
+   set -eu
+   unset XYZ_SKIP_PREPUSH XYZ_ATTEMPT_CONTEXT MERGE_CLEANUP_RECORD GITHUB_ACTIONS
+   probe=$(mktemp -d "${TMPDIR:-/tmp}/gh1656-real-hook.XXXXXX")
+   test -d "$probe"
+   base=$(git rev-parse --verify HEAD)
+   git clone -q --bare --no-local "$PWD" "$probe/origin.git"
+   git -C "$probe/origin.git" update-ref refs/heads/development "$base"
+   git clone -q --branch development "$probe/origin.git" "$probe/landing"
+   cd "$probe/landing"
+   git config user.name "GH-1656 probe"
+   git config user.email gh1656-probe@example.invalid
+   bash githooks/install.sh
+   bash githooks/install.sh --check
+   git checkout -q --detach "$base"
+   git commit -q --allow-empty -m "GH-1656 probe pin"
+   pin=$(git rev-parse HEAD)
+   git checkout -q --detach "$base"
+   git merge --no-ff --no-edit "$pin"
+   candidate=$(git rev-parse HEAD)
+   rc=0
+   git push --force-with-lease="refs/heads/development:$base" origin HEAD:refs/heads/development >"$probe/push.log" 2>&1 || rc=$?
+   cat "$probe/push.log"
+   remote=$(git --git-dir="$probe/origin.git" rev-parse refs/heads/development)
+   printf 'push_rc=%s base=%s candidate=%s origin=%s\n' "$rc" "$base" "$candidate" "$remote"
+   ```
+
+2. **[Should] Give the operator an executable recovery instruction after confirmation times out.**
+
+   **Observed input:** `merge_cleanup.py:2525–2528` tells the operator to run `--reconcile-pr N` after checking the candidate and head. `2780–2784,2851` make execution opt-in and default the target to development. The recovery handler passes through dry-run mode and skips durable reconciliation writes and batch updates in that mode (`2986–3005`). The stop prints the target, but the instruction only asks the operator to check the merge commit and head.
+
+   **Affected scope:** The new unconfirmed-publication diagnostic and its final batch-row copy. Include `--execute` and the same `--integration-branch` in the recovery instruction. Require the operator to verify MERGED, candidate, pin and target before using it. Keep the mismatch outcome on investigation and the unknown outcome on publication verification.
+
+   **Falsifier:** The confirmation-withheld case gives an executable recovery command with the original target and all three identity checks. Following it after the exact response reconciles and updates the batch row once, including the original rung label.
+
+**Remaining review**
+
+- **R1/R2:** The landing simulation precedes the ledger gate (`merge_cleanup.py:1135–1141,2369–2379`). Final eligibility checks state, target and pin before routing final CONFLICTING to the rung under merge policy, or stopping before stacked-dependent edits under squash/rebase (`2466–2512`). The B1 handoff reports non-ledger dirty paths and skips the affected PR (`2282–2294`). The base receipt shows the clean case reaching the GitHub-style refusal at `red-base.log:77–86`, squash reaching the same refusal at `88–95`, and dirty handoff missing the new diagnostic at `119–126`.
+- **R3/R4:** The bounded initial poll and undecided stop precede the dry-run preview (`merge_cleanup.py:1971–1985,2196–2199,2454–2465`). The conflict preview was red on base (`red-base.log:128–135`), with persistent UNKNOWN an unchanged control (`test/gh534_phase_b_tests.py:1038–1045`). Exact rung identity goes through the existing touched outcome fields and renders only when `merge_oid == rung_oid` (`batch_record.py:123–142,291–312,380–389`). The isolated renderer was red on base (`red-base.log:185–193`) and the candidate two-PR case asserts the published issue body (`test/gh534_phase_b_tests.py:834–848`).
+- **Publication and stops:** The source handles optional MERGE_HEAD and compares both parents and the gated tree before the push. The push strips `XYZ_SKIP_PREPUSH` and leases the exact base. On nonzero it fetches the destination and interprets ancestry 0 as published, 1 as refused and other or missing evidence as unknown, with a single push call. Confirmation requires MERGED plus matching head, base and merge OID (`merge_cleanup.py:1215–1265`). Unknown, unconfirmed and mismatch set rung/candidate fields, log candidate/pin/target and return before the tail; the confirmed branch passes the candidate to hosted lookup. The finalizer moves the logged reason into the current row's stopped status and syncs the batch (`461–464,2032–2079,2513–2563`). The recovery command is appropriate after exact confirmation. The explicit mismatch/unknown diagnostics correctly prioritize investigation or readback.
+- **Test evidence:** The forced-CONFLICTING refusal and opt-in ancestry inference preserve existing false-success controls (`test/gh534_phase_b_tests.py:74–108,163,579–587,784–790`). Bare-origin reads and the lease/lost-ack controls exercise real pushes; the hosted test isolates the lookup seam and the receipt records its failing mutation. The fixture's R1 assertions check parents, not tree identity. The smoke only prints parents and hook hits and compares the adjacent-run ref with another sample taken after that run (`smoke.py:55–70`). For the hook witness above, assert the published parents and tree, require gate evidence, and capture the adjacent path's before/after refs across the run. The earlier base log contains fixture errors disclosed in its README, so its red evidence is limited to the decisive assertions above.
+- **Plan deviation:** Accept final UNKNOWN on the existing GitHub-managed path. The initial undecided stop remains, and this later route still carries the exact-head check and requires GitHub to report a matching MERGED result (`merge_cleanup.py:2196–2199,2502–2538,550–580`). Routing only final CONFLICTING to local publication preserves the server's decision on the ordinary path.
+- **Scope:** The explicit leased push serves the case the GitHub merge path refuses. It shares the existing hook, batch writer and reconciliation tail. The R1 admission repair should use the existing gate rather than add another writer or gate.
+
+**Evidence limits:** Verify-tier source review against the seeded worktree. The nearest indexed Forge clone was from generation `2026-11-26T04:31:47Z`, predating the rung. The graph trace call was denied, so the findings use direct source reads and the narrow admission probe above. The producer's focused receipts name `c620786b7`; no reviewer phase gate was specified or run, and real-hook publication awaits the clone probe.
