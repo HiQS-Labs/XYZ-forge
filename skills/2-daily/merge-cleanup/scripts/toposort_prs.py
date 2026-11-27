@@ -107,6 +107,16 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
                 # Dependency is either already merged, closed, or external issue
                 pass
 
+    # 1b. Stacked bases are HARD (GH-1662): a PR whose base branch is another open PR's head cannot land
+    #     on the integration branch before that PR does (the landing loop stops on a base that is not the
+    #     integration branch, and retargets a stacked child only when its base PR lands first).
+    heads = {pr.get("headRefName"): pr["number"] for pr in prs if pr.get("headRefName")}
+    for pr in prs:
+        parent = heads.get(pr.get("baseRefName") or "")
+        if parent is not None and parent != pr["number"]:
+            dep_graph[pr["number"]].add(parent)
+            hard_edges[pr["number"]].add(parent)
+
     # 2. File-collision edges are SOFT (GH-623): they decide SEQUENCE (land the older first so
     #    the newer lands on top of it), never ELIGIBILITY. Treating them as hard made one
     #    handoff cascade "NOT attempted" through every collision-adjacent PR — GH-623's S3 —

@@ -755,6 +755,8 @@ def _split_paths(paths: Set[str], allowed: Set[str]) -> Tuple[List[str], List[st
     return eligible, review
 
 
+STANDALONE_ASSUMPTION = ("standalone mode: there is no B1 (no ledger), so every conflicting path needs review and a "
+                         "conflicting PR is handed off, never repaired")
 PASSES_ASSUMPTION = ("passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit "
                      "moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair")
 STACKED_ASSUMPTION = ("stacked members {pairs}: their branches share commits that are not on the base. After the "
@@ -836,7 +838,8 @@ def _conflict_hubs(order: List[int], prs: Dict[str, Dict[str, Any]], pairs: List
 
 def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[int, str],
                      unknown: Optional[Dict[int, str]] = None, consumed: Optional[Dict[int, int]] = None,
-                     timeout: int = 120, hard_deps: Optional[Dict[int, Set[int]]] = None) -> Dict[str, Any]:
+                     timeout: int = 120, hard_deps: Optional[Dict[int, Set[int]]] = None,
+                     standalone: bool = False) -> Dict[str, Any]:
     """Conflict forecast for a queue, in `clone` (objects only; no working tree needed).
 
     `heads` maps every PR in `order` to its pinned head, which the caller already fetched and verified
@@ -850,10 +853,13 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
     GH-1470: when PRs conflict, the conflict hubs are named (`_conflict_hubs`; `hard_deps` maps a PR to
     the queue members it hard-depends on) and the fold is run again over the remaining members. If that
     set folds clean and the set-aside PRs are at most HUB_MAX_SHARE of the queue, `passes` holds the two
-    `--prs` lists of a clean-first landing; the recommendation itself stays `direct`."""
+    `--prs` lists of a clean-first landing; the recommendation itself stays `direct`.
+
+    GH-1662: `standalone` (a repository without the ledger) has no B1, so nothing is repairable: the
+    repair-path set is empty, every conflicting path needs review, and a conflict hands off."""
     unknown = dict(unknown or {})
     consumed = consumed or {}
-    allowed = ledger_repair_paths(clone)
+    allowed = set() if standalone else ledger_repair_paths(clone)
     prs: Dict[str, Dict[str, Any]] = {}
     for n in order:
         prs[str(n)] = {"head": heads.get(n), "repairs_consumed": int(consumed.get(n, 0)),
@@ -964,9 +970,13 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
     else:
         rec, reason = "direct", "no conflicts found"
     deferrals = sum(1 for n in order if (prs[str(n)]["alone"] or {}).get("conflict"))
-    return {"version": 1, "base_sha": base_sha, "order": list(order), "prs": prs, "pairs": pairs,
-            "pair_unknown": pair_unknown, "repair_deferrals": deferrals,
-            "hubs": hubs, "passes": passes, "recommendation": rec, "reason": reason,
-            "stacked": stacked,
-            "assumptions": list(FORECAST_ASSUMPTIONS) + ([PASSES_ASSUMPTION] if passes else [])
-            + ([STACKED_ASSUMPTION.format(pairs=", ".join(stacked))] if stacked else [])}
+    result = {"version": 1, "base_sha": base_sha, "order": list(order), "prs": prs, "pairs": pairs,
+              "pair_unknown": pair_unknown, "repair_deferrals": deferrals,
+              "hubs": hubs, "passes": passes, "recommendation": rec, "reason": reason,
+              "stacked": stacked,
+              "assumptions": list(FORECAST_ASSUMPTIONS) + ([STANDALONE_ASSUMPTION] if standalone else [])
+              + ([PASSES_ASSUMPTION] if passes else [])
+              + ([STACKED_ASSUMPTION.format(pairs=", ".join(stacked))] if stacked else [])}
+    if standalone:  # GH-1662: a key only a standalone forecast carries, so a Forge snapshot is byte-identical
+        result["standalone"] = True
+    return result
