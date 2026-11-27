@@ -1732,7 +1732,7 @@ def hold_refusal(target, gh_num):
     return None
 
 
-def stale_evidence_refusal(target, gh_num):
+def stale_evidence_refusal(target, gh_num, deadline=None):
     """GH-1664 (OL-10): why a prepared packet's cited evidence is stale, or None when it is not.
 
     A capture's Swarm Preflight Contract may record `prepared_commit`: the full SHA of the
@@ -1743,6 +1743,8 @@ def stale_evidence_refusal(target, gh_num):
     and names the paths. Every capture `_admission_captures` lists is checked. A capture recording no
     `prepared_commit` makes no freshness claim and is skipped with a note (legacy captures admit as
     before). A recorded one that cannot be checked refuses: "stale-check-unavailable: ...".
+    Git runs through `_jog_process`, so a supervised `deadline` bounds it the way it bounds Preflight
+    (ContractError at the deadline, before any lease).
     """
     try:
         docs = _admission_captures(target, gh_num)
@@ -1750,7 +1752,11 @@ def stale_evidence_refusal(target, gh_num):
         return "stale-check-unavailable: capture document unreadable"
 
     def git(*args):
-        return subprocess.run(["git", "-C", target, *args], capture_output=True, text=True)
+        try:
+            return _jog_process(["git", "-C", target, *args], deadline=deadline,
+                                capture_output=True, text=True)
+        except (OSError, ValueError) as exc:  # e.g. a NUL byte in a contract-supplied ref or path
+            return subprocess.CompletedProcess(args, 125, "", f"{type(exc).__name__}: {exc}")
 
     fetched = False
     for doc in docs:
@@ -1784,7 +1790,7 @@ def stale_evidence_refusal(target, gh_num):
             fetched = True
         ref_commit = git("rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}").stdout.strip()
         if not ref_commit:
-            return f"stale-check-unavailable: target.ref {ref} does not resolve in {target}"
+            return f"stale-check-unavailable: target.ref {ref!r} does not resolve in {target}"
         if git("rev-parse", "--verify", "--quiet", f"{prepared}^{{commit}}").returncode != 0:
             return f"stale-check-unavailable: prepared_commit {prepared[:12]} not found in {target}"
         paths = []
@@ -3156,7 +3162,7 @@ def jog_run_main(args=None):
             # after, refuses BEFORE the lease (no attempt), promotion and any execution record.
             # --simulate starts no worker, so it is not gated. GH-1664: so does stale cited evidence.
             held = None if simulate else (hold_refusal(target, gh_num)
-                                          or stale_evidence_refusal(target, gh_num))
+                                          or stale_evidence_refusal(target, gh_num, deadline=deadline))
             if held:
                 print(f"jog: GH-{gh_num} not started: {held}; parking item.")
                 jog_set_status(root, gh_num, "parked", failure_reason=held)
