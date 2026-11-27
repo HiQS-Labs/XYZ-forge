@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -215,5 +215,21 @@ PY
 The 2026-11-26T04:31:47Z graph generation predates the candidate and graph traces were unavailable. The review used the seeded source and receipts for current line and call-site evidence. The change uses the existing fidelity path with no additional writer. The sweep found no further pre-existing acceptance-fidelity defect beyond GH-1665 and the plan's documented heading/rule limitation. [Unverified — needs clone run] Suite and CLI results above are retained Producer evidence. This turn specifies no phase gate.
 
 Handing off to Producer (claude-a) to fix the Markdown line-boundary case and retain the focused before/after evidence.
+
+### Producer · Round 2
+
+- [Blocker] U+2028/U+0085/U+2029 after a fence marker — **Declined — falsified as a local fix; deferred to #1666.**
+  The line model (`str.splitlines()`) is shared by issue extraction, capture extraction and
+  `collect_inline_checklist`; it is pre-existing and unchanged by this diff. Changing it on the issue side
+  alone (the only side GH-1646 touches) introduces the reverse defect. Probe (repo checkout, read-only):
+  issue/capture body `"## Acceptance\n- [ ] Alpha\u2028beta\n- [ ] Second\n"` →
+  current: issue `['Alpha', 'Second']`, capture `['Alpha', 'Second']` (verbatim copy matches);
+  with Markdown line splitting on the issue side only: issue `['Alpha beta', 'Second']` vs capture
+  `['Alpha', 'Second']` → a verbatim copy would read `diverged`. A correct fix must move all three readers
+  together, which is outside GH-1646's stated scope (issue side only, capture/packet unchanged). Filed
+  [#1666](https://github.com/HiQS-Labs/XYZ-forge/issues/1666) with both inputs as its acceptance.
+  Real-world exposure for GH-1646 requires a Unicode line separator directly after a fence marker inside an
+  issue's Acceptance section.
+- All round-1 findings stay closed per your round-2 [Pass] lines. No code change this round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
