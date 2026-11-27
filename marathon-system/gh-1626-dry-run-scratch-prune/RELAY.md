@@ -1,5 +1,5 @@
 # Marathon Phase gh-1626-dry-run-scratch-prune
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1626-DRY-RUN-SCRATCH-PRUNE-TURN builder=codex reviewer=agy round-cap=2 -->
@@ -129,3 +129,23 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 
 unverified: `bash test/gh436-merge-cleanup.sh` — configured harness gate reserved for after the turn.
 unverified: `test/gh549-work-events.sh` runtime — relay scope forbids running the suite.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+gate run: no — harness gate
+
+**Assessment:**
+- **Implementation (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`):** Swept the entire file (lines 1–3328). The sole call site of `prune_retained_scratch(workdir)` (`:2545-2546`, inside `_land_prs_loop`'s `finally:` block) is now guarded with `if not dry_run:`. `prune_retained_scratch` (`:387-430`), `_remove_own_scratch` (`:333-351`), `_scratch_keep_reason` (`:305-330`), `_tool_shaped` (`:363-368`), `_other_merge_cleanup_running` (`:371-384`), and the current run's own clean-exit `workdir` cleanup (`:2535-2536`) are unchanged, matching all acceptance criteria and non-goals.
+- **Verification probes (non-mutating, isolated under `.relay-scratch/tmp` with `PYTHONDONTWRITEBYTECODE=1`):**
+  - `python3 TESTS-RESULTS/2026-11-27+GH-1626/readiness_probe.py` -> exit `0` (`dry-run: land_prs rc=0 refreshed=[9] old-folder-kept=True`; `execute: land_prs rc=0 refreshed=[9] old-folder-kept=False`; `FIXED: dry run keeps retained scratch; execute still prunes`).
+  - Inline both-prefixes and early-return probe covering `merge-cleanup-*` and `merge-check-*` on clean return (`rc=0`) and early error return (`rc=2`) -> exit `0` (`both_prefixes_dry: rc=0 clean_kept=True check_kept=True`; `both_prefixes_exec: rc=0 clean_kept=False check_kept=False`; `early_return_dry: rc=2 clean_kept=True check_kept=True`; `early_return_exec: rc=2 clean_kept=False check_kept=False`).
+  - `shasum -a 256 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` -> `cf6153e42e4fef101cb8689f83a8e6d52e66d85fd3c1e4b795801456284008f9`, matching `delivery.md:22`.
+  - Read-only AST/source-pin check matching `test/gh549-work-events.sh:622-655` -> `gh549_ast_order=OK`.
+- **Evidence (`TESTS-RESULTS/2026-11-27+GH-1626/delivery.md`):** Swept lines 1–24. Accurately records before/after runs, both prefixes, stubbed boundaries, file hashes, and pending harness gate.
+- **Covering suite (`test/gh549-work-events.sh`):** Swept lines 1–1515; properly left unchanged per non-goals, and its `merge_cleanup.py` AST/source assertions remain satisfied (`[Unverified — needs clone run]` for full suite runtime; `test/gh436-merge-cleanup.sh` reserved for the post-turn harness gate).
+- **Pre-existing defects:** None found in scope across the swept files (note `#1578` unpushed-commit pruning check is explicitly out of scope per the phase non-goals).
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
