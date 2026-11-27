@@ -1765,7 +1765,9 @@ def stale_evidence_refusal(target, gh_num, deadline=None):
             text = Path(doc).read_text(encoding="utf-8")
         except OSError:
             return f"stale-check-unavailable: capture {rel} unreadable"
-        if not re.search(r'^#{1,6}\s+.*preflight\s+contract', text, re.IGNORECASE | re.MULTILINE):
+        # Same heading rule and line splitting as swarm_preflight.extract_contract (splitlines).
+        if not any(re.match(r'^#{1,6}\s+.*preflight\s+contract', line, re.IGNORECASE)
+                   for line in text.splitlines()):
             continue  # no contract: Preflight refuses it after the lease, as before
         try:
             from swarm_preflight import extract_contract
