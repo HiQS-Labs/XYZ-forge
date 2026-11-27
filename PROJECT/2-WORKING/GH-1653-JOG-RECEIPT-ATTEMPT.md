@@ -78,18 +78,48 @@ Day 2 (#1610) needed the same. Recurrence: 3+ distinct lanes in the last 14 days
 2. **`utils/py/jog_run.py`** — `publish_jog_receipt(..., accounting_root=None)`: when `push`, book
    `manual_attempt_start(target, f"GH-{issue}-jog-publish", accounting_root or target)` on the lane branch before the
    evidence commit; exhausted → `ContractError("gate-attempt budget exhausted after N consumed rounds ...")`;
-   push with `env={**os.environ, XYZ_ATTEMPT_CONTEXT: context}`; on success `manual_attempt_finish(..., "completed")`;
-   on any failure `manual_attempt_finish(..., "failed")` (best effort, the row stays consumed either way) and re-raise.
-   Restore the caller's `XYZ_ATTEMPT_CONTEXT` afterwards. The three callers pass `accounting_root=root`.
-   The task key is fixed per issue, so retries and restarts draw on the same budget; nothing renames it.
-3. **`test/gh280-jog-marathon-adapter.sh`** (existing suite, focused case only) — G4's execution clone gets a fixture
-   pre-push hook that runs the real `gate_receipt.py admit --repo . --sha --ref --destination-ref` per pushed ref
-   (the same admission the installed stub runs), plus an opt-in fail sentinel. Assertions:
-   - G4: receipt bundle commit reaches the lane branch on the remote; the accounting root holds an archived completed `GH-901-jog-publish` row.
-   - G4-neg: a plain `git push` of a task branch from the same clone with no context is refused with the admission message.
-   - G4-retry: with the sentinel, run → parked "receipt not published", 1 failed row; `jog resume` (new process) → 2 failed rows; third resume → refused "budget exhausted after 2", lane ref unchanged; `LANE_MAX_ATTEMPTS=3 jog resume` → published, archive holds 3 rows.
-   Red control: the same G4 assertions run on base `52813e56f` fail with the observed admission refusal.
-4. Smoke (GH-1088): in a disposable full clone, main path = the gh280 G4 run with the hook; adjacent path = the resume after a failed push. Receipt under `TESTS-RESULTS/2026-11-27+GH-1653/`.
+   push with `env={**os.environ, XYZ_ATTEMPT_CONTEXT: json.dumps(context)}`; on success `manual_attempt_finish(..., "completed")`;
+   on a failed push `manual_attempt_finish(..., "failed")` (best effort, the row stays consumed either way) and re-raise.
+   A finish error *after* a successful push is reported as its own error (`receipt pushed; attempt finish failed: ...`),
+   never as a failed push. Save/restore the caller's exact `XYZ_ATTEMPT_CONTEXT` in a `finally` covering reserve,
+   push and finish. Accounting `ValueError`s map to `ContractError` (the existing Jog park/`jog: <msg>` surfaces).
+   The three callers pass `accounting_root=root`. The key `GH-<n>-jog-publish` is the canonical publication identity;
+   retries and restarts draw on the same budget, nothing renames it, and it is not a recovery switch for any other key.
+   **Interrupted-finish recovery (R1-B1):** if `manual_attempt_start` refuses with rtl's
+   `completed reservation awaits archival`, Jog reads the live row (the file's last row) and, only when it is a
+   `manual` row for this key whose `candidate` equals the target's live HEAD, re-finishes it with the existing
+   `manual_attempt_finish(..., "completed")` (same-candidate re-finish, rtl L160–164), which archives it; then it
+   books normally. Any other completed row stays a refusal. A row left `active` by a crash after a successful push
+   simply counts as consumed; the next booking appends a row and the push is a no-op for an up-to-date ref.
+   **Concurrency (R1-S5):** `jog resume`'s publication branch takes the existing `JogSupervisorLock(root)` (as
+   retry-gate/retry-build already do); a held lock refuses with the existing exit 4. Run/retry-gate already hold it.
+   Docstring/wording: resume's "spend nothing" → "spends no build turn; publication books one gate attempt".
+3. **`test/gh280-jog-marathon-adapter.sh`** (existing suite, focused cases only) — an execution-clone fixture
+   pre-push hook that, per pushed ref, unsets the fixture's command-scoped transport rewrite
+   (`GIT_CONFIG_PARAMETERS`/`GIT_CONFIG_COUNT`, R1-S4: probe showed the hook otherwise sees the local bare URL and
+   hashes a different origin) and runs the real `gate_receipt.py admit --repo . --sha --ref --destination-ref`
+   (the installed stub's admission step). A receipt-only fail sentinel fires *after* admission and only when the
+   pushed commit's subject starts `jog: publish` (R1-S3), so Marathon's earlier lane push is unaffected.
+   - G4 (wake): row parked awaiting-landing; the bare remote's lane ref holds the `jog: publish` commit and the bundle
+     `receipt.json`; the coordinator `$FR/.tick/attempt-history/GH-901-jog-publish-*/attempts` holds one completed row.
+   - G4-neg: a new commit on a new task branch pushed from the same clone with `XYZ_ATTEMPT_CONTEXT` and
+     `MERGE_CLEANUP_RECORD` unset is refused with `task qualification has no attempt reservation`; remote has no such ref.
+   - G4-retry (fresh fixture; starting lane ref recorded): sentinel on → run parks `receipt not published`, 1 failed
+     row, remote lane ref unchanged; `jog resume` (new process) → 2 failed rows; sentinel off → `jog resume` refused
+     `budget exhausted after 2`, still 2 rows, remote unchanged. Optional fixture-only: `LANE_MAX_ATTEMPTS=3 jog resume`
+     publishes and the archive holds 3 rows.
+   - G4-archive (R1-B1): after a successful publication, rewrite the archived row back into the live file as a
+     `completed` row for the same candidate (simulating a crash before archival) with `committed_receipt` unset;
+     `jog resume` exits 0, archives that row, and publishes with no refusal.
+   - K2 (R1-B2, gate-only caller): the same hook on K2's execution clone; after the approved retry, the bare remote
+     holds the retry's `jog: publish` commit and `$FR/.tick/attempt-history/GH-901-jog-publish-*` holds a completed
+     row (omitting `accounting_root=root` would put it under `$FT` and fail). K2's no-builder/no-new-token checks stay.
+   - P2: reword to "Marathon keeps executor attempts and Tick tokens; Jog writes only publication rows through gate_receipt".
+   Red control: the fixture overlay run against runtime base `52813e56f` (`utils/py` from base) fails G4/K2 with the
+   admission refusal and an unchanged remote ref. Day 3 (`3f2ffa353`, #1653) is field evidence; this is the replay.
+4. Smoke (GH-1088): in a disposable full clone with the *real installed* hook (`githooks/install.sh`), main path = a
+   Jog publication of an approved fixture receipt through the installed stub; adjacent path = `jog resume` after a
+   failed publication. Receipt under `TESTS-RESULTS/2026-11-27+GH-1653/`. Live OL-13 credit stays with the Day 4 run.
 
 ## Verification
 

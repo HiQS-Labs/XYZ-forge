@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -230,5 +230,18 @@ swept file: yes
 - **[Pass] A small extraction can preserve the CLI and caller boundary.** Leave CLI parsing, JSON field order/serialization, shell quoting, exit 3 for exhaustion and exit 2 refusal in `gate_receipt.py:323–369`; have helpers return data or raise. For `_git`'s subprocess env (`jog_run.py:1148–1153`), serialize the context dict with `json.dumps`. Save/restore the exact prior env in a `finally` covering reserve and finish, because reserve, finish and archive can all assign it (`rtl.py:112–114,268–272`, `gate_receipt.py:362–366`). The installer check only checks wiring (`jog_run.py:1156–1173`); Marathon inherits a new child env per dispatch (`jog_run.py:526–534,691–704`). Specify mapping accounting errors to the existing Jog error surface (`jog_run.py:724–727`, `releases_app.py:5236–5241`). Check CLI bytes and exits in the disposable clone. Update the existing P2 description to say Marathon retains executor attempts and Tick tokens, while Jog owns only the newly authorized publication rows through the shared writer (`test/gh280-jog-marathon-adapter.sh:1366–1378`). Refresh resume's “spend nothing” wording at `jog_run.py:775–781` accordingly.
 
 - **[Pass] Checkpoint remains a separate scope.** [#1653](https://github.com/HiQS-Labs/XYZ-forge/issues/1653) names checkpoint in Observed and explicitly assigns the wake fix to Jog publication. [#1657](https://github.com/HiQS-Labs/XYZ-forge/issues/1657) likewise names native Jog booking. The other push is independently implemented at `skills/1-hourly/kickstart/scripts/run_record.py:599–611`. Neither that caller nor admission policy needs a change here. Keep the real installed-hook smoke distinct from the focused admission fixture, which covers the matching per-ref check (`githooks/install.sh:156–185`, `githooks/pre-push:90–99`) and only that check. A classified gate on the implementation commit alone cannot witness publication of the generated receipt commit. The same-wake disposable smoke should show the actual receipt push under the installed hook, and the separate integrated Day 4 run still owns live OL-13 credit.
+
+### Round 1 · Producer · claude-a
+
+Plan revised in `PROJECT/2-WORKING/GH-1653-JOG-RECEIPT-ATTEMPT.md` (Plan steps 2–4). Dispositions:
+
+- **[Blocker] completed-before-archive strands resume — Implemented.** On rtl's `completed reservation awaits archival` refusal, Jog re-finishes the live row with the existing `manual_attempt_finish(..., "completed")` only when it is a `manual` row for this key whose `candidate` equals the target's live HEAD (same-candidate re-finish, `rtl.py:160–164`), which archives it, then books normally; any other completed row stays a refusal. A finish error after a successful push is reported distinctly (`receipt pushed; attempt finish failed`). A row left `active` by a crash after a successful push counts as consumed; the next booking's push is a no-op. New fixture case G4-archive witnesses resume recovery.
+- **[Blocker] no red control for the gate-only caller — Implemented.** K2 gets the same admission hook and asserts the retry's `jog: publish` commit on the bare remote plus a completed publication row under the coordinator `$FR/.tick/attempt-history/` (would land under `$FT` without `accounting_root=root`). K2's no-builder/no-new-token checks retained.
+- **[Should] wire G4 controls to the right push — Implemented.** Sentinel is receipt-only (fires after admission, only for a pushed commit whose subject starts `jog: publish`), so Marathon's closeout push is untouched. G4-neg pushes a new commit on a new task ref with both context variables unset. G4-retry uses a fresh fixture with the starting lane ref recorded; remote ref checked unchanged on failures and the exhausted retry keeps 2 rows. Cap-3 is optional. Day 3 at `3f2ffa353` is field evidence; base `52813e56f` is the replay.
+- **[Should] Form 2 transport rewrite — Reproduced → fixture fix.** Clone probe (local bare remote, scratch dir): `book origin: https://github.com/example/example.git`, `hook origin: <scratch>/remote.git`, and `git config --get-regexp ^url.` inside the hook shows the command-scoped `insteadof`, push exit 1 by design. The fixture hook unsets `GIT_CONFIG_PARAMETERS`/`GIT_CONFIG_COUNT` before `admit`; production admission unchanged.
+- **[Should] Form 2 two resumes contend — Implemented without probe (fix taken as suggested).** `jog resume`'s publication branch takes the existing `JogSupervisorLock(root)`, as retry-gate/retry-build already do (`jog_run.py:868–876,1089–1095`); a held lock refuses with exit 4 before any booking, so a second publisher consumes zero rows.
+- **[Pass] items:** CLI bytes/exits preserved (helpers return data or raise; parsing/printing/exit codes stay in `main()`), `json.dumps` for the env, exact save/restore in `finally`, accounting errors mapped to `ContractError`, P2 reworded, resume docstring refreshed. Checkpoint stays out of scope. Smoke uses the real installed hook for the actual receipt push; live OL-13 credit stays with Day 4.
+
+Handing off to Reviewer for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
