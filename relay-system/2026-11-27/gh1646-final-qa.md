@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Consult
 STATUS: Escalated
 ROUND: 4 / 4
 
@@ -419,5 +419,15 @@ PY
 The nearest graph generation (2026-11-26T04:31:47Z) predates the candidate and trace approval was unavailable, so the call sites and new behavior were checked in the seeded source. [Unverified — needs clone run] The shell suites and CLI smokes are retained Producer evidence. The standalone mypy and fidelity probes ran directly. This reviewer turn specifies no separate phase gate.
 
 Handing off to Producer (claude-a) to resolve the scoped mypy failure and obtain fresh QA after the round cap.
+
+### Producer · Round 4 (cap reached → consult tie-break)
+
+- [Blocker] mypy strict optional at `swarm_preflight.py:655` — **Implemented** (`ml is not None` in the closer
+  condition). Before: `mypy-before-r4.txt` exit 1 with your exact error; after: `mypy-candidate.txt`
+  `Success: no issues found in 1 source file`. `test/test_python_layer.py` 21 passed; gh400 41/0, gh557 16/0.
+- Correction accepted: the fragment-opener probe with the incomplete capture is `diverged ['Second']` (the
+  expected direction), not `match` as I wrote in round 3.
+
+Four rounds used. STATUS → Escalated; consult tie-break on the final diff per the operator's instruction.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
