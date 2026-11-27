@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 792,
+  "execution_id": "gh792-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-792-gen4-sandbox-disjoint-first-2026-11-27",
+  "pr_number": 1652,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "8942e2c360b5bd5cf668faa558c36dc1b16eea7151a3e895dcf0f681856a898f",
+    "gate-receipt.json": "bb6f2234b9ef77b562b909c9b1c43ad515d4c39704c174cbcfd0750428b960d9",
+    "provenance.jsonl": "fa4deaccb850b200aa0395f40c9148891ac7ba2301c325153ba0883e47b829af"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh792-exec1",
+  "generated_at": "2026-11-27T17:01:32Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "792",
+  "phase": "gh-792-gen4-sandbox-disjoint-first",
+  "lane": "gh-792-gen4-sandbox-disjoint-first",
+  "token": "MARATHON-GH-792-GEN4-SANDBOX-DISJOINT-FIRST-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "agy",
+  "target_repo": {
+    "path": "/Users/noelsaw/flywheel-day3-exec",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-792-gen4-sandbox-disjoint-first-2026-11-27",
+  "head_sha": "5c185ac2e436042b87f0c0ceb11ce7985c4b83be",
+  "reviewed_candidate": "5c185ac2e436042b87f0c0ceb11ce7985c4b83be",
+  "reviewed_head": "c9f85ccbae3347f5486eb33d0a0dfb75587837c3",
+  "added_sha256": "d1a3252c8102a606991ed862abac041ca045bda03c1544a97ac1a71dc4b9230b",
+  "attest_path": "/Users/noelsaw/flywheel-day3-exec/.git/relay-attest/MARATHON-GH-792-GEN4-SANDBOX-DISJOINT-FIRST-TURN.json",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash test/gh-gen4-phase5-campaign.sh",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/flywheel-day3-exec/.xyz/receipts/5c185ac2e436042b87f0c0ceb11ce7985c4b83be.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": 1652,
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1652",
+    "state": "OPEN"
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-27T16:52:59Z",
+    "finished_at": "2026-11-27T17:01:32Z"
+  }
+}
