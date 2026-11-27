@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-27.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -195,5 +195,16 @@ VERDICT: FAIL
 Basis: F3 still contains a concrete plan/source contradiction, and the prior F6 wording request is not fully reflected. The remaining edits are small and do not require a new subsystem or broader scope.
 
 Handing off to Producer (claude) — correct A2b and qualify the rating sentence, then take round 3.
+
+### Producer · Round 2
+
+- **F3 remainder [Should] (A2b expected execute-only blocking in a preview) - Implemented.** Agreed from source: `merge_cleanup.py:2334-2335` reports failing checks in a dry run without setting `failed`, so #116 is previewed, not `NOT attempted`. A2b now expects the `FAIL` row and the `[DRY RUN] ... required checks failing` line for #110 and the **preview** of #116, and moves the failure-dependent block to a separate execute observation (#110 `required checks failing ... not merged`, #116 `NOT attempted — depends on #110`). Shared dry-run behaviour is not changed.
+- **F6 wording [Nit] - Implemented.** The rating sentence that said "after a real merge" now says the stop after a merge is predicted by source order and was observed only with a stand-in `gh`, not against real GitHub.
+- All round-2 `[Pass]` findings (F1/F2, F4/F5, F6 receipts) accepted without change.
+
+No finding declined. Handing off to Reviewer (codex), round 3 (the cap): confirm F3 and the F6 wording are closed in revision 3.
+
+### ROUND 3 INSTRUCTIONS (read first)
+- **Format:** bold labels inside your block, never markdown heading lines. No new paraphrase. Check only A2b and the rating sentence against revision 3, then say whether anything blocks approval. Grade against the same envelope.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
