@@ -1,6 +1,6 @@
 # Marathon Phase gh-1423-relay-attest-gitignored
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-1423-RELAY-ATTEST-GITIGNORED-TURN builder=codex reviewer=agy round-cap=9 -->
 
@@ -129,3 +129,33 @@ Verification: Python source compiled in memory. Reviewed the tracked-file check,
 
 unverified: full-driver ignored-path baseline, post-fix replay, non-ignored control, and commit failure control — the turn forbids Git and suite execution. The earlier report and preparation probe are linked in the delivery receipt.
 unverified: bash test/gh505-relay-attest.sh — designated harness gate.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+gate run: no — harness gate
+
+#### Code review & whole-file sweep (`utils/py/relay_drive.py`, lines 1–1708)
+
+- **[Pass]** `commit_relay_file` (`utils/py/relay_drive.py:827-845`) removes the redundant `git add --` call and relies on `git ls-files --error-unmatch --` followed by path-scoped `git commit -q -m <msg> -- <abs_path>`, keeping only `subprocess`, `os`, `relay_file`, `transcript_repo`, and `eprint` in scope per `PROJECT/2-WORKING/GH-1423-RELAY-ATTEST-GITIGNORED.md:145`.
+  - Probe 1 (`env PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/probe-gh1423.py`): exit `0` — confirms tracked file under gitignored `relay-system/` commits and returns `True`, non-ignored repo commits and returns `True`, and failing `pre-commit` hook returns `False`.
+  - Probe 2 (isolated scratch repo in `$PWD/.relay-scratch/tmp`, `GIT_*` unset): exit `0` — `edge1_pathscoped: ok=True committed=['relay-system/t.md'] still_staged=['other.txt'] logs=[]` (path-scoped commit does not sweep unrelated staged changes); `edge2_ro_gitdir: ok=False logs=["relay-drive: commit of relay file FAILED: fatal: Unable to create '.../.git/index.lock': Permission denied"]` (read-only `.git` returns `False` with stderr); `edge3_symlink: ok=True committed=True logs=[]`.
+- **Whole-file sweep note (out of scope for GH-1423):** Reviewed `utils/py/relay_drive.py:1-1708` in full. Pre-existing `--consult-verify` divergence escalation (`utils/py/relay_drive.py:1556-1557`) still runs bare `git add` + un-scoped `git commit` instead of `commit_relay_file`; leaving untouched because `PROJECT/2-WORKING/GH-1423-RELAY-ATTEST-GITIGNORED.md:145` explicitly restricts code edits to `commit_relay_file` only. No other defects found in the touched paths.
+
+#### Findings
+
+- **[Blocker] `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md` records only an unexecuted replay recipe and expected-result table instead of the required recorded manual repro evidence.**
+  - **Observed input:** Artifact contradiction between `RELAY.md:31-33` (and `PROJECT/2-WORKING/GH-1423-RELAY-ATTEST-GITIGNORED.md:43-45,95,145`) vs `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md:3-27` and `RELAY.md:128-130`:
+    - `RELAY.md:31-33` requires (1) a recorded manual repro in a scratch repo ignoring `relay-system/` showing baseline exit 4 / `attest-publish-failed` with captured `git add` stderr, (2) post-fix exit 0 with both attestation commit and record present plus a non-ignored repo control, and (3) a genuine commit failure (e.g. read-only index or rejecting hook) still returning `attest-publish-failed`. `PROJECT/2-WORKING/GH-1423-RELAY-ATTEST-GITIGNORED.md:95,145` specifies that the full-driver repro is delivery evidence recorded in `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md`.
+    - `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md:3-12` only summarizes Conveyor's preparation notes (which ran bare `git add`/`git commit` and ran `probe-gh1423.py` against `sim-gh1423.patch` — a different patch that kept `git add` rather than the Builder's edit at `utils/py/relay_drive.py:838-840`), and `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md:14-27` provides only a future-tense procedure and an `Expected result` table (`delivery.md:18-23,27`: "The table gives expected outcomes for that replay") with zero observed commands, exit codes, stderr, commit subjects/trailers, or `relay_attest.load(...)` results against the edited `utils/py/relay_drive.py`.
+  - **Affected scope:** `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md` (and Round 2 Builder verification note in `RELAY.md`).
+  - **Falsifier:** Run a self-contained repro script under `TMPDIR="$PWD/.relay-scratch/tmp"` (inside `workspace-write` and exempted from containment by `relay-automation/relay-turn-lib.sh:898`; never run `git` against the worktree or `RTL_ROOT`, and never invoke `test/*.sh`). Specifically: unset inherited `GIT_*` and driver env vars (`RELAY_DRIVER_LOCKED`, `RELAY_TARGET_ROOT`, `TICK_REPO_ROOT`, `TICK_BIN`, `XYZ_ROOT`), set `PYTHONDONTWRITEBYTECODE=1`, `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_GLOBAL=/dev/null`, `XYZ_WRITE_OPS_LOG=0`, `RELAY_COST_SUMMARY=0`, `XYZ_HARNESS_CONTEXT=test`, copy `relay-automation/`, `utils/`, `bin/`, `src/` into `$TMPDIR/repro/harness-fixed` (and `$TMPDIR/repro/harness-base` with only the pre-fix `git add` line restored in `commit_relay_file`), initialize scratch target repos under `$TMPDIR/repro/`, and drive `python3 "$HARNESS/utils/py/relay_drive.py"` across all 4 arms:
+    1. Baseline red control (ignored `relay-system/`, tracked `relay-system/relay.md`): expect exit `4`, escalation reason `attest-publish-failed`, captured `git add` stderr (`The following paths are ignored...`), attestation commit landed with trailer, record absent.
+    2. Fixed driver (ignored `relay-system/`, tracked `relay-system/relay.md`): expect exit `0`, attestation commit landed with `### Attestation · relay-drive`, and `relay_attest.load(...)` + `relay_attest.candidate_ok(...)` passing on the task JSON record.
+    3. Fixed driver (no `.gitignore` rule): expect exit `0`, attestation commit and validated record present.
+    4. Fixed driver (genuine commit failure — e.g. rejecting pre-commit hook gated on `### Attestation · relay-drive` or read-only `.git`/index after the review turn): expect exit `4`, reason `attest-publish-failed`, captured commit stderr, and neither attestation commit nor record published.
+    Also run `python3 TESTS-RESULTS/2026-11-27+GH-1658-runA-prep/probe-gh1423.py` against the live `utils/py/relay_drive.py` (expect exit `0`), remove `$TMPDIR/repro` before finishing, and record the actual observed commands, exit codes, decisive stderr/stdout, commit subjects, and record checks in `TESTS-RESULTS/2026-11-27+GH-1423/delivery.md`. (If Codex's sandbox actually blocks any subprocess inside `.relay-scratch/tmp`, quote the exact command and sandbox error instead of assuming it is blocked.)
+
+**Verdict:** Changes requested
+
+handing off to codex — codex, take your turn.
