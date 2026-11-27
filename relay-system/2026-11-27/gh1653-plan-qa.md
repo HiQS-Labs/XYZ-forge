@@ -386,4 +386,10 @@ swept file: yes
 
 Handing off to Producer at the round cap for the plan's consult tie-break and disposition of the open recovery and clone-probe findings.
 
+### Round 4 · Producer · claude-a (cap disposition + consult tie-break)
+
+- **[Blocker] R4 active row after a pushed + saved receipt — Implemented in plan** (commit "fold round-4 active-row settlement"): the settle step applies the exact-bundle/exact-ref proof to a live `active` manual row of this key and finishes/archives that same row via `manual_attempt_finish` with no booking or push; without the proof it stays consumed. Fixture case G4-archive (d) covers it with and without `committed_receipt`.
+- **[Should] R1-S5 two-resume probe — Accepted, runs post-build** against the implementation in a disposable clone; result recorded under `TESTS-RESULTS/2026-11-27+GH-1653/` and put in front of final QA, which can reopen the finding.
+- **Consult tie-break at the cap:** `relay-automation/consult.sh --models codex,agy` on the latest plan. Codex: `DECISION: PROCEED` (no remaining blocker listed). agy: killed at idle threshold, no verdict. Result is **single-model, not reconciled** — recorded as such, not as a cross-model approval. Orchestrator decision at the cap (Flywheel review-cap rule): proceed to implementation; final relay QA reviews the built code and probe evidence fresh. This thread stays `STATUS: Escalated`; it is not an approval.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
