@@ -86,7 +86,7 @@ merge-cleanup: PR #101: standalone — landing clone has no githooks/install.sh;
 merge-cleanup: PR #101: standalone — pre-merge ledger gate skipped (no ledger in this repository)
 merge-cleanup: PR #101: required checks: 1 required check(s) green
 merge-cleanup: Merging PR #101 via `gh pr merge 101 --squash --match-head-commit af133bb74cd97d39add8f2ee9585ae3fe8ee05ad`...
-merge-cleanup: ✅ PR #101 is MERGED as b5882bd9f8
+merge-cleanup: ✅ PR #101 is MERGED as 4516b4f839
 merge-cleanup: PR #101: standalone — post-merge reconcile (wave_reconcile, releases check, pdda, Jog) skipped
 merge-cleanup: PR #101: already published at origin/main; no push needed
 merge-cleanup: ✅ PR #101 committed; primary is clean at origin/main
@@ -95,7 +95,7 @@ merge-cleanup: PR #109: standalone — landing clone has no githooks/install.sh;
 merge-cleanup: PR #109: standalone — pre-merge ledger gate skipped (no ledger in this repository)
 merge-cleanup: PR #109: required checks: 1 required check(s) green
 merge-cleanup: Merging PR #109 via `gh pr merge 109 --squash --match-head-commit b181b69f0717d0464ec0aac34029cb824a75a61d`...
-merge-cleanup: ✅ PR #109 is MERGED as 946dca328f
+merge-cleanup: ✅ PR #109 is MERGED as aff4881d64
 merge-cleanup: PR #109: standalone — post-merge reconcile (wave_reconcile, releases check, pdda, Jog) skipped
 merge-cleanup: PR #109: already published at origin/main; no push needed
 merge-cleanup: ✅ PR #109 committed; primary is clean at origin/main
@@ -105,7 +105,7 @@ merge-cleanup: PR #106: standalone — pre-merge ledger gate skipped (no ledger 
 merge-cleanup: PR #106: required checks: 1 required check(s) green
 merge-cleanup: PR #106: retargeted open stacked PR #107 from 'feat/faq' to 'main' before merging the base PR
 merge-cleanup: Merging PR #106 via `gh pr merge 106 --squash --match-head-commit 80a390b552f4bf947526fd533531d88ef36e934d`...
-merge-cleanup: ✅ PR #106 is MERGED as e4d341be46
+merge-cleanup: ✅ PR #106 is MERGED as af63878fa8
 merge-cleanup: PR #106: standalone — post-merge reconcile (wave_reconcile, releases check, pdda, Jog) skipped
 merge-cleanup: PR #106: already published at origin/main; no push needed
 merge-cleanup: ✅ PR #106 committed; primary is clean at origin/main
@@ -114,11 +114,17 @@ merge-cleanup: PR #107: standalone — landing clone has no githooks/install.sh;
 merge-cleanup: PR #107: standalone — pre-merge ledger gate skipped (no ledger in this repository)
 merge-cleanup: PR #107: required checks: 1 required check(s) green
 merge-cleanup: Merging PR #107 via `gh pr merge 107 --squash --match-head-commit 26f2bbeded1f141947a3d42ac6d098810b1beacc`...
-merge-cleanup: ✅ PR #107 is MERGED as d659525682
+merge-cleanup: ✅ PR #107 is MERGED as 352ef5fd0b
 merge-cleanup: PR #107: standalone — post-merge reconcile (wave_reconcile, releases check, pdda, Jog) skipped
 merge-cleanup: PR #107: already published at origin/main; no push needed
 merge-cleanup: ✅ PR #107 committed; primary is clean at origin/main
 merge-cleanup: Landing clones removed after a clean run (<TMP>/merge-cleanup-XXXX)
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-0fd547c3-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-aa091233-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-fdf83da1-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-10ea98dd-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-26e9e0d2-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-ac668439-XXXX/repo
 merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-90572224-XXXX/repo
 merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-79ca29ca-XXXX/repo
 merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-22985161-XXXX/repo
@@ -143,7 +149,7 @@ merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in p
 merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-2869a122-XXXX/repo
 merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-1aa9440d-XXXX/repo
 merge-cleanup: Keeping <TMP>/merge-check-fkubrbrt: untracked files or a stash in repo
-merge-cleanup: Scratch pruning: removed 0 old retained clone folder(s) under <TMP>/; kept 24: merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-check-fkubrbrt
+merge-cleanup: Scratch pruning: removed 0 old retained clone folder(s) under <TMP>/; kept 30: merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-check-fkubrbrt
 merge-cleanup: Merged set ⊆ --prs: #101, #106, #107, #109 within #101, #106, #107, #109
 ================================================================================
 PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING

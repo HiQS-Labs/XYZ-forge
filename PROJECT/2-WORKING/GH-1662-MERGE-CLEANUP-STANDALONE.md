@@ -34,7 +34,7 @@ goal: "On a repository with no XYZ-forge overlay, `merge_cleanup.py --standalone
 
 | What was just completed | What's next |
 |---|---|
-| Plan approved by Codex on round 3 (round 1 FAIL six Should; round 2 FAIL one Should; both answered). Implemented; manual check A1-A17 recorded under `TESTS-RESULTS/2026-11-27+GH-1662/`; existing suites run in a disposable clone. | Final Codex QA, qualification gate and push from a disposable clone, ready PR. Merge is the operator's. |
+| Plan approved by Codex on round 3 (round 1 FAIL six Should; round 2 FAIL one Should; both answered). Implemented; manual check A1-A19 recorded under `TESTS-RESULTS/2026-11-27+GH-1662/`; existing suites run in a disposable clone. | Final Codex QA, qualification gate and push from a disposable clone, ready PR. Merge is the operator's. |
 
 ## Contract (binding: the "Contract decision" comment on #1661)
 
@@ -122,6 +122,18 @@ Exact subsets (fixture, integration branch `main`, fresh HOME, stand-in `gh`; ea
 
 After final QA approval, `origin/development` moved 87 commits (`6142128d9`), including GH-1656's local-merge rung (`land_via_local_merge`, GitHub-`CONFLICTING` PRs landed through a leased push under policy `merge`), a batch-record change and a phase B test addition, and conflicted with this branch in `merge_cleanup.py` (the dry-run `Would merge` block) and the ledger. Resolution: the dry-run block takes GH-1656's text and keeps this change's `landing_heads` line plus one standalone-only message (the rung pushes from the clone, so without a proven hook the dry run says `--execute` would stop); the ledger takes the base's `releases.sql`/`releases.db` and this task's row is re-applied through the writer (`roadmap pickup`, `--accepted-start`), `releases check` clean. Docs now name the rung as the one extra push a standalone run can reach (D4, SKILL.md, STANDALONE.md) and row A17 proves it is refused without a hook. The regression rows (A1, A4, A6) compare against `origin/development` at `6142128d9`; the `BASE-*` measurements stay at `52813e56f`, where the defects were measured. All rows and suites were rerun on the merged tree.
 
+## Review fixes after opening #1674 (CodeRabbit, 7 inline comments)
+
+Each comment was checked against the code before any change; all seven were valid. Fixed in `0a4ee7dca` (driver rework in `d2ddfdf15`):
+
+- **F1 (Major), stacked parent vs the integration branch.** Reproduced: with a same-repository PR whose head is `development` and base `main` open (a promotion PR), every ordinary PR into `development` hard-depended on it and was deferred, in **Forge mode too** (a regression this change introduced: `development` has no stacked edge). `toposort_prs(prs, integration=None)` now adds no edge when a PR's base is the integration branch; the three `merge_cleanup.py` call sites and `toposort_prs.py --integration-branch` pass it. Control A19.
+- **F2, ledger gate skipped for a ledger that arrives in the landing tree.** The overlay guard ran once against the primary. Under `--standalone` the landing tree is now checked with the same markers before the skip and the PR is refused (rc 2, the file named) in the dry run and under `--execute`. Control A18.
+- **F3, Forge-mode B1 dry-run preview.** The `continue` after the B1 preview skipped the `landing_heads` insertion, so a stacked child of a repairable parent stopped the preview. The parent is now recorded there (same fork exclusion). **Not exercised**: building a repairable ledger conflict in the foreign-repo fixture was not done; the change mirrors the exercised insertion.
+- **F4/F5, runbook.** `qualification` must be an object (`{"full_suite": ...}`) with examples; the primary precondition requires `HEAD == origin/<B>` (an ancestry test alone passes when the primary is behind); the stacked rule names the integration-branch exception.
+- **F6, driver.** `run_controls.py` rewrites `.err` on every invocation.
+- **F7, dry-run forecast (also on `development`).** A dry run printed `Would merge` for a PR whose required checks were failing, and for its hard dependents, while `--execute` reports `NOT attempted`. The dry run now says `would NOT land in this run` for a failing-checks PR and its hard dependents (a dry-run-only set; `failed`, exit codes and `--execute` are untouched; pending checks are not final, since `--execute` waits for them, so they keep the old preview). A2b's expectation changed accordingly. This is shared Forge-mode dry-run output for queues with a failing-checks PR.
+- **A16 control rework.** At `0a4ee7dca` A16 failed: its mutant (no fork guard) no longer deferred two fork `main`->`main` PRs, because F1's rule now covers that case too. The code was right and the control was stale. A16 now has a shared-branch case only the fork guard protects and an end-to-end mutant that removes both guards; it passes at `d2ddfdf15`. The failed row stays in `provenance.jsonl`.
+
 ## Verification results (see `provenance.jsonl` for the revision of each row)
 
 Manual check, `TESTS-RESULTS/2026-11-27+GH-1662/` (`provenance.jsonl`, `runs/`, `run_controls.py`, `runbook_walk.py`, `fixture/`). All rows pass; red controls are real (each mutant fails on the named assertion, the same row passes unmutated).
@@ -135,10 +147,12 @@ Manual check, `TESTS-RESULTS/2026-11-27+GH-1662/` (`provenance.jsonl`, `runs/`, 
 | A5 | standalone `--execute` lands 101, 109, 106, 107 in order; primary equals origin and clean; origin has only fixture-author and stand-in commits (no tool push); sweep verdict recorded |
 | A8-A12 | prerequisites before the first clone; scan roots; overlay guard; forecast labels; pushes stay gated |
 | A16 | fork heads are not stacked parents (final QA R1 F1, R2 F2): no edge between two fork `main` PRs, a selected fork PR kept and previewed, a genuine stack still ordered and deferred; a landed fork PR issues zero `pr edit` retargets (also in the production shape) while a same-repository parent still issues exactly one; the mutants without each guard reproduce the defects |
-| A13 | existing suites green at the merged head `0f48b76de`: phase B 52, phase C 111, gh645 8, gh674 6, gh436 240 (disposable full clone, test venv first on PATH, identity unchanged; the counts moved with the 87 base commits) |
+| A13 | existing suites green at the review-fix commit `0a4ee7dca` (and earlier at the merged head `0f48b76de`): phase B 52, phase C 111, gh645 8, gh674 6, gh436 240 (disposable full clone, test venv first on PATH, identity unchanged; the counts moved with the 87 base commits) |
+| A18 | review F2 (#1674): a PR that brings `releases.sql` into the landing tree is refused under `--standalone` in the dry run and under `--execute`, naming the file, merging nothing (origin tip unchanged, PR still open); the mutant without the check skips the gate and previews the merge |
+| A19 | review F1 (#1674): a same-repository PR with head `main` and base `stable` is not the stacked parent of a PR into `main` (Forge and standalone share the sorter); a real stack still orders and defers; the mutant defers the ordinary PR; the bare CLI without `--integration-branch` keeps the old edge |
 | A15 | the runbook's commands and rules reproduce the script's order, 20 conflict pairs, alone-conflict and fold stop |
 
-**Not verified:** real GitHub (checks, protection, merge queue, rate limits, real squash effect on a stacked child); Python below 3.9 at runtime; A15 shares an author with the script and the runbook (finds drift, not independent review). One recorded correction: A1's first attempt (stack present, #106/#107 unlisted) differed in the order of two `not in --prs` log lines because D9 reorders the unlisted stacked pair; A1 now uses a `--no-stack` fixture, and that order change is the accepted D9 semantics.
+**Not verified:** the Forge-mode B1 dry-run preview fix (F3); real GitHub (checks, protection, merge queue, rate limits, real squash effect on a stacked child); Python below 3.9 at runtime; A15 shares an author with the script and the runbook (finds drift, not independent review). One recorded correction: A1's first attempt (stack present, #106/#107 unlisted) differed in the order of two `not in --prs` log lines because D9 reorders the unlisted stacked pair; A1 now uses a `--no-stack` fixture, and that order change is the accepted D9 semantics.
 
 ## Smoke (GH-1088)
 

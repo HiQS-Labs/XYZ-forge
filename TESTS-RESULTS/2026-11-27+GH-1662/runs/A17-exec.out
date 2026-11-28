@@ -77,6 +77,12 @@ merge-cleanup: PR #101: standalone — landing clone has no githooks/install.sh;
 merge-cleanup: PR #101: standalone — pre-merge ledger gate skipped (no ledger in this repository)
 merge-cleanup: PR #101: required checks: 1 required check(s) green
 merge-cleanup: Landing clones retained for inspection under <TMP>/merge-cleanup-XXXX
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-0fd547c3-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-aa091233-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-fdf83da1-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-10ea98dd-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-26e9e0d2-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-ac668439-XXXX/repo
 merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-90572224-XXXX/repo
 merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-79ca29ca-XXXX/repo
 merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-22985161-XXXX/repo
@@ -101,4 +107,4 @@ merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in p
 merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-2869a122-XXXX/repo
 merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-1aa9440d-XXXX/repo
 merge-cleanup: Keeping <TMP>/merge-check-fkubrbrt: untracked files or a stash in repo
-merge-cleanup: Scratch pruning: removed 0 old retained clone folder(s) under <TMP>/; kept 24: merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-check-fkubrbrt
+merge-cleanup: Scratch pruning: removed 0 old retained clone folder(s) under <TMP>/; kept 30: merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-check-fkubrbrt

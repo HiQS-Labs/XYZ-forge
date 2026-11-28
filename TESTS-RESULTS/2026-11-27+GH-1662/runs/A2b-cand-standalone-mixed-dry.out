@@ -178,16 +178,12 @@ merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; sou
 merge-cleanup: PR #110: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
 merge-cleanup: PR #110: standalone — pre-merge ledger gate skipped (no ledger in this repository)
 merge-cleanup: [DRY RUN] PR #110: required checks failing (ci) — --execute would not merge it yet
-merge-cleanup: [DRY RUN] Would merge PR #110 via `gh pr merge 110 --squash`
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
 merge-cleanup: PR #114: carries hold label 'do not merge' — skipped (#444)
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
 merge-cleanup: PR #115: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: PR #116: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
-merge-cleanup: PR #116: standalone — pre-merge ledger gate skipped (no ledger in this repository)
-merge-cleanup: PR #116: required checks: 1 required check(s) green
-merge-cleanup: [DRY RUN] Would merge PR #116 via `gh pr merge 116 --squash`
+merge-cleanup: [DRY RUN] PR #116: would NOT land in this run — depends on #110 (required checks failing)
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
 merge-cleanup: PR #117: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
 merge-cleanup: PR #117: standalone — pre-merge ledger gate skipped (no ledger in this repository)
