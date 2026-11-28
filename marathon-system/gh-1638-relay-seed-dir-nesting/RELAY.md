@@ -1,5 +1,5 @@
 # Marathon Phase gh-1638-relay-seed-dir-nesting
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1638-RELAY-SEED-DIR-NESTING-TURN builder=codex reviewer=agy round-cap=9 -->
@@ -131,3 +131,20 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 
 unverified: `bash test/relay-pkg-freshness.sh` — relay scope forbids running repository test scripts in this turn. The archive content was checked independently.
 unverified: `bash test/worktree-isolation.sh` and the real-Git preparation replay against the delivered source — the relay assigns the gate to the harness and prohibits running Git in the turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+gate run: no — harness gate
+
+- **Implementation (`relay-automation/relay-turn-lib.sh:722-765`, `:827-837`):** [Pass] `_rtl_seed_directory` rejects `.`, `..`, and empty path segments lexically before touching the filesystem (`relay-automation/relay-turn-lib.sh:724-728`), absolutizes relative `$RTL_ROOT` paths before `cd -P` (`:729`), resolves the worktree and walks each parent physically (`cd -P`) requiring containment inside `$worktree` before creating missing parents (`:730-748`), protects root `.git` case-insensitively (`:750-753`), clears any existing destination or leaf symlink without following it and confirms removal (`:757-763`), and copies the host directory via `cp -R "$src" "$dest"` (`:764`). On any failure, `rtl_worktree_begin` tears down only via `git -C "$RTL_ROOT" worktree remove --force "$wt"`, deregisters on success, reports a refused teardown while leaving the worktree in place, and returns 1 with empty stdout (`:827-836`). Ordinary file entries (`:838-841`), archive-absolute skips (`:823-826`), and the `SEED-DELETE` branch (`:842-846`) retain existing behavior.
+- **Whole-file sweep (`relay-automation/relay-turn-lib.sh:1-1891`):** [Pass] Reviewed the entire file (`relay-automation/relay-turn-lib.sh:1-1891`). No defects found in the changed seeding path and no new blocking pre-existing defects introduced or uncovered within this phase's scope. Noted out-of-scope pre-existing items left intentionally untouched per `PROJECT/2-WORKING/GH-1638-RELAY-SEED-DIR-NESTING.md:12-15` and `test/write-ops-log.sh:84-91`: commit-pathspec filtering for directory lanes (`relay-automation/relay-turn-lib.sh:1687-1690`, tracked separately on `#1638`) and the pre-existing `rm -rf "$wt"` fallbacks outside the seeding loop (`:870`, `:1040`).
+- **Package & delivery receipt (`skills/1-hourly/relay-automation/relay-pkg.tar.gz`, `TESTS-RESULTS/2026-11-27+GH-1638/delivery.md:1-33`):** [Pass] Delivery receipt records baseline red/candidate green evidence, hashes, and scope-imposed `unverified:` notes matching `RELAY.md:38`, `:70`, `:90`.
+- **Independent reviewer probes (non-mutating, run under `$PWD/.relay-scratch/tmp` without Git or repo test scripts):**
+  1. Syntax, digests, and tarball freshness (`bash -n relay-automation/relay-turn-lib.sh`, `shasum -a 256`, Python `tarfile` byte-for-byte comparison against live files) -> exit `0`: `bash -n: OK`, `49d3ecb23aec17f1aca6ed6d046aaee385b156de0317177ce84bb50a53b2663c  relay-automation/relay-turn-lib.sh`, `d9638f90215f80b1748c4432944efe5985e123a9899bde955976005e6ab6045f  skills/1-hourly/relay-automation/relay-pkg.tar.gz`, `tar member count: 18`, `mismatches: []`. Digests match `TESTS-RESULTS/2026-11-27+GH-1638/delivery.md:32-33`.
+  2. Edge-case harness probe (`/bin/bash` 3.2 sourcing `relay-automation/relay-turn-lib.sh` with stubbed `git`/`_rtl_sig` and `CDPATH` set) -> exit `0`: `REVIEWER_PROBE: PASS=31 FAIL=0` covering top-level and multi-segment mirroring (edits, nested files, dotfiles, retired child deletion, ordinary file entry), missing checkout parents, unreadable source copy failure, failed and no-op `rm` clear, refused `git worktree remove` preserving worktree and reporting `worktree remove`, escaping and dangling parent symlinks, leaf symlink replacement preserving external target, `.`/`..`/empty/trailing-slash segments, `.git`/`.GIT`/`selflink/.git`, spaces and leading-dash directory names, and relative `RTL_ROOT`.
+- **Unverified in-turn items (disclosed):** `bash test/relay-pkg-freshness.sh` (script execution forbidden by `RELAY.md:38`; equivalent 18-member byte-for-byte check verified above) and `bash test/worktree-isolation.sh` (harness gate per `RELAY.md:90`).
+
+**Verdict:** Approved
+
+relay closed, no further turn needed.
