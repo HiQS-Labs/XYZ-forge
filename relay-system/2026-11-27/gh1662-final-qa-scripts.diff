@@ -1,0 +1,723 @@
+diff --git a/skills/2-daily/merge-cleanup/SKILL.md b/skills/2-daily/merge-cleanup/SKILL.md
+index c955f8c2e..69755e54c 100644
+--- a/skills/2-daily/merge-cleanup/SKILL.md
++++ b/skills/2-daily/merge-cleanup/SKILL.md
+@@ -44,6 +44,15 @@ When the operator speaks naturally:
+ - **GitHub CLI (`gh`)**: 2.18.0 or newer. Required for the `headRefOid` JSON field during Phase 4 PR discovery. If an older `gh` (e.g. 2.4.0 from Ubuntu universe) is installed, merge-cleanup will warn during preflight and advise installing the official release from `https://cli.github.com`.
+ - **Process & Handle Monitoring (`lsof`)**: Used by `inspect_open_handles` to identify active processes holding checkout directories before any deletion. On Linux hosts (including environments running Docker with overlay filesystems), `lsof` can emit warnings about unstatable mounts outside the target checkout (e.g. `lsof: WARNING: can't stat() overlay file system /var/lib/docker/overlay2/.../merged`). `merge-cleanup` safely classifies and filters out warnings for paths outside the repository checkout, while strictly failing closed for any warnings at, inside, or containing the checkout path. Pruning continues to enforce that checkouts with active root-CWD processes or open handles are never removed.
+ 
++
++### Two modes: the Forge overlay (default) and `--standalone` (GH-1662)
++
++The default mode assumes the XYZ-forge overlay in the repository being landed: `githooks/install.sh` (each landing clone's pre-push gate, GH-1576), the RELEASES ledger (`releases.sql` at HEAD plus `utils/py/releases_app.py`, for the pre-merge ledger gate), `utils/py/wave_reconcile.py` and `utils/pdda/pdda.sh` (post-merge), and the integration branch **`development`**: post-merge `wave_reconcile.py` defaults to `development`, filters its PR flows on it, and merge-cleanup forwards no branch to it, so `--integration-branch main` merges and then stops at reconcile. A repository without that overlay cannot land through the default mode.
++
++For such a repository the merge **sequence** needs only `git` and `gh`, and **landing** works when the operator declares `--standalone` on the command line. The declaration is explicit and is never inferred from a missing file (GH-1576 stands: without the flag a landing clone with no installer still refuses). It skips only what needs the absent overlay: the gate-wiring refusal when the clone has no installer, the pre-merge ledger gate, post-merge `wave_reconcile`/`releases_app`/`pdda.sh`/Jog, and B1 (a conflicting PR is **handed off** with its conflicting paths, exit 3). Pushes stay gated: a push from a clone without a proven gate hook is still refused, and nothing here uses `--no-verify`. It is refused when the primary contains an overlay file, so it cannot bypass a ledger that exists. It also prints a **STANDALONE PREREQUISITES** block before anything is cloned, keeps the primary clean by excluding `/.tick/` in its own `.git/info/exclude`, and scans only the primary's parent folder (own origin) instead of the fixed default roots; see [`--prefix`](#landing-without-unrelated-checkout-teardown-gh-1470) and `--root` for teardown scope. The default mode reports a missing installer, ledger or non-`development` integration branch as `PRE-FLIGHT` warnings before it clones.
++
++[`STANDALONE.md`](STANDALONE.md) has the exact differences, how to read each report, and a **prose runbook** an agent can follow by hand to sequence and land a large queue when Python or the scripts are unavailable.
++
+ ---
+ 
+ ## Project merge policy
+@@ -218,7 +227,7 @@ Parking preserves work for later review; it never qualifies it for integration o
+    Include the overview in the final chat and qualifying batch issue even on a stopped run.
+ 
+ ### Phase 1: Discover & Inventory
+-- Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` — `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces`, `~/marathon-clones` (where `/jog`, marathon flows and older `/start-task` runs create task clones). Without `--root`, the scan also walks the primary's parent folder, where GH-970 task clones sit beside the primary, unless that folder is a `NEVER_DELETE` root (GH-722). From that folder it inspects only checkouts whose `origin` matches the primary's, and only those become removable there; an unreadable origin never matches. When that folder is itself one of the listed roots, it is scanned exactly as before. The Phase 1 header prints the roots scanned. The fixed list in `scan_clones.py` is the list in `WORKTREE-SAFETY.md` §16.1; a test pins the parity (GH-534 A.1).
++- Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` — `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces`, `~/marathon-clones` (where `/jog`, marathon flows and older `/start-task` runs create task clones). Under `--standalone` (and no `--root`) only the primary's parent folder is scanned, origin-filtered, and the fixed roots are not (GH-1662). Without `--root`, the scan also walks the primary's parent folder, where GH-970 task clones sit beside the primary, unless that folder is a `NEVER_DELETE` root (GH-722). From that folder it inspects only checkouts whose `origin` matches the primary's, and only those become removable there; an unreadable origin never matches. When that folder is itself one of the listed roots, it is scanned exactly as before. The Phase 1 header prints the roots scanned. The fixed list in `scan_clones.py` is the list in `WORKTREE-SAFETY.md` §16.1; a test pins the parity (GH-534 A.1).
+ - Evaluates component-aware containment (`_within(child, parent)`) and refuses `NEVER_DELETE` protected roots (`$HOME`, `~/Documents`, `~/Desktop`, `/`).
+ - Distinguishes **Linked Worktrees** (`.git` is a file with pointer `gitdir: ...`) from **Standalone Clones** (`.git` is a directory).
+ - Uses `git worktree list --porcelain` to determine parent-child relationships.
+@@ -250,7 +259,7 @@ Parking preserves work for later review; it never qualifies it for integration o
+ ### Phase 4: PR Matrix & Topological Sorting
+ - Runs only after Phase 0 has reported. The PR sequence is advice until the primary can receive it.
+ - Fetches open PRs via GitHub API (`gh pr list`). The discovery call is bounded in time and retried on transient network failures (GH-623): a FAILED discovery is an error, never an empty queue — after three transient retries it exits 2 before Phase 6, because rolling into teardown on a false "no PRs" would report success while the queue was silently skipped.
+-- Extracts explicit dependency references (`depends on #N`, `blocked by #N`, `after #N`) as **hard** edges.
++- Extracts explicit dependency references (`depends on #N`, `blocked by #N`, `after #N`) as **hard** edges. A **stacked base** (a PR whose base branch is the head branch of another open PR in the same repository, never a fork's) is a hard edge too (GH-1662): it cannot land on the integration branch before its base PR does. A dry run previews such a child as `would be retargeted ... once that PR lands`; `--execute` retargets it when its base lands.
+ - Analyzes touched file sets to detect unannotated file collisions and orders shared-file PRs chronologically as **soft** edges: they decide sequence only, never eligibility (GH-623).
+ - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
+ - **`--prs` allowlist (GH-1226).** The PRs a run may land are fixed when it starts, never discovered at merge time:
+@@ -636,6 +645,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
+ | teardown-fresh-inspection | 6 | script | TestA5FreshInspection.test_teardown_refuses_a_stale_scan_record |
+ | mergeable-unknown-poll | 5 | script | TestPhase5EndToEnd.test_unknown_mergeable_settles_and_the_pr_lands |
+ | prs-allowlist | 4 | script | TestPhase5EndToEnd.test_unlisted_pr_is_never_sequenced |
++| standalone-mode | 4-5 | script | manual check, `TESTS-RESULTS/2026-11-27+GH-1662/` |
+ | landing-forecast | 4 | script | manual checks, `TESTS-RESULTS/2026-11-13+GH-1452/` and `TESTS-RESULTS/2026-11-14+GH-1470/` |
+ | batch-issue-threshold | 5 | script | TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved |
+ | batch-issue-resume-append | 5 | script | TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved |
+@@ -643,7 +653,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
+ | batch-regression-sweep | 5 | caller | — |
+ | post-deploy-carryover-dual-sink | 5 | caller | — |
+ 
+-CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--prs`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`, `--record-sweep`, `--no-auto-sweep`, `--landing-plan`, `--landing-reason`.
++CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--prs`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--standalone`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`, `--record-sweep`, `--no-auto-sweep`, `--landing-plan`, `--landing-reason`.
+ 
+ ## CLI Usage
+ 
+diff --git a/skills/2-daily/merge-cleanup/STANDALONE.md b/skills/2-daily/merge-cleanup/STANDALONE.md
+new file mode 100644
+index 000000000..aa91687cf
+--- /dev/null
++++ b/skills/2-daily/merge-cleanup/STANDALONE.md
+@@ -0,0 +1,154 @@
++# /merge-cleanup without the XYZ-forge overlay (standalone mode and a prose runbook)
++
++This page is linked from [`SKILL.md`](SKILL.md). It is for a repository that has **not** installed the XYZ-forge harness overlay (no `githooks/install.sh`, no RELEASES ledger, no `utils/py/wave_reconcile.py`, no `pdda.sh`). It has three parts, in priority order:
++
++1. **Sequencing** works with only `git` and `gh`: the merge order and the landing forecast for a large queue.
++2. **Landing** works in an explicit standalone mode (`--standalone`).
++3. **A prose runbook** for an agent when the scripts cannot run at all (no Python, or the scripts are not installed): the same ordering rules and a safe landing loop, done by hand.
++
++The default mode (no `--standalone`) is the Forge-overlay mode and is unchanged. Read [what each mode needs](#what-each-mode-needs) first.
++
++## What each mode needs
++
++| | Default (Forge overlay) mode | `--standalone` |
++|---|---|---|
++| Declared how | nothing | the flag, every run. It is **never inferred** from a missing file (GH-1576): without it, a landing clone with no `githooks/install.sh` still refuses. |
++| Repo must have | `githooks/install.sh` (the pre-push gate), the RELEASES ledger (`releases.sql` at HEAD, `utils/py/releases_app.py`), `utils/py/wave_reconcile.py`, `utils/pdda/pdda.sh` | none of those. The flag is **refused** if the primary carries any overlay marker (`releases.sql`, `releases.db`, `utils/py/releases_app.py`, `.xyz/utils/py/releases_app.py`, `utils/py/wave_reconcile.py`): use the default mode for a partial overlay. |
++| Integration branch | `development` only. `wave_reconcile.py` (post-merge) defaults to `development`, filters its PR flows on a literal `development`, and merge-cleanup forwards no branch to it, so `--integration-branch main` merges and then stops at reconcile. | any branch (`--integration-branch main`). |
++| Pre-merge ledger gate, post-merge `wave_reconcile`, `releases_app check`, `pdda.sh`, Jog | run | skipped, and logged as skipped |
++| A conflicting landing | B1 may repair a disjoint ledger/changelog conflict, then pushes the repaired head through the clone's gate hook | **hands off**: the PR is named with its conflicting paths, the queue continues, the run exits 3. There is no automatic repair. |
++| `.tick/` records (`selection-*.json`, batch records) | written under `<primary>/.tick/`, which the Forge `.gitignore` hides | the primary's own `.git/info/exclude` gets `/.tick/` once (local, untracked) so the primary stays clean; nothing is written if `.tick/` is already ignored |
++| Default scan roots (teardown candidates) | four fixed roots, not origin-filtered, plus the primary's parent folder (origin-filtered) | the primary's parent folder only, origin-filtered. The fixed roots are not scanned. `--root` is still the operator's explicit choice; `--prefix` still narrows by name. |
++| Pushes | gated by the clone's pre-push hook; refused without a proven hook | the same code: **refused without a proven hook**. A clean standalone queue makes no push. Never `--no-verify`. |
++
++## Prerequisites
++
++- Python 3.9 or newer, `git` 2.38 or newer (`git merge-tree --write-tree`), `gh` 2.18 or newer and authenticated for the repository, an `origin` remote, and `lsof` (the teardown scan; without it checkouts are preserved, not removed).
++- A **gate hook** matters only if a push is to be made. Standalone landing makes none on a clean queue. If the repo ships its own `githooks/install.sh`, merge-cleanup runs it in each landing clone as in the default mode.
++- The `--standalone` dry run prints a **STANDALONE PREREQUISITES** block first, before the primary is inspected and before any clone is made (the forecast clone and the landing clones come later). Each unmet item is named there, for example `[UNMET] git >= 2.38: git version 2.30.0 is below the required 2.38.0 minimum ...`. `--execute` refuses (exit 2) on an unmet Python, `gh` or `origin`; an old `git` only withholds the forecast.
++
++## Part 1 and 2: the scripts, standalone
++
++```bash
++S=<installed skill>/scripts/merge_cleanup.py     # copied skill folder; the scripts are standard-library only
++python3 $S --primary "$PRIMARY" --integration-branch main --standalone --prs-only    # sequence only: no clone
++python3 $S --primary "$PRIMARY" --integration-branch main --standalone --prs 12,14,15,19   # dry run: pins heads, forecast for 3+
++python3 $S --primary "$PRIMARY" --integration-branch main --standalone --prs 12@<sha>,14@<sha> \
++    --landing-plan direct --landing-reason "<why>" --execute                         # lands them, in order
++```
++
++- `--prs-only` lists **every** open PR in order and makes no clone. A dry run with `--prs` also simulates each listed landing in disposable clones (each **alone** against the current base: it merges nothing, so two PRs that conflict only with each other both read "Would merge"; the forecast's pair and fold lines show those), prints the **Landing forecast** for 3 or more, and pins the heads. `--execute` lands only the pinned PRs, at those heads, and exits 5 for 3 or more PRs until `--landing-plan direct|group` and a reason are given. The exit codes are the default mode's: 2 a stop, 3 something did not land (read the list), 4 landed with the sweep verdict pending (record it with `--record-sweep`), 5 a landing decision is required.
++- Declare the repo's sweep cadence in a committed `.merge-cleanup.json` (`qualification`: `none`, `per_batch` with a `sweep_command`, or `promotion`) as in SKILL.md; without it a batch of 2 or more PRs exits 4 until a verdict is recorded.
++- The batch issue (2 or more PRs) is opened in **your** repository through `gh`; say so if that is not wanted.
++- `--teardown-only` and Phase 6 work as in SKILL.md. Review the Phase 1-3 table before an `--execute`; pass `--prefix <name>` (a substring unique to the clones you mean) to keep removal to those.
++
++### How to read the output
++
++| You see | Meaning |
++|---|---|
++| table row `Draft yes` and, with `--execute`/dry run, `SKIPPED (draft)` then `Skipped draft PR(s)` | not landed; hard dependents wait. A draft in `--prs` is refused at pin time (rc 2): drop it. |
++| `carries hold label` / `Skipped held PR(s)` | a label containing `hold`, `do not merge`, `do-not-merge`, `blocked` or `wip`, or such a word in the title |
++| `Checks FAIL` in the table; `[DRY RUN] ... required checks failing` | the dry run only reports it; `--execute` does not merge it and its hard dependents are `NOT attempted` |
++| `NOT attempted — depends on #N (...)` | a hard dependency did not land (or is pending in a cycle) |
++| `Cycle or unresolved dependency detected among PRs: [...]` under Ordering Notes | those PRs are appended in numeric order; each is then `NOT attempted` because its dependency is not landed. Break the cycle by editing a `Depends on` line. |
++| `landing merge conflicts ... HANDOFF` with the conflict set | standalone has no repair; resolve it on the PR branch (see the runbook, conflict handling), then re-run the dry run to re-pin |
++| `N PR(s) did not land (...)` and exit 3 | the closing summary of everything not landed, with each reason |
++
++## Part 3: the prose runbook (an agent, no scripts)
++
++Use this when Python or the scripts are unavailable. It does by hand what the scripts do; the order it produces is the same. Do not invent rules: where the script and this page differ, the script wins and this page is wrong.
++
++**Ground rules (every step).** Never force-push, never delete a branch, never `--no-verify`, never edit someone else's PR branch unless the operator authorized that PR. Work in your own disposable clones, not in the operator's primary. Re-read a PR's live state immediately before acting on it. Stop and report at the first state you cannot establish; unknown is not a pass.
++
++### 0. Preconditions
++
++1. The primary checkout is on the integration branch (`<B>`), clean (`git status --porcelain` empty), and not behind or ahead of `origin/<B>` (`git fetch origin <B>` then `git merge-base --is-ancestor HEAD origin/<B>` and no local-only commits). If not, stop and report.
++2. Get the PR list the operator authorized. Anything else open is listed, never landed.
++
++### 1. Inventory
++
++```bash
++gh pr list --state open --limit 1000 --json number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url,isCrossRepository > prs.json
++```
++
++A listing that fails is an error, not an empty queue. `files` can be cut off for a very large PR (the listing returns a bounded number of files): for any PR showing exactly 100, read `gh api repos/{owner}/{repo}/pulls/<N>/files --paginate --jq '.[].filename'`. Record, per PR: number, head SHA, base branch, draft, labels, checks, mergeable, created time, files, body.
++
++### 2. Classify each PR (nothing is dropped; each gets a reason)
++
++| Class | Test | Treatment |
++|---|---|---|
++| draft | `isDraft` | skipped; hard dependents wait |
++| held | a label whose lowercase name contains `hold`, `do not merge`, `do-not-merge`, `blocked` or `wip`; or a title word `hold`, `wip`, `dnm`, `blocked`, `do not merge`, `no merge` | skipped; hard dependents wait |
++| wrong base | `baseRefName` is neither `<B>` nor the head branch of another open, same-repository PR | stop: it does not land on the branch you verified |
++| conflicting | `mergeable` is `CONFLICTING` | not landed; hand off (step 8) |
++| checks | `gh pr checks <N> --required --json name,bucket`: `fail`/`cancel` is failing, `pending` is pending, `pass`/`skipping` is ok, and `no required checks reported` is none | failing: not landed, dependents wait. pending: wait (bounded), then defer. unreadable: defer |
++| mergeable unknown | `UNKNOWN` | re-read every 15 s up to 6 times; still unknown: stop, never guess |
++
++### 3. Dependencies (edges that decide eligibility)
++
++A **hard edge** `A -> B` means B waits for A and is never attempted if A did not land:
++
++- the PR title or body says `depends on`, `blocked by`, `after`, `requires` or `prerequisite` followed by `#N` or a pull-request URL (case-insensitive), or `part of wave after #N`, and #N is an **open** PR in this inventory (a merged, closed or external number is ignored);
++- **stacked base:** B's `baseRefName` equals A's `headRefName` for another open PR A **whose head branch is in this repository** (`isCrossRepository` is false: two forks' `main` are not one branch, and not this repository's `main`). B cannot land on `<B>` until A has, because it targets A's branch.
++
++### 4. File-overlap matrix (edges that decide sequence only)
++
++Build each PR's file set. For every pair that shares a file and has **no** hard edge between them, add a **soft edge**: the older PR (`createdAt`) lands first. Skip a soft edge that would close a cycle with the edges already present, and say so. A soft edge never blocks: if the older PR did not land, the newer one is still attempted and its own landing check decides.
++
++How to read the matrix: a PR with many overlaps is a candidate **conflict hub**; two PRs that overlap on the same lines will conflict when the second lands; overlap on the same file in different regions usually merges cleanly. Overlap is a prediction; step 6 measures it.
++
++### 5. The order
++
++1. Take every PR that has no unmet incoming edge (hard or soft). Among those, take the **lowest number** first.
++2. Repeat after removing it, until none remain.
++3. If PRs remain, they are in a **cycle** (or wait on one). Append them in ascending number order, report the cycle by number, and treat each as `NOT attempted` until its hard dependency lands. Never break a cycle by guessing; ask the author or the operator to edit a `Depends on` line.
++
++Present the result as a table: sequence, PR, title, head SHA, base, draft/hold/checks/mergeable, files, and the reason for every edge ("hard: depends on #109", "stacked on #106", "soft: both touch src/core.py, #102 older"). List the skipped and blocked PRs with their reason. A table that omits a PR is wrong.
++
++### 6. Forecast the landings (needs `git` 2.38+, no checkout, no push)
++
++```bash
++git clone --quiet --no-checkout "$ORIGIN" f && cd f
++git fetch --quiet origin <B> && BASE=$(git rev-parse origin/<B>)
++for N in <listed>; do git fetch --quiet origin +pull/$N/head:refs/forecast/$N; done   # each head must equal the SHA you recorded
++git merge-tree --write-tree --name-only --no-messages $BASE refs/forecast/<N>          # alone: exit 0 clean, 1 conflict (paths follow the tree id), other = did not run
++git merge-tree --write-tree --name-only --no-messages refs/forecast/<A> refs/forecast/<B>   # every pair
++```
++
++- **Cumulative fold** in the step 5 order: start at `$BASE`; for each PR run `git merge-tree --write-tree --name-only --no-messages <CUR> <PR>`; on exit 0 advance with `CUR=$(git -c user.name=fold -c user.email=fold@local commit-tree <tree> -p <CUR> -p <PR> -m fold)`; at the first exit 1 stop and mark every later PR "not simulated after #X".
++- **Conflict hubs.** Set aside every PR that conflicts alone with `$BASE`. Then, while any two remaining PRs conflict with each other, set aside the one with the most pairwise conflicts (ties: the later one in the order). Anything that hard-depends on a set-aside PR is set aside too. The rest is the **clean set**; fold it again. The greedy choice is a heuristic, not a proven minimum.
++- **Recommendation (the script's rule).** No conflicts: `direct`, one by one. Any conflict on a path the tool cannot repair (in standalone mode that is **every** path, there being no B1): `group`, one reviewed combined resolution (GH-1066). If any step could not run: **no** recommendation, never a guess. The script's `direct in passes` needs repairable paths, so it does not arise here.
++- **A reasoned alternative you may state.** When the hubs are few (at most half the queue) and the clean set folds clean, you may land the clean set first and hand each hub to its author, giving that as your own landing reason. It is your decision and your reason, not the script's recommendation.
++- **Blind spots to state:** merge-tree is text-level; reconcile commits and later pushes move the base; a stacked child can read `CONFLICTING` after its base was squash-merged even though merge-tree is clean (merge `<B>` into the child branch: that is a new head and fresh checks).
++
++Without git 2.38, `merge-tree --write-tree` does not exist: use `git merge --no-commit --no-ff` in a throwaway clone per PR (then `git merge --abort`) and say that the pair and fold simulations were not run.
++
++### 7. The landing loop (one PR at a time; re-check after each)
++
++For each PR in order, **re-read it live first** (`gh pr view <N> --json state,isDraft,mergeable,headRefOid,baseRefName,labels,mergeCommit,title`):
++
++1. Not `OPEN`, now a draft or now held: skip it, record why, and treat it as not landed for its hard dependents. If `baseRefName != <B>`: **stop and report** (a stacked child must already have been retargeted: do that with `gh pr edit <N> --base <B>` **before** merging its base PR, never after, and only for PRs in the authorized queue; a child whose base PR did not land is blocked, step 3).
++2. Head moved from the SHA you recorded: do not merge it; re-do the forecast for the queue and re-confirm.
++3. Re-simulate against the base **now** (`git fetch origin <B>`, then step 6's "alone" command at the new tip). Conflict: hand off (step 8) and continue with the PRs that do not depend on it.
++4. Checks per step 2. Then `gh pr merge <N> --squash --match-head-commit <recorded sha>` (use `--merge` or `--rebase` if the project's policy file says so; never choose by guess).
++5. Verify the **remote** says `MERGED` with a merge commit (`gh pr view <N> --json state,mergeCommit`); a zero exit is not a landing.
++6. In the primary: `git fetch origin <B>` then `git merge --ff-only origin/<B>`; confirm `git status --porcelain` is empty and `HEAD == origin/<B>`. If the fast-forward fails, stop and report: the PR is merged remotely but the primary did not advance.
++7. **Re-check the rest of the queue:** the base moved, so every remaining PR's mergeable state and its overlaps may have changed. Re-read the next PR's live state (it can read `UNKNOWN` for a few seconds), and if a landing touched a file another queued PR touches, re-run that pair's forecast before proceeding.
++
++### 8. Conflicts and failing PRs: no force-push, no branch deletion
++
++- **Report and hand off by default.** Name the PR, the conflicting paths (from the merge-tree output), the PRs it conflicts with, and who could resolve it. Continue with the PRs that do not depend on it.
++- Resolve a conflict yourself **only if the operator authorized that PR**. Do it in a disposable full clone: `git checkout --detach <pr head>`, `git merge origin/<B>`, resolve, commit, and push the result to the PR branch with a plain `git push` through the project's pre-push hook, never `--force` and never `--no-verify`. If the clone has no installed gate hook, the push is **refused**: report that instead of pushing. A new head needs fresh checks and a fresh forecast; treat it as a new PR in the queue.
++- Never delete a PR branch, a stacked parent's branch, or an unmerged clone; never rewrite history on the integration branch. A failing-checks PR is not merged and not "fixed" by you unless the operator asks.
++
++### 9. Stop conditions
++
++Stop (and report) when: the primary is not ready; a listing or a live read fails and is not a clear network blip; a PR's mergeable state stays `UNKNOWN`; a PR targets a branch you did not verify; the fast-forward fails; two runs of the same landing disagree; the operator's authorized list is exhausted; or any step needs an override the operator did not give. A network blip may be retried twice with a short wait; anything else is a stop.
++
++### 10. What to report
++
++One table: every PR in the inventory with its final state: **landed** (merge commit), **not landed** with the reason (draft, held, failing checks, conflict with paths, blocked by #N, cycle, head moved, deferred), and what you did not attempt. Then: the order you used and why (edges), the forecast and its blind spots, the primary's final state (`HEAD == origin/<B>`, clean), and what the operator must decide (a hub to resolve, a cycle to break, a stack to retarget).
++
++### What only the scripts do
++
++The scripts add what a hand run cannot do reliably: the `--prs` pin file that refuses a moved head (GH-1226), the durable per-PR repair record and its two-repair ceiling, the lock around those records, the batch issue and its sweep record, polling and bounded retry with defer, `gh pr merge --match-head-commit` on the pinned SHA, the safe-teardown inspection (dirty, stash, unlanded refs, live sessions, open handles) and Trash-only removal, and the forecast's cumulative fold and hub selection done for every pair. **Do not tear down or delete clones by hand**; report them for the scripts or the operator. Where you cannot run them, say plainly which of these you skipped.
+diff --git a/skills/2-daily/merge-cleanup/scripts/ledger_merge.py b/skills/2-daily/merge-cleanup/scripts/ledger_merge.py
+index 11ff4e85c..388070afd 100644
+--- a/skills/2-daily/merge-cleanup/scripts/ledger_merge.py
++++ b/skills/2-daily/merge-cleanup/scripts/ledger_merge.py
+@@ -755,6 +755,8 @@ def _split_paths(paths: Set[str], allowed: Set[str]) -> Tuple[List[str], List[st
+     return eligible, review
+ 
+ 
++STANDALONE_ASSUMPTION = ("standalone mode: there is no B1 (no ledger), so every conflicting path needs review and a "
++                         "conflicting PR is handed off, never repaired")
+ PASSES_ASSUMPTION = ("passes plan: pass 1 is forecast against the frozen base only; each landing's reconcile commit "
+                      "moves the base, so a pass-1 PR that touches the ledger or changelog can still need a B1 repair")
+ STACKED_ASSUMPTION = ("stacked members {pairs}: their branches share commits that are not on the base. After the "
+@@ -836,7 +838,8 @@ def _conflict_hubs(order: List[int], prs: Dict[str, Dict[str, Any]], pairs: List
+ 
+ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[int, str],
+                      unknown: Optional[Dict[int, str]] = None, consumed: Optional[Dict[int, int]] = None,
+-                     timeout: int = 120, hard_deps: Optional[Dict[int, Set[int]]] = None) -> Dict[str, Any]:
++                     timeout: int = 120, hard_deps: Optional[Dict[int, Set[int]]] = None,
++                     standalone: bool = False) -> Dict[str, Any]:
+     """Conflict forecast for a queue, in `clone` (objects only; no working tree needed).
+ 
+     `heads` maps every PR in `order` to its pinned head, which the caller already fetched and verified
+@@ -850,10 +853,13 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
+     GH-1470: when PRs conflict, the conflict hubs are named (`_conflict_hubs`; `hard_deps` maps a PR to
+     the queue members it hard-depends on) and the fold is run again over the remaining members. If that
+     set folds clean and the set-aside PRs are at most HUB_MAX_SHARE of the queue, `passes` holds the two
+-    `--prs` lists of a clean-first landing; the recommendation itself stays `direct`."""
++    `--prs` lists of a clean-first landing; the recommendation itself stays `direct`.
++
++    GH-1662: `standalone` (a repository without the ledger) has no B1, so nothing is repairable: the
++    repair-path set is empty, every conflicting path needs review, and a conflict hands off."""
+     unknown = dict(unknown or {})
+     consumed = consumed or {}
+-    allowed = ledger_repair_paths(clone)
++    allowed = set() if standalone else ledger_repair_paths(clone)
+     prs: Dict[str, Dict[str, Any]] = {}
+     for n in order:
+         prs[str(n)] = {"head": heads.get(n), "repairs_consumed": int(consumed.get(n, 0)),
+@@ -964,9 +970,13 @@ def landing_forecast(clone: Path, base_sha: str, order: List[int], heads: Dict[i
+     else:
+         rec, reason = "direct", "no conflicts found"
+     deferrals = sum(1 for n in order if (prs[str(n)]["alone"] or {}).get("conflict"))
+-    return {"version": 1, "base_sha": base_sha, "order": list(order), "prs": prs, "pairs": pairs,
+-            "pair_unknown": pair_unknown, "repair_deferrals": deferrals,
+-            "hubs": hubs, "passes": passes, "recommendation": rec, "reason": reason,
+-            "stacked": stacked,
+-            "assumptions": list(FORECAST_ASSUMPTIONS) + ([PASSES_ASSUMPTION] if passes else [])
+-            + ([STACKED_ASSUMPTION.format(pairs=", ".join(stacked))] if stacked else [])}
++    result = {"version": 1, "base_sha": base_sha, "order": list(order), "prs": prs, "pairs": pairs,
++              "pair_unknown": pair_unknown, "repair_deferrals": deferrals,
++              "hubs": hubs, "passes": passes, "recommendation": rec, "reason": reason,
++              "stacked": stacked,
++              "assumptions": list(FORECAST_ASSUMPTIONS) + ([STANDALONE_ASSUMPTION] if standalone else [])
++              + ([PASSES_ASSUMPTION] if passes else [])
++              + ([STACKED_ASSUMPTION.format(pairs=", ".join(stacked))] if stacked else [])}
++    if standalone:  # GH-1662: a key only a standalone forecast carries, so a Forge snapshot is byte-identical
++        result["standalone"] = True
++    return result
+diff --git a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+index a81b9e285..d2c55df90 100644
+--- a/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
++++ b/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py
+@@ -31,6 +31,7 @@ from scan_clones import (
+     same_origin,
+     is_safe_deletable_path,
+     default_scan_roots,
++    standalone_scan_roots,
+     primary_safe_roots,
+     scan_directories,
+     inspect_checkout,
+@@ -642,6 +643,13 @@ def _protect_stacked_dependents(info: Dict[str, Any], open_prs: List[Dict[str, A
+     """Retarget open stacked dependents before merging their base."""
+     pr_num = info["number"]
+     head = info.get("headRefName") or ""
++    # GH-1662: a fork's head branch is not a branch of this repository, so a fork PR is nobody's stacked parent
++    # (the sorter already says so). The live read carries no identity; the discovery list does.
++    cross = info.get("isCrossRepository")
++    if cross is None:
++        cross = next((p.get("isCrossRepository") for p in open_prs if p.get("number") == pr_num), None)
++    if cross:
++        return True
+     dependents = [p for p in open_prs
+                   if p.get("number") != pr_num and (p.get("baseRefName") or "") == head]
+     if not dependents:
+@@ -802,7 +810,8 @@ def effective_sequence(open_prs: List[Dict[str, Any]], listed: Set[int]) -> List
+     return [p for p in all_ordered if int(p["number"]) not in deferred]
+ 
+ 
+-def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[Dict[str, Any]]) -> Dict[str, Any]:
++def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[Dict[str, Any]],
++                           standalone: bool = False) -> Dict[str, Any]:
+     """GH-1452: the planning-time landing forecast for a dry run over 3+ PRs, in dependency order.
+ 
+     This side owns the network and the clone: one disposable clone with no working tree (never the
+@@ -812,6 +821,7 @@ def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[D
+     recommendation) and never blocks pinning."""
+     nums = [int(p["number"]) for p in ordered]
+     heads = {int(p["number"]): p["headRefOid"] for p in ordered}
++    sa = {"standalone": True} if standalone else {}  # GH-1662: Forge-mode calls keep their exact arguments
+     # GH-1470: a PR that hard-depends on a set-aside hub cannot land in the clean-first pass
+     deps = {int(p["number"]): {int(d) for d in (p.get("_hard_deps") or [])} for p in ordered}
+     try:
+@@ -846,10 +856,10 @@ def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[D
+                     consumed[n] = attempt_record.repair_count(attempt_record.load(rec_path)) if rec_path.exists() else 0
+                 except attempt_record.RecordError as exc:
+                     unknown[n] = f"attempt record unreadable: {str(exc)[:100]}"
+-            return ledger_merge.landing_forecast(clone, base_sha, nums, heads, unknown, consumed, hard_deps=deps)
++            return ledger_merge.landing_forecast(clone, base_sha, nums, heads, unknown, consumed, hard_deps=deps, **sa)
+     except Exception as exc:  # advisory only: nothing here may stop the dry run from pinning
+         why = f"forecast did not run: {str(exc)[:160]}"
+-        return ledger_merge.landing_forecast(Path(tempfile.gettempdir()), "", nums, heads, {n: why for n in nums}, {})
++        return ledger_merge.landing_forecast(Path(tempfile.gettempdir()), "", nums, heads, {n: why for n in nums}, {}, **sa)
+ 
+ 
+ def format_landing_forecast(fc: Dict[str, Any], integration: str) -> str:
+@@ -879,8 +889,12 @@ def format_landing_forecast(fc: Dict[str, Any], integration: str) -> str:
+         e = (fc.get("prs") or {}).get(str(n), {})
+         if e.get("status") == "unknown":
+             out.append(f"#{n}: unknown — {e.get('reason') or 'not simulated'}")
+-    out.append(f"PRs needing a B1 repair (each lands in the same run once its new head's checks pass, "
+-               f"else defers): {fc.get('repair_deferrals', 0)}")
++    if fc.get("standalone"):  # GH-1662: no B1 here; a PR that conflicts with the base is handed off
++        out.append(f"PRs that conflict with the base (standalone: handed off, no automatic repair): "
++                   f"{fc.get('repair_deferrals', 0)}")
++    else:
++        out.append(f"PRs needing a B1 repair (each lands in the same run once its new head's checks pass, "
++                   f"else defers): {fc.get('repair_deferrals', 0)}")
+     nums = lambda ns: ", ".join(f"#{n}" for n in ns) or "none"
+     hubs = fc.get("hubs")
+     if hubs:  # GH-1470: who holds the conflicts, and whether the rest really fold clean without them
+@@ -1098,7 +1112,7 @@ def gate_toolchain_fault_reason(clone: Path) -> str:
+ 
+ 
+ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_branch: str,
+-                          workdir: Path) -> Dict[str, Any]:
++                          workdir: Path, standalone: bool = False) -> Dict[str, Any]:
+     """A disposable full clone at the PR head with `git merge origin/<branch>` attempted (E.6/B1).
+ 
+     Returns {"clone": Path|None, "merge_rc": int|None, "error": str}. merge_rc 0 = clean."""
+@@ -1121,7 +1135,15 @@ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_br
+         run_git(clone, ["config", k, v])
+     # GH-1576: this clone is made here, so wiring its pre-push gate is this tool's job; a repair
+     # push from it must never run ungated.
+-    unwired = gate_unwired_reason(clone, install=True)
++    # GH-1662: only an explicit --standalone declaration tolerates a clone with no installer at all (a
++    # repository without the overlay); the missing file alone never skips it. An installer that exists
++    # still runs and still refuses on failure, and push_resolved_head re-checks the gate before any push.
++    if standalone and not (Path(clone) / "githooks" / "install.sh").is_file():
++        log(f"PR #{pr['number']}: standalone — landing clone has no githooks/install.sh; nothing is pushed "
++            "from it, and any push stays refused without a proven gate hook")
++        unwired = ""
++    else:
++        unwired = gate_unwired_reason(clone, install=True)
+     if unwired:
+         return {"clone": clone, "merge_rc": None, "error": f"landing clone gate wiring failed: {unwired}"}
+     r = _retry_call(lambda: _net_git(clone, ["fetch", "--quiet", "origin", f"pull/{pr['number']}/head", integration_branch]),
+@@ -1475,6 +1497,104 @@ def preflight_warnings(primary_repo: Optional[Path] = None) -> List[str]:
+     return out
+ 
+ 
++# GH-1662: files whose presence contradicts a `--standalone` declaration, i.e. what the skipped steps need.
++STANDALONE_OVERLAY_MARKERS = ("releases.sql", "releases.db", "utils/py/releases_app.py",
++                              ".xyz/utils/py/releases_app.py", "utils/py/wave_reconcile.py", "utils/pdda/pdda.sh")
++
++
++def standalone_overlay_found(primary: Path) -> List[str]:
++    """Overlay files present in the primary. `--standalone` declares there are none; skipping a ledger gate
++    where a ledger exists would land PRs the ledger never saw, so a contradicting declaration is refused."""
++    return [m for m in STANDALONE_OVERLAY_MARKERS if (Path(primary) / m).exists()]
++
++
++def standalone_prerequisites(primary: Path) -> Tuple[List[str], List[str]]:
++    """GH-1662: (report lines, hard-unmet names) for `--standalone`, printed before anything is cloned.
++    Hard: Python, a launchable git and gh, an origin remote. An old git or gh only withholds the forecast
++    or warns (as in default mode); `lsof` and the gate hook are informational."""
++    lines: List[str] = []
++    hard: List[str] = []
++
++    def row(ok: bool, name: str, detail: str, is_hard: bool = False) -> None:
++        lines.append(f"  [{'ok' if ok else 'UNMET'}] {name}: {detail}")
++        if not ok and is_hard:
++            hard.append(name)
++
++    v = sys.version_info
++    row(v >= (3, 9), "Python >= 3.9", f"{v[0]}.{v[1]}.{v[2]}", True)
++    g = run_git(Path("."), ["--version"], timeout=5)
++    gout = ((g.stdout or "") + (g.stderr or "")).strip()
++    if g.returncode != 0:
++        row(False, "git launchable", gout or "git could not be run", True)
++    else:
++        msg = check_git_version()
++        row(msg is None, "git >= 2.38", msg or gout)
++    h = _gh(["--version"], Path("."), timeout=30)
++    hout = ((h.stdout or "") + (h.stderr or "")).strip()
++    if h.returncode != 0:
++        row(False, "gh launchable", hout or "gh could not be run", True)
++    else:
++        msg = check_gh_version()
++        row(msg is None, "gh >= 2.18", msg or (hout.splitlines() or [""])[0])
++    url = origin_url(primary)
++    row(bool(url), "origin remote", url or "the primary has none; landing and forecast clones need it", True)
++    lsof = shutil.which("lsof")
++    lines.append(f"  [{'ok' if lsof else 'info'}] lsof (teardown scan): "
++                 f"{lsof or 'not found; checkouts are then preserved, never removed'}")
++    hook = (Path(primary) / "githooks" / "install.sh").is_file()
++    lines.append(f"  [info] gate hook (only a push needs it): "
++                 f"{'githooks/install.sh present; it runs in each landing clone' if hook else 'no githooks/install.sh; standalone makes no push and any push from a clone stays refused'}")
++    return lines, hard
++
++
++def default_mode_preflight(primary: Path, integration: str) -> List[str]:
++    """GH-1662: requirements of the default (Forge overlay) mode that the primary lacks, named before the first
++    clone. Report-only: the later guards are unchanged, and a repository with the overlay gets no line."""
++    out: List[str] = []
++    if not (Path(primary) / "githooks" / "install.sh").is_file():
++        out.append("githooks/install.sh is missing in the primary, so every landing clone refuses (GH-1576); "
++                   "declare --standalone only for a repository without the XYZ overlay")
++    if not (Path(primary) / LEDGER_DUMP).is_file() or not tool_path(Path(primary), "releases_app.py").is_file():
++        out.append("no RELEASES ledger (releases.sql with releases_app.py), so the pre-merge ledger gate refuses; "
++                   "--standalone skips it for a repository without the overlay")
++    if integration != "development" and tool_path(Path(primary), "wave_reconcile.py").is_file():
++        out.append(f"the integration branch is '{integration}', but post-merge wave_reconcile.py is "
++                   "development-only; --standalone does not run it")
++    return out
++
++
++def ensure_tick_ignored(primary: Path) -> Optional[str]:
++    """GH-1662 (T4): None when merge-cleanup's records under `<primary>/.tick/merge-cleanup/` cannot dirty the
++    primary, else why not. Already ignored: nothing is written. Otherwise `/.tick/` is appended to the primary's
++    own git exclude file (local, untracked). Tracked records cannot be hidden by an ignore rule, so they refuse."""
++    probe = ".tick/merge-cleanup/"
++    tracked = run_git(primary, ["ls-files", ".tick/merge-cleanup"])
++    if tracked.returncode != 0:
++        return f"cannot list tracked .tick records: {tracked.stderr.strip() or 'git failed'}"
++    if tracked.stdout.strip():
++        return "records under .tick/merge-cleanup are tracked, which an ignore rule cannot hide from the post-merge commit"
++    chk = run_git(primary, ["check-ignore", "-q", probe])
++    if chk.returncode == 0:
++        return None
++    if chk.returncode != 1:
++        return f"git check-ignore failed: {chk.stderr.strip() or 'git failed'}"
++    where = run_git(primary, ["rev-parse", "--git-path", "info/exclude"])
++    if where.returncode != 0 or not where.stdout.strip():
++        return f"cannot resolve the git exclude file: {where.stderr.strip() or 'git failed'}"
++    path = Path(primary) / where.stdout.strip()
++    try:
++        path.parent.mkdir(parents=True, exist_ok=True)
++        existing = path.read_text(encoding="utf-8") if path.exists() else ""
++        with open(path, "a", encoding="utf-8") as fh:
++            fh.write(("" if not existing or existing.endswith("\n") else "\n") + "/.tick/\n")
++    except OSError as exc:
++        return f"cannot write {path}: {exc}"
++    if run_git(primary, ["check-ignore", "-q", probe]).returncode != 0:
++        return f"appended /.tick/ to {path}, but {probe} is still not ignored"
++    log(f"standalone: added /.tick/ to {path} so the primary stays clean (local, untracked)")
++    return None
++
++
+ def jog_primary_precondition(primary_repo: Path, listed: List[Dict[str, Any]]) -> Optional[str]:
+     """GH-1470: read-only dry-run check of the Jog primary pin that the post-merge Jog step needs.
+     Returns a warning when a listed PR maps to an open Jog row and the primary is not pinned (or
+@@ -2044,6 +2164,10 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+     if track is not None:
+         track["failed"] = failed
+     pending = {pr["number"] for pr in ordered_prs}
++    # GH-1662: `--standalone` (a repository without the overlay). `sa` keeps every Forge-mode call exact.
++    standalone = getattr(args, "standalone", False) is True
++    sa = {"standalone": True} if standalone else {}
++    landing_heads: Set[str] = set()  # branches of PRs already previewed to land in this dry run (stacked bases)
+     try:
+         for pr in ordered_prs:
+             if track is not None:  # GH-1064: a stop from here on is this PR's, with these errors
+@@ -2107,8 +2231,14 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+                 _note_external_state(p_num, info, batch, track)
+                 continue
+             if (info.get("baseRefName") or "") != branch:
+-                log_err(f"PR #{p_num} targets '{info.get('baseRefName')}', not '{branch}' — stopping")
+-                return 2
++                if dry_run and (info.get("baseRefName") or "") in landing_heads:
++                    # GH-1662: a stacked child whose base PR is previewed above; execute retargets it
++                    # (_protect_stacked_dependents) when that base lands, so the preview must not stop here.
++                    log(f"[DRY RUN] PR #{p_num} targets '{info.get('baseRefName')}', the branch of a PR previewed "
++                        f"above; it would be retargeted to '{branch}' once that PR lands")
++                else:
++                    log_err(f"PR #{p_num} targets '{info.get('baseRefName')}', not '{branch}' — stopping")
++                    return 2
+             info = _await_mergeable(p_num, info, primary_repo)
+             if info.get("error"):  # a refresh inside the poll failed: same rules as the first read
+                 if _transient(info["error"]):
+@@ -2135,7 +2265,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+                 continue
+ 
+             # Simulate this landing against the integration head fetched NOW.
+-            prep = prepare_landing_clone(info, primary_repo, branch, workdir)
++            prep = prepare_landing_clone(info, primary_repo, branch, workdir, **sa)
+             if prep["error"]:
+                 if _transient(prep["error"]):
+                     log_err(f"PR #{p_num}: DEFERRED — network unavailable after {RETRY_ATTEMPTS} attempts: "
+@@ -2147,6 +2277,16 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+                 return 2
+             clone = prep["clone"]
+ 
++            if prep["merge_rc"] != 0 and standalone:
++                # GH-1662: B1 repairs the Forge ledger and changelog; a repository without them has no
++                # repair, so the PR is handed off with its conflicting paths and the queue continues.
++                got, conflict_paths, why = ledger_merge.extract_conflict_set(clone)
++                log_err(f"PR #{p_num}: HANDOFF — the landing merge conflicts (GitHub said {mergeable}) and standalone "
++                        "mode has no automatic repair; resolve it on the PR branch, then re-run the dry run to re-pin")
++                log_err(f"  conflict set: {', '.join(sorted(conflict_paths)) if got else '(not extracted: ' + why + ')'}")
++                failed[p_num] = "handoff"
++                keep_workdir = True
++                continue
+             if prep["merge_rc"] != 0:
+                 log(f"PR #{p_num}: landing merge conflicts (GitHub said {mergeable}) — routing to B1")
+                 # GH-623 --resume: the LIVE state above is authoritative — a PR whose last repair
+@@ -2283,7 +2423,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+                 if info.get("error") or info.get("mergeable") != "MERGEABLE":
+                     log_err(f"PR #{p_num}: after resolution the PR reads {info.get('mergeable') or info.get('error')} — stopping")
+                     return 2
+-                prep = prepare_landing_clone(info, primary_repo, branch, workdir)
++                prep = prepare_landing_clone(info, primary_repo, branch, workdir, **sa)
+                 if prep["error"] or prep["merge_rc"] != 0:
+                     log_err(f"PR #{p_num}: the resolved head still does not merge cleanly — stopping ({prep['error'] or 'merge rc ' + str(prep['merge_rc'])})")
+                     keep_workdir = True
+@@ -2292,16 +2432,19 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+                 own_repair = b1["commit"]
+ 
+             # E.6: the ledger gate on the simulated landing.
+-            gate = pre_merge_ledger_gate(clone, gh_bin=_gh_bin(), integration_branch=branch)
+-            for d in gate["diagnostics"]:
+-                log(f"  gate: {d}")
+-            if not gate["green"]:
+-                log_err(f"PR #{p_num}: pre-merge ledger gate RED — not merged:")
+-                for f in gate["failures"]:
+-                    log_err(f"  - {f}")
+-                keep_workdir = True
+-                return 2
+-            log(f"PR #{p_num}: pre-merge ledger gate green on {info['headRefOid'][:10]} + origin/{branch}")
++            if standalone:
++                log(f"PR #{p_num}: standalone — pre-merge ledger gate skipped (no ledger in this repository)")
++            else:
++                gate = pre_merge_ledger_gate(clone, gh_bin=_gh_bin(), integration_branch=branch)
++                for d in gate["diagnostics"]:
++                    log(f"  gate: {d}")
++                if not gate["green"]:
++                    log_err(f"PR #{p_num}: pre-merge ledger gate RED — not merged:")
++                    for f in gate["failures"]:
++                        log_err(f"  - {f}")
++                    keep_workdir = True
++                    return 2
++                log(f"PR #{p_num}: pre-merge ledger gate green on {info['headRefOid'][:10]} + origin/{branch}")
+ 
+             pinned = (getattr(args, "_pins", None) or {}).get(p_num)
+             repinning = (not dry_run and own_repair is not None and pinned is not None
+@@ -2378,6 +2521,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+ 
+             if dry_run:
+                 log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy}`")
++                if pr.get("headRefName") and not pr.get("isCrossRepository"):
++                    landing_heads.add(pr["headRefName"])
+                 continue
+             live = refresh_pr_with_retry(p_num, primary_repo)
+             if live.get("error"):
+@@ -2435,7 +2580,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args,
+                 log_err("PR is merged remotely but the primary did not advance — reconcile by hand.")
+                 return 2
+             is_intermediate = bool(pending)
+-            if not run_post_merge_reconcile(
++            if standalone:
++                log(f"PR #{p_num}: standalone — post-merge reconcile (wave_reconcile, releases check, pdda, Jog) skipped")
++            elif not run_post_merge_reconcile(
+                     p_num, primary_repo, integration_branch=branch, dry_run=False,
+                     pr_head=info.get("headRefOid"), is_intermediate=is_intermediate):
+                 log_err(f"PR #{p_num}: post-merge reconciliation FAILED — stopping before the next PR")
+@@ -2668,6 +2815,10 @@ def main():
+     parser.add_argument("--no-auto-sweep", action="store_true", help="Do not automatically run the post-merge QA sweep at batch conclusion; halt with exit 4 (QA pending) instead (GH-1383)")
+     parser.add_argument("--landing-plan", choices=["direct", "group"], default=None, help="Landing plan decision for queues of 3+ PRs: 'direct' sequential landing or 'group' candidate (GH-1066)")
+     parser.add_argument("--landing-reason", default="", help="Non-empty justification for the chosen --landing-plan (GH-1066)")
++    parser.add_argument("--standalone", action="store_true",
++                        help="Declare a repository WITHOUT the XYZ overlay (GH-1662): skip the ledger gate, post-merge "
++                             "reconcile and B1 (a conflict hands off), scan only the primary's own-origin siblings; never "
++                             "inferred from a missing file, refused if overlay files exist; pushes stay gated. See STANDALONE.md")
+ 
+     args = parser.parse_args()
+ 
+@@ -2697,12 +2848,14 @@ def main():
+                 or args.root or args.prefix or args.exclude or args.prs or args.strategy or args.show_merge_policy
+                 or args.scan_only or args.prs_only or args.teardown_only or args.reconcile_pr
+                 or args.marker or args.allow_unready_primary or args.resume or args.backup_first or args.backup_root or args.record_sweep
+-                or args.no_auto_sweep):
++                or args.no_auto_sweep or args.standalone):
+             parser.error("published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides")
+         return retire_published_checkouts(primary_repo, args.checkout, args.retire_published_pr,
+                                          args.integration_branch, args.execute)
+     if args.record_sweep:
+         return record_sweep(primary_repo, args.integration_branch, Path(args.record_sweep))
++    if args.standalone and args.reconcile_pr:
++        parser.error("--standalone has no post-merge reconcile; --reconcile-pr is a Forge-overlay step")
+     args.prs = {n: sha for group in args.prs for n, sha in group}
+     args._pins = None
+     _MERGED_THIS_RUN.clear()
+@@ -2725,6 +2878,8 @@ def main():
+     if args.root:
+         search_roots, sibling = [Path(r).expanduser().resolve() for r in args.root], None
+         roots_line = "Scanned roots: " + ", ".join(str(r) for r in search_roots)
++    elif args.standalone:
++        search_roots, sibling, roots_line = standalone_scan_roots(primary_repo)
+     else:
+         search_roots, sibling, roots_line = default_scan_roots(primary_repo)
+     dry_run = not args.execute
+@@ -2733,6 +2888,30 @@ def main():
+     if dry_run:
+         log("Running in SAFE DRY-RUN mode. Pass --execute to apply changes.")
+ 
++    # GH-1662: prerequisites are named before anything is cloned, and before the early checkpoint below
++    # (which can create a batch). The declaration is explicit and guarded; a missing file never implies it.
++    lands = bool(args.prs) and not (args.scan_only or args.teardown_only or args.prs_only) and args.reconcile_pr == 0
++    if args.standalone:
++        found = standalone_overlay_found(primary_repo)
++        if found:
++            log_err("REFUSING --standalone: it declares a repository without the XYZ overlay, but the primary has "
++                    + ", ".join(found) + ". Skipping the ledger gate and reconcile there would land PRs the ledger never "
++                    "saw; run without --standalone (default mode).")
++            return 2
++        lines, hard = standalone_prerequisites(primary_repo)
++        print("STANDALONE PREREQUISITES (--standalone: no XYZ overlay assumed)\n" + "\n".join(lines) + "\n")
++        if hard and args.execute:
++            log_err("REFUSING to execute: unmet standalone prerequisite(s): " + ", ".join(hard))
++            return 2
++        if lands or args.execute:
++            why = ensure_tick_ignored(primary_repo)
++            if why:
++                log_err(f"REFUSING --standalone: {why}")
++                return 2
++    elif lands:
++        for warning in default_mode_preflight(primary_repo, args.integration_branch):
++            log_warn(f"PRE-FLIGHT: {warning}")
++
+     # Upfront landing plan checkpoint for queues of 3+ PRs (GH-1066 / GH-1158 / Plan QA R1).
+     # Refuse execution before ANY mutation (before prepare_primary_landing prunes REBASE_HEAD,
+     # before scan_directories fetches refs/FETCH_HEAD, and before --marker comments or batch issue writes).
+@@ -2952,7 +3131,8 @@ def main():
+             listed_order = effective_sequence(prs, set(listed_found))
+             if len(listed_order) >= 3:
+                 warn_git_version_if_needed()
+-                forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order)
++                forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order,
++                                                  **({"standalone": True} if args.standalone else {}))
+         args._forecast = forecast
+         if not pin_selection(primary_repo, args.integration_branch, args.prs, prs, forecast=forecast):
+             return 2
+diff --git a/skills/2-daily/merge-cleanup/scripts/scan_clones.py b/skills/2-daily/merge-cleanup/scripts/scan_clones.py
+index 9c3ce3b89..c01af0249 100644
+--- a/skills/2-daily/merge-cleanup/scripts/scan_clones.py
++++ b/skills/2-daily/merge-cleanup/scripts/scan_clones.py
+@@ -83,6 +83,18 @@ def default_scan_roots(primary: Path) -> Tuple[List[Path], Optional[Path], str]:
+     return roots, sib, line
+ 
+ 
++def standalone_scan_roots(primary: Path) -> Tuple[List[Path], Optional[Path], str]:
++    """GH-1662: the scan roots for `--standalone` without --root. Only the primary's parent folder, always
++    through the origin filter (even when it is also a default root), and only when `sibling_root` allows it;
++    the fixed original-operator roots are not scanned. Same return shape as `default_scan_roots`."""
++    parent = sibling_root(primary)
++    if parent is None:
++        return [], None, (f"Scanned roots: none (standalone: {primary.resolve().parent} is a NEVER_DELETE root; "
++                          "pass --root to scan elsewhere)")
++    return [parent], parent, (f"Scanned roots: {parent} (standalone: only checkouts with the primary's origin; "
++                              "the fixed default roots are not scanned)")
++
++
+ def _within(child: Path, parent: Path) -> bool:
+     """True only if child is STRICTLY inside parent (rejects child == parent)."""
+     if child == parent:
+diff --git a/skills/2-daily/merge-cleanup/scripts/toposort_prs.py b/skills/2-daily/merge-cleanup/scripts/toposort_prs.py
+index 3ac02f3fe..78cd20c8f 100644
+--- a/skills/2-daily/merge-cleanup/scripts/toposort_prs.py
++++ b/skills/2-daily/merge-cleanup/scripts/toposort_prs.py
+@@ -32,7 +32,7 @@ def fetch_open_prs(repo_path: Optional[str] = None) -> List[Dict[str, Any]]:
+     cmd = [
+         os.environ.get("MERGE_CLEANUP_GH_BIN") or "gh", "pr", "list",
+         "--state", "open", "--limit", "1000",  # GH-1226: the default 30 would hide a listed --prs PR
+-        "--json", "number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
++        "--json", "number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url,isCrossRepository"
+     ]
+     cwd = repo_path or "."
+     try:
+@@ -107,6 +107,19 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
+                 # Dependency is either already merged, closed, or external issue
+                 pass
+ 
++    # 1b. Stacked bases are HARD (GH-1662): a PR whose base branch is another open PR's head cannot land
++    #     on the integration branch before that PR does (the landing loop stops on a base that is not the
++    #     integration branch, and retargets a stacked child only when its base PR lands first).
++    # A fork's head branch is not a branch of this repository (two forks' `main` are not one branch, and neither
++    # is the upstream `main`), so a cross-repository PR is never a stacked parent.
++    heads = {pr.get("headRefName"): pr["number"] for pr in prs
++             if pr.get("headRefName") and not pr.get("isCrossRepository")}
++    for pr in prs:
++        parent = heads.get(pr.get("baseRefName") or "")
++        if parent is not None and parent != pr["number"]:
++            dep_graph[pr["number"]].add(parent)
++            hard_edges[pr["number"]].add(parent)
++
+     # 2. File-collision edges are SOFT (GH-623): they decide SEQUENCE (land the older first so
+     #    the newer lands on top of it), never ELIGIBILITY. Treating them as hard made one
+     #    handoff cascade "NOT attempted" through every collision-adjacent PR — GH-623's S3 —

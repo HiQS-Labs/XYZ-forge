@@ -1,0 +1,196 @@
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: <FX>/primary
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+STANDALONE PREREQUISITES (--standalone: no XYZ overlay assumed)
+  [ok] Python >= 3.9: 3.9.6
+  [ok] git >= 2.38: git version 2.54.0 (Apple Git-157)
+  [ok] gh >= 2.18: gh version 2.99.0 (stand-in)
+  [ok] origin remote: <FX>/origin.git
+  [ok] lsof (teardown scan): /usr/sbin/lsof
+  [info] gate hook (only a push needs it): no githooks/install.sh; the only pushes a standalone run can attempt (the GH-1656 local-merge rung, post-merge writes) are refused
+
+merge-cleanup: standalone: added /.tick/ to <FX>/primary/.git/info/exclude so the primary stays clean (local, untracked)
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: <FX>/primary
+  branch: main  (integration: main)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (1 found)
+================================================================================
+
+Scanned roots: <FX>/home
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `primary` | standalone_clone | `main` | ✅ | 🔥 Active (9 in 10m) | 0 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+
+merge-cleanup: --prs pinned for --execute (<FX>/primary/.tick/merge-cleanup/fx-origin/selection-main.json): #101 @ af133bb74c, #102 @ d6271d6f89, #103 @ 385e5159c3, #104 @ 3c19b42054, #105 @ 04b18769b5, #106 @ 80a390b552, #107 @ 26f2bbeded, #109 @ b181b69f07, #110 @ 72fc41859b, #111 @ ed86234114, #112 @ ebbcf7c79c, #113 @ 30b630463d, #114 @ a2f701ed0b, #115 @ 9cdcea7c5e, #116 @ b5ae5de9d2, #117 @ dee105825c
+merge-cleanup: Pinned for --execute: --prs 101@af133bb74cd97d39add8f2ee9585ae3fe8ee05ad,102@d6271d6f89fa39894f6b1e6bb0c3271487b44e01,103@385e5159c356a9006bcf455d38d1a6442fda66cc,104@3c19b42054a1a93f7e048a8c4eb1e13f4ff38fdf,105@04b18769b5e40224893445be9051dc24dfb0103e,106@80a390b552f4bf947526fd533531d88ef36e934d,107@26f2bbeded1f141947a3d42ac6d098810b1beacc,109@b181b69f0717d0464ec0aac34029cb824a75a61d,110@72fc41859b8534101f025b1c2334f93c29119b6e,111@ed86234114fc7516bcb83c6f1375d5aceabcf317,112@ebbcf7c79c57bef389c89a476e59982cf4bfffcf,113@30b630463d7553db8322dc6498f16d45e30a6062,114@a2f701ed0b93c1e0c69fd07419183679dca5a4c0,115@9cdcea7c5e410e3def51483df80a35190ddfe6d2,116@b5ae5de9d28b71592dcfbfde87268858bec6baee,117@dee105825cacee3373cda39200a88b9556fa5d2c
+merge-cleanup: PR #108: not in --prs; not sequenced
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (16 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#101](https://github.com/acme/widgets/pull/101) | docs: guide | `feat/guide` | `main` | no | PASS | MERGEABLE | 1 |
+| 2 | [#102](https://github.com/acme/widgets/pull/102) | feat: api v2 | `feat/api-v2` | `main` | no | PASS | MERGEABLE | 2 |
+| 3 | [#103](https://github.com/acme/widgets/pull/103) | refactor: core | `feat/core-refactor` | `main` | no | PASS | MERGEABLE | 1 |
+| 4 | [#104](https://github.com/acme/widgets/pull/104) | feat: ui polish | `feat/ui-polish` | `main` | no | PASS | MERGEABLE | 1 |
+| 5 | [#105](https://github.com/acme/widgets/pull/105) | feat: hub rework (touches core, api, ui) | `feat/hub` | `main` | no | PASS | MERGEABLE | 3 |
+| 6 | [#109](https://github.com/acme/widgets/pull/109) | docs: changelog entry | `feat/changelog` | `main` | no | PASS | MERGEABLE | 1 |
+| 7 | [#106](https://github.com/acme/widgets/pull/106) | docs: faq | `feat/faq` | `main` | no | PASS | MERGEABLE | 1 |
+| 8 | [#107](https://github.com/acme/widgets/pull/107) | docs: faq extra (stacked on #106) | `feat/faq-extra` | `feat/faq` | no | PASS | MERGEABLE | 1 |
+| 9 | [#110](https://github.com/acme/widgets/pull/110) | fix: util | `feat/util-fix` | `main` | no | FAIL | MERGEABLE | 1 |
+| 10 | [#114](https://github.com/acme/widgets/pull/114) | chore: held PR | `chore/held` | `main` | no | PASS | MERGEABLE | 1 |
+| 11 | [#115](https://github.com/acme/widgets/pull/115) | feat: settings (branched before main mov | `feat/stale-settings` | `main` | no | PASS | CONFLICTING | 1 |
+| 12 | [#116](https://github.com/acme/widgets/pull/116) | feat: uses util | `feat/uses-util` | `main` | no | PASS | MERGEABLE | 1 |
+| 13 | [#117](https://github.com/acme/widgets/pull/117) | docs: another changelog entry | `feat/changelog-2` | `main` | no | PASS | MERGEABLE | 1 |
+| 14 | [#111](https://github.com/acme/widgets/pull/111) | docs: cycle a | `feat/cycle-a` | `main` | no | PASS | MERGEABLE | 1 |
+| 15 | [#112](https://github.com/acme/widgets/pull/112) | docs: cycle b | `feat/cycle-b` | `main` | no | PASS | MERGEABLE | 1 |
+| 16 | [#113](https://github.com/acme/widgets/pull/113) | docs: needs the cycle | `feat/needs-cycle` | `main` | no | PASS | MERGEABLE | 1 |
+
+Ordering Notes:
+  - File collision on 1 file(s) between PR #102 and PR #103 — ordering #102 before #103
+  - File collision on 2 file(s) between PR #102 and PR #105 — ordering #102 before #105
+  - File collision on 1 file(s) between PR #103 and PR #105 — ordering #103 before #105
+  - File collision on 1 file(s) between PR #104 and PR #105 — ordering #104 before #105
+  - File collision on 1 file(s) between PR #108 and PR #115 — ordering #108 before #115
+  - File collision on 1 file(s) between PR #109 and PR #117 — ordering #109 before #117
+  - Cycle or unresolved dependency detected among PRs: [111, 112, 113]. Appending in numerical order.
+
+================================================================================
+LANDING PLAN DECISION (GH-1066)
+================================================================================
+
+Landing forecast (GH-1452, advisory; origin/main @ e6a260118d):
+| PR | alone | in sequence | potentially B1-eligible paths | needs-review paths | repairs used | churn risk |
+|---|---|---|---|---|---|---|
+| #101 | clean | clean | — | — | 0 | high |
+| #102 | clean | clean | — | — | 0 | high |
+| #103 | clean | conflict | — | src/core.py | 0 | high |
+| #104 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #105 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #109 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #106 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #107 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #110 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #114 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #115 | conflict | conditional (not simulated after #103: conflict) | — | config/settings.json | 0 | high |
+| #116 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #117 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #111 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #112 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+| #113 | clean | conditional (not simulated after #103: conflict) | — | — | 0 | high |
+Members #101 and #115 conflict with each other on: config/settings.json
+Members #102 and #103 conflict with each other on: src/core.py
+Members #102 and #105 conflict with each other on: src/api.py, src/core.py
+Members #102 and #115 conflict with each other on: config/settings.json
+Members #103 and #105 conflict with each other on: src/core.py
+Members #103 and #115 conflict with each other on: config/settings.json
+Members #104 and #105 conflict with each other on: src/ui.py
+Members #104 and #115 conflict with each other on: config/settings.json
+Members #105 and #115 conflict with each other on: config/settings.json
+Members #109 and #115 conflict with each other on: config/settings.json
+Members #109 and #117 conflict with each other on: CHANGELOG.md
+Members #106 and #115 conflict with each other on: config/settings.json
+Members #107 and #115 conflict with each other on: config/settings.json
+Members #110 and #115 conflict with each other on: config/settings.json
+Members #114 and #115 conflict with each other on: config/settings.json
+Members #115 and #116 conflict with each other on: config/settings.json
+Members #115 and #117 conflict with each other on: config/settings.json
+Members #115 and #111 conflict with each other on: config/settings.json
+Members #115 and #112 conflict with each other on: config/settings.json
+Members #115 and #113 conflict with each other on: config/settings.json
+PRs that conflict with the base (standalone: handed off, no automatic repair): 1
+Conflict hubs (GH-1470): 4 — conflict with the base: #115; picked by conflict degree (greedy heuristic, not a proven minimum): #103, #105, #117
+Clean once hubs are set aside: 12 of 16 — #101, #102, #104, #109, #106, #107, #110, #114, #116, #111, #112, #113
+Clean-set fold (hubs set aside, sequence order): clean through all 12
+Recommendation: group — conflicts on code, excluded or unclassified paths (#101, #102, #103, #104, #105, #109, #106, #107, #110, #114, #115, #116, #117, #111, #112, #113); one reviewed resolution beats repeating it per PR
+Blind spot: text-level merge-tree forecast: B1 is not run, so a path marked potentially B1-eligible can still hand off
+Blind spot: reconcile commits written after each landing are not simulated and can add conflicts
+Blind spot: a B1 repair pushes a new head, which must pass its checks again before it lands (it defers if they do not)
+Blind spot: standalone mode: there is no B1 (no ledger), so every conflicting path needs review and a conflicting PR is handed off, never repaired
+Blind spot: stacked members #106/#107: their branches share commits that are not on the base. After the earlier one is squash-merged, GitHub can mark the later one CONFLICTING even though merge-tree here is clean, and re-setting the PR base does not clear it; merge the base into the later branch (new head, fresh checks, re-pin)
+
+Forecast advice, not a decision. To act on it at --execute, state your own reason:
+  --landing-plan group --landing-reason "<your reason>"
+
+Queue holds 16 PRs. GH-1066 requires an explicit decision under --execute:
+  --landing-plan direct|group --landing-reason "<justification>"
+  • direct: Sequential landing on development (best for small/independent PRs).
+  • group:  Combine candidates into a single integration branch to minimize gate churn.
+See skills/2-daily/merge-cleanup/SKILL.md for guidance.
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #101: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #101: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #101: required checks: 1 required check(s) green
+merge-cleanup: [DRY RUN] Would merge PR #101 via `gh pr merge 101 --squash`
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #102: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #102: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #102: required checks: 1 required check(s) green
+merge-cleanup: [DRY RUN] Would merge PR #102 via `gh pr merge 102 --squash`
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #103: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #103: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #103: required checks: 1 required check(s) green
+merge-cleanup: [DRY RUN] Would merge PR #103 via `gh pr merge 103 --squash`
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #104: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #104: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #104: required checks: 1 required check(s) green
+merge-cleanup: [DRY RUN] Would merge PR #104 via `gh pr merge 104 --squash`
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #105: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #105: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #105: required checks: 1 required check(s) green
+merge-cleanup: [DRY RUN] Would merge PR #105 via `gh pr merge 105 --squash`
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #109: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #109: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #109: required checks: 1 required check(s) green
+merge-cleanup: [DRY RUN] Would merge PR #109 via `gh pr merge 109 --squash`
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #106: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #106: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #106: required checks: 1 required check(s) green
+merge-cleanup: [DRY RUN] Would merge PR #106 via `gh pr merge 106 --squash`
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: [DRY RUN] PR #107 targets 'feat/faq', the branch of a PR previewed above; it would be retargeted to 'main' once that PR lands
+merge-cleanup: PR #107: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #107: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #107: required checks: 1 required check(s) green
+merge-cleanup: [DRY RUN] Would merge PR #107 via `gh pr merge 107 --squash`
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #110: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #110: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: [DRY RUN] PR #110: required checks failing (ci) — --execute would not merge it yet
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #114: carries hold label 'do not merge' — skipped (#444)
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #115: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: [DRY RUN] PR #116: would NOT land in this run — depends on #110 (required checks failing)
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #117: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #117: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #117: required checks: 1 required check(s) green
+merge-cleanup: [DRY RUN] Would merge PR #117 via `gh pr merge 117 --squash`
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Skipped held PR(s): #114
+merge-cleanup: Landing clones retained for inspection under <TMP>/merge-cleanup-XXXX

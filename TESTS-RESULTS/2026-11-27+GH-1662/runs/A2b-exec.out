@@ -1,0 +1,139 @@
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: <FX>/primary
+STANDALONE PREREQUISITES (--standalone: no XYZ overlay assumed)
+  [ok] Python >= 3.9: 3.9.6
+  [ok] git >= 2.38: git version 2.54.0 (Apple Git-157)
+  [ok] gh >= 2.18: gh version 2.99.0 (stand-in)
+  [ok] origin remote: <FX>/origin.git
+  [ok] lsof (teardown scan): /usr/sbin/lsof
+  [info] gate hook (only a push needs it): no githooks/install.sh; the only pushes a standalone run can attempt (the GH-1656 local-merge rung, post-merge writes) are refused
+
+merge-cleanup: Landing forecast (GH-1452): your decision 'direct' is match against the dry run's recommendation (direct)
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: <FX>/primary
+  branch: main  (integration: main)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (1 found)
+================================================================================
+
+Scanned roots: <FX>/home
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `primary` | standalone_clone | `main` | ✅ | 🔥 Active (11 in 10m) | 0 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+
+merge-cleanup: PR #102: not in --prs; not sequenced
+merge-cleanup: PR #103: not in --prs; not sequenced
+merge-cleanup: PR #104: not in --prs; not sequenced
+merge-cleanup: PR #105: not in --prs; not sequenced
+merge-cleanup: PR #108: not in --prs; not sequenced
+merge-cleanup: PR #106: not in --prs; not sequenced
+merge-cleanup: PR #107: not in --prs; not sequenced
+merge-cleanup: PR #114: not in --prs; not sequenced
+merge-cleanup: PR #115: not in --prs; not sequenced
+merge-cleanup: PR #117: not in --prs; not sequenced
+merge-cleanup: PR #111: not in --prs; not sequenced
+merge-cleanup: PR #112: not in --prs; not sequenced
+merge-cleanup: PR #113: not in --prs; not sequenced
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (4 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#101](https://github.com/acme/widgets/pull/101) | docs: guide | `feat/guide` | `main` | no | PASS | MERGEABLE | 1 |
+| 2 | [#109](https://github.com/acme/widgets/pull/109) | docs: changelog entry | `feat/changelog` | `main` | no | PASS | MERGEABLE | 1 |
+| 3 | [#110](https://github.com/acme/widgets/pull/110) | fix: util | `feat/util-fix` | `main` | no | FAIL | MERGEABLE | 1 |
+| 4 | [#116](https://github.com/acme/widgets/pull/116) | feat: uses util | `feat/uses-util` | `main` | no | PASS | MERGEABLE | 1 |
+
+Ordering Notes:
+  - File collision on 1 file(s) between PR #102 and PR #103 — ordering #102 before #103
+  - File collision on 2 file(s) between PR #102 and PR #105 — ordering #102 before #105
+  - File collision on 1 file(s) between PR #103 and PR #105 — ordering #103 before #105
+  - File collision on 1 file(s) between PR #104 and PR #105 — ordering #104 before #105
+  - File collision on 1 file(s) between PR #108 and PR #115 — ordering #108 before #115
+  - File collision on 1 file(s) between PR #109 and PR #117 — ordering #109 before #117
+  - Cycle or unresolved dependency detected among PRs: [111, 112, 113]. Appending in numerical order.
+
+================================================================================
+LANDING PLAN DECISION (GH-1066)
+================================================================================
+
+Plan: DIRECT
+Reason: manual check of blocked reporting
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: <FX>/primary
+  branch: main  (integration: main)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Merge batch issue: https://github.com/acme/widgets/issues/901
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #101: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #101: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #101: required checks: 1 required check(s) green
+merge-cleanup: Merging PR #101 via `gh pr merge 101 --squash --match-head-commit af133bb74cd97d39add8f2ee9585ae3fe8ee05ad`...
+merge-cleanup: ✅ PR #101 is MERGED as 1b881b7827
+merge-cleanup: PR #101: standalone — post-merge reconcile (wave_reconcile, releases check, pdda, Jog) skipped
+merge-cleanup: PR #101: already published at origin/main; no push needed
+merge-cleanup: ✅ PR #101 committed; primary is clean at origin/main
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #109: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #109: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: PR #109: required checks: 1 required check(s) green
+merge-cleanup: Merging PR #109 via `gh pr merge 109 --squash --match-head-commit b181b69f0717d0464ec0aac34029cb824a75a61d`...
+merge-cleanup: ✅ PR #109 is MERGED as b26fe4a5da
+merge-cleanup: PR #109: standalone — post-merge reconcile (wave_reconcile, releases check, pdda, Jog) skipped
+merge-cleanup: PR #109: already published at origin/main; no push needed
+merge-cleanup: ✅ PR #109 committed; primary is clean at origin/main
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #110: standalone — landing clone has no githooks/install.sh; nothing is pushed from it, and any push stays refused without a proven gate hook
+merge-cleanup: PR #110: standalone — pre-merge ledger gate skipped (no ledger in this repository)
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Released landed PRs' clones: pr-101-af133bb7-XXXX, pr-109-b181b69f-XXXX
+merge-cleanup: Landing clones retained for inspection under <TMP>/merge-cleanup-XXXX
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-0fd547c3-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-aa091233-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-fdf83da1-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-10ea98dd-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-26e9e0d2-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-ac668439-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-90572224-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-79ca29ca-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-22985161-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-55af9ea7-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-6dc98d66-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-539add4d-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-6f4de189-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-673d89a4-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-2d12d87e-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-4c0e0c8d-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-255e9144-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-07a60e06-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-163769d0-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-a02e41a9-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-a716c81e-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-bde33c4b-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-f84e7fea-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-21871231-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-1cea079c-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-9575a574-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-7109cf17-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-2869a122-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-cleanup-XXXX: untracked files or a stash in pr-2-1aa9440d-XXXX/repo
+merge-cleanup: Keeping <TMP>/merge-check-fkubrbrt: untracked files or a stash in repo
+merge-cleanup: Scratch pruning: removed 0 old retained clone folder(s) under <TMP>/; kept 30: merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-cleanup-XXXX, merge-check-fkubrbrt
+merge-cleanup: Merged set ⊆ --prs: #101, #109 within #101, #109, #110, #116

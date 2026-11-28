@@ -1,0 +1,7 @@
+{
+ "result": {
+  "gate_unwired_reason": "githooks/install.sh is missing, so this clone's pre-push gate cannot be proven (GH-1576)",
+  "commit_and_push_returned": false
+ },
+ "stderr": "merge-cleanup: ERROR \u2014 post-merge write: refusing to push post-merge writes: githooks/install.sh is missing, so this clone's pre-push gate cannot be proven (GH-1576)\n"
+}

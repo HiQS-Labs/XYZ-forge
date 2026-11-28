@@ -1,0 +1,2 @@
+merge-cleanup: ERROR — PR #101: local-merge rung did not land — push refused before pushing: githooks/install.sh is missing, so this clone's pre-push gate cannot be proven (GH-1576)
+merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.

@@ -83,6 +83,18 @@ def default_scan_roots(primary: Path) -> Tuple[List[Path], Optional[Path], str]:
     return roots, sib, line
 
 
+def standalone_scan_roots(primary: Path) -> Tuple[List[Path], Optional[Path], str]:
+    """GH-1662: the scan roots for `--standalone` without --root. Only the primary's parent folder, always
+    through the origin filter (even when it is also a default root), and only when `sibling_root` allows it;
+    the fixed original-operator roots are not scanned. Same return shape as `default_scan_roots`."""
+    parent = sibling_root(primary)
+    if parent is None:
+        return [], None, (f"Scanned roots: none (standalone: {primary.resolve().parent} is a NEVER_DELETE root; "
+                          "pass --root to scan elsewhere)")
+    return [parent], parent, (f"Scanned roots: {parent} (standalone: only checkouts with the primary's origin; "
+                              "the fixed default roots are not scanned)")
+
+
 def _within(child: Path, parent: Path) -> bool:
     """True only if child is STRICTLY inside parent (rejects child == parent)."""
     if child == parent:

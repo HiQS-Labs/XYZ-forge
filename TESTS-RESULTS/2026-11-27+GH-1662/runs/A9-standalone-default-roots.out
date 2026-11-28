@@ -1,0 +1,32 @@
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: <FX>/primary
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+STANDALONE PREREQUISITES (--standalone: no XYZ overlay assumed)
+  [ok] Python >= 3.9: 3.9.6
+  [ok] git >= 2.38: git version 2.54.0 (Apple Git-157)
+  [ok] gh >= 2.18: gh version 2.99.0 (stand-in)
+  [ok] origin remote: <FX>/origin.git
+  [ok] lsof (teardown scan): /usr/sbin/lsof
+  [info] gate hook (only a push needs it): no githooks/install.sh; the only pushes a standalone run can attempt (the GH-1656 local-merge rung, post-merge writes) are refused
+
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: <FX>/primary
+  branch: main  (integration: main)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (1 found)
+================================================================================
+
+Scanned roots: none (standalone: <FX> is a NEVER_DELETE root; pass --root to scan elsewhere)
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `primary` | standalone_clone | `main` | ✅ | 🔥 Active (9 in 10m) | 0 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+

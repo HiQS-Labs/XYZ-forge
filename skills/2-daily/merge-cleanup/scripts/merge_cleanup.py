@@ -31,6 +31,7 @@ from scan_clones import (
     same_origin,
     is_safe_deletable_path,
     default_scan_roots,
+    standalone_scan_roots,
     primary_safe_roots,
     scan_directories,
     inspect_checkout,
@@ -642,6 +643,13 @@ def _protect_stacked_dependents(info: Dict[str, Any], open_prs: List[Dict[str, A
     """Retarget open stacked dependents before merging their base."""
     pr_num = info["number"]
     head = info.get("headRefName") or ""
+    # GH-1662: a fork's head branch is not a branch of this repository, so a fork PR is nobody's stacked parent
+    # (the sorter already says so). The live read carries no identity; the discovery list does.
+    cross = info.get("isCrossRepository")
+    if cross is None:
+        cross = next((p.get("isCrossRepository") for p in open_prs if p.get("number") == pr_num), None)
+    if cross:
+        return True
     dependents = [p for p in open_prs
                   if p.get("number") != pr_num and (p.get("baseRefName") or "") == head]
     if not dependents:
@@ -794,15 +802,17 @@ def deferred_closure(all_ordered: List[Dict[str, Any]], eligible: Set[int]) -> S
     return deferred
 
 
-def effective_sequence(open_prs: List[Dict[str, Any]], listed: Set[int]) -> List[Dict[str, Any]]:
+def effective_sequence(open_prs: List[Dict[str, Any]], listed: Set[int],
+                       integration: Optional[str] = None) -> List[Dict[str, Any]]:
     """The order Phase 4 will land the listed PRs in: every open PR is sorted so dependency and
     collision edges through unlisted PRs stay visible, then deferrals are applied (GH-1226, GH-1452)."""
-    all_ordered, _, _ = toposort_prs(open_prs)
+    all_ordered, _, _ = toposort_prs(open_prs, integration)
     deferred = deferred_closure(all_ordered, listed)
     return [p for p in all_ordered if int(p["number"]) not in deferred]
 
 
-def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[Dict[str, Any]]) -> Dict[str, Any]:
+def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[Dict[str, Any]],
+                           standalone: bool = False) -> Dict[str, Any]:
     """GH-1452: the planning-time landing forecast for a dry run over 3+ PRs, in dependency order.
 
     This side owns the network and the clone: one disposable clone with no working tree (never the
@@ -812,6 +822,7 @@ def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[D
     recommendation) and never blocks pinning."""
     nums = [int(p["number"]) for p in ordered]
     heads = {int(p["number"]): p["headRefOid"] for p in ordered}
+    sa = {"standalone": True} if standalone else {}  # GH-1662: Forge-mode calls keep their exact arguments
     # GH-1470: a PR that hard-depends on a set-aside hub cannot land in the clean-first pass
     deps = {int(p["number"]): {int(d) for d in (p.get("_hard_deps") or [])} for p in ordered}
     try:
@@ -846,10 +857,10 @@ def build_landing_forecast(primary_repo: Path, integration: str, ordered: List[D
                     consumed[n] = attempt_record.repair_count(attempt_record.load(rec_path)) if rec_path.exists() else 0
                 except attempt_record.RecordError as exc:
                     unknown[n] = f"attempt record unreadable: {str(exc)[:100]}"
-            return ledger_merge.landing_forecast(clone, base_sha, nums, heads, unknown, consumed, hard_deps=deps)
+            return ledger_merge.landing_forecast(clone, base_sha, nums, heads, unknown, consumed, hard_deps=deps, **sa)
     except Exception as exc:  # advisory only: nothing here may stop the dry run from pinning
         why = f"forecast did not run: {str(exc)[:160]}"
-        return ledger_merge.landing_forecast(Path(tempfile.gettempdir()), "", nums, heads, {n: why for n in nums}, {})
+        return ledger_merge.landing_forecast(Path(tempfile.gettempdir()), "", nums, heads, {n: why for n in nums}, {}, **sa)
 
 
 def format_landing_forecast(fc: Dict[str, Any], integration: str) -> str:
@@ -879,8 +890,12 @@ def format_landing_forecast(fc: Dict[str, Any], integration: str) -> str:
         e = (fc.get("prs") or {}).get(str(n), {})
         if e.get("status") == "unknown":
             out.append(f"#{n}: unknown — {e.get('reason') or 'not simulated'}")
-    out.append(f"PRs needing a B1 repair (each lands in the same run once its new head's checks pass, "
-               f"else defers): {fc.get('repair_deferrals', 0)}")
+    if fc.get("standalone"):  # GH-1662: no B1 here; a PR that conflicts with the base is handed off
+        out.append(f"PRs that conflict with the base (standalone: handed off, no automatic repair): "
+                   f"{fc.get('repair_deferrals', 0)}")
+    else:
+        out.append(f"PRs needing a B1 repair (each lands in the same run once its new head's checks pass, "
+                   f"else defers): {fc.get('repair_deferrals', 0)}")
     nums = lambda ns: ", ".join(f"#{n}" for n in ns) or "none"
     hubs = fc.get("hubs")
     if hubs:  # GH-1470: who holds the conflicts, and whether the rest really fold clean without them
@@ -1098,7 +1113,7 @@ def gate_toolchain_fault_reason(clone: Path) -> str:
 
 
 def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_branch: str,
-                          workdir: Path) -> Dict[str, Any]:
+                          workdir: Path, standalone: bool = False) -> Dict[str, Any]:
     """A disposable full clone at the PR head with `git merge origin/<branch>` attempted (E.6/B1).
 
     Returns {"clone": Path|None, "merge_rc": int|None, "error": str}. merge_rc 0 = clean."""
@@ -1121,7 +1136,15 @@ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_br
         run_git(clone, ["config", k, v])
     # GH-1576: this clone is made here, so wiring its pre-push gate is this tool's job; a repair
     # push from it must never run ungated.
-    unwired = gate_unwired_reason(clone, install=True)
+    # GH-1662: only an explicit --standalone declaration tolerates a clone with no installer at all (a
+    # repository without the overlay); the missing file alone never skips it. An installer that exists
+    # still runs and still refuses on failure, and push_resolved_head re-checks the gate before any push.
+    if standalone and not (Path(clone) / "githooks" / "install.sh").is_file():
+        log(f"PR #{pr['number']}: standalone — landing clone has no githooks/install.sh; nothing is pushed "
+            "from it, and any push stays refused without a proven gate hook")
+        unwired = ""
+    else:
+        unwired = gate_unwired_reason(clone, install=True)
     if unwired:
         return {"clone": clone, "merge_rc": None, "error": f"landing clone gate wiring failed: {unwired}"}
     r = _retry_call(lambda: _net_git(clone, ["fetch", "--quiet", "origin", f"pull/{pr['number']}/head", integration_branch]),
@@ -1546,6 +1569,104 @@ def preflight_warnings(primary_repo: Optional[Path] = None) -> List[str]:
     if git_msg and not _GIT_WARNED:
         out.append(git_msg)
     return out
+
+
+# GH-1662: files whose presence contradicts a `--standalone` declaration, i.e. what the skipped steps need.
+STANDALONE_OVERLAY_MARKERS = ("releases.sql", "releases.db", "utils/py/releases_app.py",
+                              ".xyz/utils/py/releases_app.py", "utils/py/wave_reconcile.py", "utils/pdda/pdda.sh")
+
+
+def standalone_overlay_found(primary: Path) -> List[str]:
+    """Overlay files present in the primary. `--standalone` declares there are none; skipping a ledger gate
+    where a ledger exists would land PRs the ledger never saw, so a contradicting declaration is refused."""
+    return [m for m in STANDALONE_OVERLAY_MARKERS if (Path(primary) / m).exists()]
+
+
+def standalone_prerequisites(primary: Path) -> Tuple[List[str], List[str]]:
+    """GH-1662: (report lines, hard-unmet names) for `--standalone`, printed before anything is cloned.
+    Hard: Python, a launchable git and gh, an origin remote. An old git or gh only withholds the forecast
+    or warns (as in default mode); `lsof` and the gate hook are informational."""
+    lines: List[str] = []
+    hard: List[str] = []
+
+    def row(ok: bool, name: str, detail: str, is_hard: bool = False) -> None:
+        lines.append(f"  [{'ok' if ok else 'UNMET'}] {name}: {detail}")
+        if not ok and is_hard:
+            hard.append(name)
+
+    v = sys.version_info
+    row(v >= (3, 9), "Python >= 3.9", f"{v[0]}.{v[1]}.{v[2]}", True)
+    g = run_git(Path("."), ["--version"], timeout=5)
+    gout = ((g.stdout or "") + (g.stderr or "")).strip()
+    if g.returncode != 0:
+        row(False, "git launchable", gout or "git could not be run", True)
+    else:
+        msg = check_git_version()
+        row(msg is None, "git >= 2.38", msg or gout)
+    h = _gh(["--version"], Path("."), timeout=30)
+    hout = ((h.stdout or "") + (h.stderr or "")).strip()
+    if h.returncode != 0:
+        row(False, "gh launchable", hout or "gh could not be run", True)
+    else:
+        msg = check_gh_version()
+        row(msg is None, "gh >= 2.18", msg or (hout.splitlines() or [""])[0])
+    url = origin_url(primary)
+    row(bool(url), "origin remote", url or "the primary has none; landing and forecast clones need it", True)
+    lsof = shutil.which("lsof")
+    lines.append(f"  [{'ok' if lsof else 'info'}] lsof (teardown scan): "
+                 f"{lsof or 'not found; checkouts are then preserved, never removed'}")
+    hook = (Path(primary) / "githooks" / "install.sh").is_file()
+    lines.append(f"  [info] gate hook (only a push needs it): "
+                 f"{'githooks/install.sh present; it runs in each landing clone' if hook else 'no githooks/install.sh; the only pushes a standalone run can attempt (the GH-1656 local-merge rung, post-merge writes) are refused'}")
+    return lines, hard
+
+
+def default_mode_preflight(primary: Path, integration: str) -> List[str]:
+    """GH-1662: requirements of the default (Forge overlay) mode that the primary lacks, named before the first
+    clone. Report-only: the later guards are unchanged, and a repository with the overlay gets no line."""
+    out: List[str] = []
+    if not (Path(primary) / "githooks" / "install.sh").is_file():
+        out.append("githooks/install.sh is missing in the primary, so every landing clone refuses (GH-1576); "
+                   "declare --standalone only for a repository without the XYZ overlay")
+    if not (Path(primary) / LEDGER_DUMP).is_file() or not tool_path(Path(primary), "releases_app.py").is_file():
+        out.append("no RELEASES ledger (releases.sql with releases_app.py), so the pre-merge ledger gate refuses; "
+                   "--standalone skips it for a repository without the overlay")
+    if integration != "development" and tool_path(Path(primary), "wave_reconcile.py").is_file():
+        out.append(f"the integration branch is '{integration}', but post-merge wave_reconcile.py is "
+                   "development-only; --standalone does not run it")
+    return out
+
+
+def ensure_tick_ignored(primary: Path) -> Optional[str]:
+    """GH-1662 (T4): None when merge-cleanup's records under `<primary>/.tick/merge-cleanup/` cannot dirty the
+    primary, else why not. Already ignored: nothing is written. Otherwise `/.tick/` is appended to the primary's
+    own git exclude file (local, untracked). Tracked records cannot be hidden by an ignore rule, so they refuse."""
+    probe = ".tick/merge-cleanup/"
+    tracked = run_git(primary, ["ls-files", ".tick/merge-cleanup"])
+    if tracked.returncode != 0:
+        return f"cannot list tracked .tick records: {tracked.stderr.strip() or 'git failed'}"
+    if tracked.stdout.strip():
+        return "records under .tick/merge-cleanup are tracked, which an ignore rule cannot hide from the post-merge commit"
+    chk = run_git(primary, ["check-ignore", "-q", probe])
+    if chk.returncode == 0:
+        return None
+    if chk.returncode != 1:
+        return f"git check-ignore failed: {chk.stderr.strip() or 'git failed'}"
+    where = run_git(primary, ["rev-parse", "--git-path", "info/exclude"])
+    if where.returncode != 0 or not where.stdout.strip():
+        return f"cannot resolve the git exclude file: {where.stderr.strip() or 'git failed'}"
+    path = Path(primary) / where.stdout.strip()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        existing = path.read_text(encoding="utf-8") if path.exists() else ""
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(("" if not existing or existing.endswith("\n") else "\n") + "/.tick/\n")
+    except OSError as exc:
+        return f"cannot write {path}: {exc}"
+    if run_git(primary, ["check-ignore", "-q", probe]).returncode != 0:
+        return f"appended /.tick/ to {path}, but {probe} is still not ignored"
+    log(f"standalone: added /.tick/ to {path} so the primary stays clean (local, untracked)")
+    return None
 
 
 def jog_primary_precondition(primary_repo: Path, listed: List[Dict[str, Any]]) -> Optional[str]:
@@ -2119,6 +2240,13 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
     if track is not None:
         track["failed"] = failed
     pending = {pr["number"] for pr in ordered_prs}
+    # GH-1662: `--standalone` (a repository without the overlay). `sa` keeps every Forge-mode call exact.
+    standalone = getattr(args, "standalone", False) is True
+    sa = {"standalone": True} if standalone else {}
+    landing_heads: Set[str] = set()  # branches of PRs already previewed to land in this dry run (stacked bases)
+    # GH-1662 (review): dry-run only. PRs the preview says `--execute` would not land (checks not ok), and their hard
+    # dependents, so the forecast matches `--execute`'s `NOT attempted`. Never touches `failed`: exit codes are unchanged.
+    dry_unlanded: Dict[int, str] = {}
     try:
         for pr in ordered_prs:
             if track is not None:  # GH-1064: a stop from here on is this PR's, with these errors
@@ -2152,6 +2280,12 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 log_err(f"PR #{p_num}: NOT attempted — depends on {why}")
                 failed[p_num] = f"blocked by {', '.join('#%d' % d for d in blocked_by)}"
                 continue
+            dry_blocked = [d for d in pr.get("_hard_deps", []) if d in dry_unlanded] if dry_run else []
+            if dry_blocked:
+                log(f"[DRY RUN] PR #{p_num}: would NOT land in this run — depends on "
+                    + ", ".join(f"#{d} ({dry_unlanded[d]})" for d in dry_blocked))
+                dry_unlanded[p_num] = "blocked by " + ", ".join("#%d" % d for d in dry_blocked)
+                continue
             # E + GH-623: live refresh, retried on transient failures. A TRANSIENT failure that
             # survives the retries defers this PR and the queue continues (the incident's S4:
             # one DNS failure aborted #604/#607/#614 which were never attempted). A failure we
@@ -2182,8 +2316,14 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 _note_external_state(p_num, info, batch, track)
                 continue
             if (info.get("baseRefName") or "") != branch:
-                log_err(f"PR #{p_num} targets '{info.get('baseRefName')}', not '{branch}' — stopping")
-                return 2
+                if dry_run and (info.get("baseRefName") or "") in landing_heads:
+                    # GH-1662: a stacked child whose base PR is previewed above; execute retargets it
+                    # (_protect_stacked_dependents) when that base lands, so the preview must not stop here.
+                    log(f"[DRY RUN] PR #{p_num} targets '{info.get('baseRefName')}', the branch of a PR previewed "
+                        f"above; it would be retargeted to '{branch}' once that PR lands")
+                else:
+                    log_err(f"PR #{p_num} targets '{info.get('baseRefName')}', not '{branch}' — stopping")
+                    return 2
             info = _await_mergeable(p_num, info, primary_repo)
             if info.get("error"):  # a refresh inside the poll failed: same rules as the first read
                 if _transient(info["error"]):
@@ -2210,7 +2350,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 continue
 
             # Simulate this landing against the integration head fetched NOW.
-            prep = prepare_landing_clone(info, primary_repo, branch, workdir)
+            prep = prepare_landing_clone(info, primary_repo, branch, workdir, **sa)
             if prep["error"]:
                 if _transient(prep["error"]):
                     log_err(f"PR #{p_num}: DEFERRED — network unavailable after {RETRY_ATTEMPTS} attempts: "
@@ -2222,6 +2362,16 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 return 2
             clone = prep["clone"]
 
+            if prep["merge_rc"] != 0 and standalone:
+                # GH-1662: B1 repairs the Forge ledger and changelog; a repository without them has no
+                # repair, so the PR is handed off with its conflicting paths and the queue continues.
+                got, conflict_paths, why = ledger_merge.extract_conflict_set(clone)
+                log_err(f"PR #{p_num}: HANDOFF — the landing merge conflicts (GitHub said {mergeable}) and standalone "
+                        "mode has no automatic repair; resolve it on the PR branch, then re-run the dry run to re-pin")
+                log_err(f"  conflict set: {', '.join(sorted(conflict_paths)) if got else '(not extracted: ' + why + ')'}")
+                failed[p_num] = "handoff"
+                keep_workdir = True
+                continue
             if prep["merge_rc"] != 0:
                 log(f"PR #{p_num}: landing merge conflicts (GitHub said {mergeable}) — routing to B1")
                 # GH-623 --resume: the LIVE state above is authoritative — a PR whose last repair
@@ -2302,6 +2452,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     log(f"[DRY RUN] PR #{p_num}: B1 would repair this ledger conflict "
                         f"({b1['reason'].removeprefix('[DRY RUN] ')}); "
                         "--execute repairs it, waits for the new head's checks and re-pins")
+                    if pr.get("headRefName") and not pr.get("isCrossRepository"):
+                        landing_heads.add(pr["headRefName"])  # GH-1662: a stacked child previews behind it, conditionally
                     continue
                 if not b1["resolved"]:
                     if idx is not None:
@@ -2362,7 +2514,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 if info.get("error") or info.get("mergeable") != "MERGEABLE":
                     log_err(f"PR #{p_num}: after resolution the PR reads {info.get('mergeable') or info.get('error')} — stopping")
                     return 2
-                prep = prepare_landing_clone(info, primary_repo, branch, workdir)
+                prep = prepare_landing_clone(info, primary_repo, branch, workdir, **sa)
                 if prep["error"] or prep["merge_rc"] != 0:
                     log_err(f"PR #{p_num}: the resolved head still does not merge cleanly — stopping ({prep['error'] or 'merge rc ' + str(prep['merge_rc'])})")
                     keep_workdir = True
@@ -2371,16 +2523,29 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 own_repair = b1["commit"]
 
             # E.6: the ledger gate on the simulated landing.
-            gate = pre_merge_ledger_gate(clone, gh_bin=_gh_bin(), integration_branch=branch)
-            for d in gate["diagnostics"]:
-                log(f"  gate: {d}")
-            if not gate["green"]:
-                log_err(f"PR #{p_num}: pre-merge ledger gate RED — not merged:")
-                for f in gate["failures"]:
-                    log_err(f"  - {f}")
-                keep_workdir = True
-                return 2
-            log(f"PR #{p_num}: pre-merge ledger gate green on {info['headRefOid'][:10]} + origin/{branch}")
+            if standalone:
+                # GH-1662 (review): the declaration was checked against the primary once, at startup. A queued PR
+                # (or an earlier landing) can bring an overlay file into the landing tree itself, and a ledger
+                # that exists there must never be skipped silently: refuse, naming the files.
+                landed_overlay = standalone_overlay_found(clone)
+                if landed_overlay:
+                    log_err(f"PR #{p_num}: REFUSING under --standalone — the landing tree contains "
+                            f"{', '.join(landed_overlay)}, so a ledger/overlay exists and the pre-merge ledger gate "
+                            "cannot be skipped; run without --standalone (default mode) — not merged")
+                    keep_workdir = True
+                    return 2
+                log(f"PR #{p_num}: standalone — pre-merge ledger gate skipped (no ledger in this repository)")
+            else:
+                gate = pre_merge_ledger_gate(clone, gh_bin=_gh_bin(), integration_branch=branch)
+                for d in gate["diagnostics"]:
+                    log(f"  gate: {d}")
+                if not gate["green"]:
+                    log_err(f"PR #{p_num}: pre-merge ledger gate RED — not merged:")
+                    for f in gate["failures"]:
+                        log_err(f"  - {f}")
+                    keep_workdir = True
+                    return 2
+                log(f"PR #{p_num}: pre-merge ledger gate green on {info['headRefOid'][:10]} + origin/{branch}")
 
             pinned = (getattr(args, "_pins", None) or {}).get(p_num)
             repinning = (not dry_run and own_repair is not None and pinned is not None
@@ -2412,6 +2577,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     checks, detail = checks_state(p_num, primary_repo, declared, had_required and repinning)
             if checks != "ok" and dry_run:  # a preview reports it; only --execute defers
                 log(f"[DRY RUN] PR #{p_num}: required checks {checks} ({detail}) — --execute would not merge it yet")
+                if checks == "failing":  # pending is not final: --execute waits for it and may land the PR
+                    dry_unlanded[p_num] = "required checks failing"
+                    continue
             elif checks != "ok":
                 if checks == "failing":
                     log_err(f"PR #{p_num}: required checks failing ({detail}) — not merged")
@@ -2461,11 +2629,20 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 elif checks != "ok":
                     pass  # the checks preview above already said --execute would not merge it yet
                 elif strategy == "merge":
-                    log(f"[DRY RUN] PR #{p_num}: GitHub reports CONFLICTING but the local merge is clean — "
-                        f"--execute would land it through the {LOCAL_MERGE_RUNG} rung (GH-1656)")
+                    # GH-1662: that rung pushes from the clone, so standalone without a proven gate hook is refused there
+                    rung_gate = gate_unwired_reason(clone) if standalone else ""
+                    if rung_gate:
+                        log(f"[DRY RUN] PR #{p_num}: GitHub reports CONFLICTING but the local merge is clean — the "
+                            f"{LOCAL_MERGE_RUNG} rung pushes from the clone and that push would be refused ({rung_gate}); "
+                            "--execute would stop before landing it")
+                    else:
+                        log(f"[DRY RUN] PR #{p_num}: GitHub reports CONFLICTING but the local merge is clean — "
+                            f"--execute would land it through the {LOCAL_MERGE_RUNG} rung (GH-1656)")
                 else:
                     log(f"[DRY RUN] PR #{p_num}: non-ledger conflict; local merge clean, but strategy {strategy} "
                         "cannot be landed locally — --execute would stop before `gh pr merge` (GH-1656)")
+                if pr.get("headRefName") and not pr.get("isCrossRepository"):
+                    landing_heads.add(pr["headRefName"])
                 continue
             live = refresh_pr_with_retry(p_num, primary_repo)
             if live.get("error"):
@@ -2562,7 +2739,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 log_err("PR is merged remotely but the primary did not advance — reconcile by hand.")
                 return 2
             is_intermediate = bool(pending)
-            if not run_post_merge_reconcile(
+            if standalone:
+                log(f"PR #{p_num}: standalone — post-merge reconcile (wave_reconcile, releases check, pdda, Jog) skipped")
+            elif not run_post_merge_reconcile(
                     p_num, primary_repo, integration_branch=branch, dry_run=False,
                     pr_head=info.get("headRefOid"), is_intermediate=is_intermediate,
                     merged_head=merged_oid if rung else None):  # GH-1656: the rung's exact landing
@@ -2796,6 +2975,10 @@ def main():
     parser.add_argument("--no-auto-sweep", action="store_true", help="Do not automatically run the post-merge QA sweep at batch conclusion; halt with exit 4 (QA pending) instead (GH-1383)")
     parser.add_argument("--landing-plan", choices=["direct", "group"], default=None, help="Landing plan decision for queues of 3+ PRs: 'direct' sequential landing or 'group' candidate (GH-1066)")
     parser.add_argument("--landing-reason", default="", help="Non-empty justification for the chosen --landing-plan (GH-1066)")
+    parser.add_argument("--standalone", action="store_true",
+                        help="Declare a repository WITHOUT the XYZ overlay (GH-1662): skip the ledger gate, post-merge "
+                             "reconcile and B1 (a conflict hands off), scan only the primary's own-origin siblings; never "
+                             "inferred from a missing file, refused if overlay files exist; pushes stay gated. See STANDALONE.md")
 
     args = parser.parse_args()
 
@@ -2825,12 +3008,14 @@ def main():
                 or args.root or args.prefix or args.exclude or args.prs or args.strategy or args.show_merge_policy
                 or args.scan_only or args.prs_only or args.teardown_only or args.reconcile_pr
                 or args.marker or args.allow_unready_primary or args.resume or args.backup_first or args.backup_root or args.record_sweep
-                or args.no_auto_sweep):
+                or args.no_auto_sweep or args.standalone):
             parser.error("published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides")
         return retire_published_checkouts(primary_repo, args.checkout, args.retire_published_pr,
                                          args.integration_branch, args.execute)
     if args.record_sweep:
         return record_sweep(primary_repo, args.integration_branch, Path(args.record_sweep))
+    if args.standalone and args.reconcile_pr:
+        parser.error("--standalone has no post-merge reconcile; --reconcile-pr is a Forge-overlay step")
     args.prs = {n: sha for group in args.prs for n, sha in group}
     args._pins = None
     _MERGED_THIS_RUN.clear()
@@ -2853,6 +3038,8 @@ def main():
     if args.root:
         search_roots, sibling = [Path(r).expanduser().resolve() for r in args.root], None
         roots_line = "Scanned roots: " + ", ".join(str(r) for r in search_roots)
+    elif args.standalone:
+        search_roots, sibling, roots_line = standalone_scan_roots(primary_repo)
     else:
         search_roots, sibling, roots_line = default_scan_roots(primary_repo)
     dry_run = not args.execute
@@ -2860,6 +3047,30 @@ def main():
     log(f"Operating on primary repo: {primary_repo}")
     if dry_run:
         log("Running in SAFE DRY-RUN mode. Pass --execute to apply changes.")
+
+    # GH-1662: prerequisites are named before anything is cloned, and before the early checkpoint below
+    # (which can create a batch). The declaration is explicit and guarded; a missing file never implies it.
+    lands = bool(args.prs) and not (args.scan_only or args.teardown_only or args.prs_only) and args.reconcile_pr == 0
+    if args.standalone:
+        found = standalone_overlay_found(primary_repo)
+        if found:
+            log_err("REFUSING --standalone: it declares a repository without the XYZ overlay, but the primary has "
+                    + ", ".join(found) + ". Skipping the ledger gate and reconcile there would land PRs the ledger never "
+                    "saw; run without --standalone (default mode).")
+            return 2
+        lines, hard = standalone_prerequisites(primary_repo)
+        print("STANDALONE PREREQUISITES (--standalone: no XYZ overlay assumed)\n" + "\n".join(lines) + "\n")
+        if hard and args.execute:
+            log_err("REFUSING to execute: unmet standalone prerequisite(s): " + ", ".join(hard))
+            return 2
+        if lands or args.execute:
+            why = ensure_tick_ignored(primary_repo)
+            if why:
+                log_err(f"REFUSING --standalone: {why}")
+                return 2
+    elif lands:
+        for warning in default_mode_preflight(primary_repo, args.integration_branch):
+            log_warn(f"PRE-FLIGHT: {warning}")
 
     # Upfront landing plan checkpoint for queues of 3+ PRs (GH-1066 / GH-1158 / Plan QA R1).
     # Refuse execution before ANY mutation (before prepare_primary_landing prunes REBASE_HEAD,
@@ -2879,7 +3090,7 @@ def main():
         active_early = [p for p in early_prs if int(p.get("number", 0)) in args._pins]
         early_ordered: List[Dict[str, Any]] = []
         if active_early:
-            early_ordered, _, _ = toposort_prs(active_early)
+            early_ordered, _, _ = toposort_prs(active_early, args.integration_branch)
 
         checkpoint_eligible_prs = {int(p["number"]) for p in early_ordered}
 
@@ -2923,7 +3134,7 @@ def main():
 
             args._forecast_cmp = forecast_comparison(
                 primary_repo, args.integration_branch, args.landing_plan, args._pins,
-                [int(p["number"]) for p in effective_sequence(early_prs, set(args._pins))])
+                [int(p["number"]) for p in effective_sequence(early_prs, set(args._pins), args.integration_branch)])
             if args._forecast_cmp:
                 log(f"Landing forecast (GH-1452): your decision '{args.landing_plan}' is "
                     f"{args._forecast_cmp['state']} against the dry run's recommendation "
@@ -3077,10 +3288,11 @@ def main():
         forecast = None
         listed_found, listed_problems = _listed_open(list(args.prs), prs)
         if not listed_problems:
-            listed_order = effective_sequence(prs, set(listed_found))
+            listed_order = effective_sequence(prs, set(listed_found), args.integration_branch)
             if len(listed_order) >= 3:
                 warn_git_version_if_needed()
-                forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order)
+                forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order,
+                                                  **({"standalone": True} if args.standalone else {}))
         args._forecast = forecast
         if not pin_selection(primary_repo, args.integration_branch, args.prs, prs, forecast=forecast):
             return 2
@@ -3095,7 +3307,7 @@ def main():
     # Under --execute that is the pinned set (checkpoint_eligible_prs); a dry run uses --prs as given.
     eligible = checkpoint_eligible_prs if checkpoint_eligible_prs is not None else (set(args.prs) or None)
     if prs:
-        all_ordered, _, warnings = toposort_prs(prs)
+        all_ordered, _, warnings = toposort_prs(prs, args.integration_branch)
         if eligible is not None:
             # Transitive propagation: any retained PR depending on a deferred PR must also be deferred
             deferred_set = deferred_closure(all_ordered, eligible)

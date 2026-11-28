@@ -1,0 +1,2 @@
+merge-cleanup: ERROR — PR #101: REFUSING under --standalone — the landing tree contains releases.sql, so a ledger/overlay exists and the pre-merge ledger gate cannot be skipped; run without --standalone (default mode) — not merged
+merge-cleanup: ERROR — Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.

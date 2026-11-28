@@ -1,0 +1,62 @@
+{
+ "candidate": {
+  "fork_info_has_field": [],
+  "fork_production_shape": [],
+  "same_repository_parent": [
+   [
+    "pr",
+    "edit",
+    "12",
+    "--base",
+    "main"
+   ]
+  ],
+  "no_identity_anywhere": [
+   [
+    "pr",
+    "edit",
+    "12",
+    "--base",
+    "main"
+   ]
+  ]
+ },
+ "mutant_no_cross_repository_guard": {
+  "fork_info_has_field": [
+   [
+    "pr",
+    "edit",
+    "12",
+    "--base",
+    "main"
+   ]
+  ],
+  "fork_production_shape": [
+   [
+    "pr",
+    "edit",
+    "12",
+    "--base",
+    "main"
+   ]
+  ],
+  "same_repository_parent": [
+   [
+    "pr",
+    "edit",
+    "12",
+    "--base",
+    "main"
+   ]
+  ],
+  "no_identity_anywhere": [
+   [
+    "pr",
+    "edit",
+    "12",
+    "--base",
+    "main"
+   ]
+  ]
+ }
+}
