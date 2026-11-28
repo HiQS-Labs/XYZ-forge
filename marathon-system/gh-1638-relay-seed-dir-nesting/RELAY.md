@@ -1,6 +1,6 @@
 # Marathon Phase gh-1638-relay-seed-dir-nesting
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1638-RELAY-SEED-DIR-NESTING-TURN builder=codex reviewer=agy round-cap=9 -->
 
@@ -121,3 +121,13 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Updated `relay-automation/relay-turn-lib.sh` to mirror directory seeds in place. The seed checks destination parents physically, refuses malformed paths and the worktree Git pointer, and fails setup if it cannot clear or copy the directory. Git-managed teardown reports a refusal and preserves the worktree for inspection.
+- Regenerated `skills/1-hourly/relay-automation/relay-pkg.tar.gz` and recorded evidence in `TESTS-RESULTS/2026-11-27+GH-1638/delivery.md`.
+- Verified Bash syntax, red and green filesystem behavior through `rtl_worktree_begin` with stubbed worktree operations, and byte-for-byte freshness of all 18 archive members. The baseline demonstrated a nested duplicate and stale contents. The candidate passed 34 assertions, including failed copy and clear, refused teardown, multi-segment paths, and an outside-pointing parent symlink.
+- The first manual probe reached a read-only signature call before the signature callback was stubbed. The receipt excludes that attempt and records the fully stubbed runs.
+
+unverified: `bash test/relay-pkg-freshness.sh` — relay scope forbids running repository test scripts in this turn. The archive content was checked independently.
+unverified: `bash test/worktree-isolation.sh` and the real-Git preparation replay against the delivered source — the relay assigns the gate to the harness and prohibits running Git in the turn.
