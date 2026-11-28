@@ -148,3 +148,13 @@ gate run: no — harness gate
 **Verdict:** Approved
 
 relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-11-28T00:06:36Z
+task: MARATHON-GH-1638-RELAY-SEED-DIR-NESTING-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 02e924a167fc2b30c1d87dd26f5bf1d393f98856
+added-range: 25807+3788
+added-sha256: 6fba69ea451925f004ceaa1d198479079b1a4e55a77ea4198da02532373921e1
+config-sha256: f744f24f5632a1fed5f2ba920bb6c56a5a2be6bdef546e57de4894481fcad543
+gate-run: no
