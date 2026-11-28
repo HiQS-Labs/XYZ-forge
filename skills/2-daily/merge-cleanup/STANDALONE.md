@@ -38,7 +38,7 @@ python3 $S --primary "$PRIMARY" --integration-branch main --standalone --prs 12@
 ```
 
 - `--prs-only` lists **every** open PR in order and makes no clone. A dry run with `--prs` also simulates each listed landing in disposable clones (each **alone** against the current base: it merges nothing, so two PRs that conflict only with each other both read "Would merge"; the forecast's pair and fold lines show those), prints the **Landing forecast** for 3 or more, and pins the heads. `--execute` lands only the pinned PRs, at those heads, and exits 5 for 3 or more PRs until `--landing-plan direct|group` and a reason are given. The exit codes are the default mode's: 2 a stop, 3 something did not land (read the list), 4 landed with the sweep verdict pending (record it with `--record-sweep`), 5 a landing decision is required.
-- Declare the repo's sweep cadence in a committed `.merge-cleanup.json` (`qualification`: `none`, `per_batch` with a `sweep_command`, or `promotion`) as in SKILL.md; without it a batch of 2 or more PRs exits 4 until a verdict is recorded.
+- Declare the repo's sweep cadence in a committed `.merge-cleanup.json` as in SKILL.md. `qualification` must be an **object** with `full_suite` (a bare string such as `"qualification": "none"` is rejected): `{"qualification": {"full_suite": "none"}}`, or `{"qualification": {"full_suite": "per_batch", "sweep_command": "<your test command>"}}`, or `{"qualification": {"full_suite": "promotion"}}` (`sweep_command` is not allowed with `none`); without it a batch of 2 or more PRs exits 4 until a verdict is recorded.
 - The batch issue (2 or more PRs) is opened in **your** repository through `gh`; say so if that is not wanted.
 - `--teardown-only` and Phase 6 work as in SKILL.md. Review the Phase 1-3 table before an `--execute`; pass `--prefix <name>` (a substring unique to the clones you mean) to keep removal to those.
 
@@ -62,7 +62,7 @@ Use this when Python or the scripts are unavailable. It does by hand what the sc
 
 ### 0. Preconditions
 
-1. The primary checkout is on the integration branch (`<B>`), clean (`git status --porcelain` empty), and not behind or ahead of `origin/<B>` (`git fetch origin <B>` then `git merge-base --is-ancestor HEAD origin/<B>` and no local-only commits). If not, stop and report.
+1. The primary checkout is on the integration branch (`<B>`), clean (`git status --porcelain` empty), and exactly equal to `origin/<B>`: neither behind nor ahead (`git fetch origin <B>`, then `test "$(git rev-parse HEAD)" = "$(git rev-parse origin/<B>)"`; an ancestry check alone passes when the primary is behind). If not, stop and report.
 2. Get the PR list the operator authorized. Anything else open is listed, never landed.
 
 ### 1. Inventory
@@ -89,7 +89,7 @@ A listing that fails is an error, not an empty queue. `files` can be cut off for
 A **hard edge** `A -> B` means B waits for A and is never attempted if A did not land:
 
 - the PR title or body says `depends on`, `blocked by`, `after`, `requires` or `prerequisite` followed by `#N` or a pull-request URL (case-insensitive), or `part of wave after #N`, and #N is an **open** PR in this inventory (a merged, closed or external number is ignored);
-- **stacked base:** B's `baseRefName` equals A's `headRefName` for another open PR A **whose head branch is in this repository** (`isCrossRepository` is false: two forks' `main` are not one branch, and not this repository's `main`). B cannot land on `<B>` until A has, because it targets A's branch.
+- **stacked base:** B's `baseRefName` equals A's `headRefName` for another open PR A **whose head branch is in this repository** (`isCrossRepository` is false: two forks' `main` are not one branch, and not this repository's `main`), and B's base is **not** `<B>` itself (a promotion PR whose head is named `<B>` is not the parent of an ordinary PR into `<B>`). B cannot land on `<B>` until A has, because it targets A's branch.
 
 ### 4. File-overlap matrix (edges that decide sequence only)
 

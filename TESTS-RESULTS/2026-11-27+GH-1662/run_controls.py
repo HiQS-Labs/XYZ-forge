@@ -86,9 +86,12 @@ def run(fx, label, scripts, args, py=None, root=True, env=None, merge=False, int
     rc = proc.wait()
     out = "".join(out_lines)
     for suffix, text in ((".out", out), (".err", err)):
-        if text or suffix == ".out":
-            with open(os.path.join(RUNS, label + suffix), "w") as fh:
-                fh.write(norm(text, fx))
+        if suffix == ".err" and merge:  # stderr was merged into stdout: no .err belongs to this invocation
+            if os.path.exists(os.path.join(RUNS, label + suffix)):
+                os.remove(os.path.join(RUNS, label + suffix))
+            continue
+        with open(os.path.join(RUNS, label + suffix), "w") as fh:  # always rewritten, even when empty
+            fh.write(norm(text, fx))
     with open(os.path.join(RUNS, label + ".rc"), "w") as fh:
         fh.write("%d\n" % rc)
     return rc, out, err, stamps
@@ -173,10 +176,10 @@ if want("A2b"):
     f = build("a2c")
     r, o, e, _ = run(f, "A2b-cand-standalone-mixed-dry", CAND, ["--standalone", "--prs", MIXED])
     need = ["carries hold label 'do not merge'", "PR #115: HANDOFF", "conflict set: config/settings.json", "PR #111: NOT attempted", "PR #112: NOT attempted",
-            "PR #113: NOT attempted", "required checks failing (ci)", "Would merge PR #116", "4 PR(s) did not land", "Cycle or unresolved dependency detected among PRs: [111, 112, 113]"]
+            "PR #113: NOT attempted", "required checks failing (ci)", "PR #116: would NOT land in this run \u2014 depends on #110", "4 PR(s) did not land", "Cycle or unresolved dependency detected among PRs: [111, 112, 113]"]
     allout = o + e
-    miss = [n for n in need if n not in allout]
-    rec("A2b", "Standalone dry run of the 16-PR MIXED queue: every draft/hold/failing/cyclic/conflicting PR is reported, none dropped; #116 previewed (dry run reports checks only)",
+    miss = [n for n in need if n not in allout] + [n for n in ("Would merge PR #110", "Would merge PR #116") if n in allout]
+    rec("A2b", "Standalone dry run of the 16-PR MIXED queue: every draft/hold/failing/cyclic/conflicting PR is reported, none dropped; failing-checks #110 and its hard dependent #116 are forecast as not landing, matching --execute (review F7)",
         cmd_s + " --standalone --prs " + MIXED, r, r == 3 and not miss and seq(o) and len(seq(o)) == 16,
         "rc %d (3 = not everything landed); table rows %d; missing expectations: %s" % (r, len(seq(o)), miss), REV_CAND,
         "draft #108 is not in --prs: a draft cannot be pinned (rc 2 if listed); see the --prs-only run")
@@ -542,6 +545,82 @@ if want("A17"):
         "dry rc %d (refusal foretold=%s); execute rc %d (push refused=%s); origin tip unchanged=%s; PR 101 state %s" % (
             r1, "that push would be refused" in o1, r2, "push refused before pushing" in (o2 + e2), before == tip(), state101), REV_CAND,
         "the rung and its push belong to GH-1656; the gate check before the push is the existing gate_unwired_reason")
+
+# A18 ---------------------------------------------------------------------------------------------------------
+if want("A18"):  # code review F2: a ledger that arrives in the LANDING tree must never be skipped silently
+    def with_ledger_pr(name):
+        f = build(name)
+        ge = dict(os.environ, GIT_AUTHOR_NAME="o", GIT_AUTHOR_EMAIL="o@o", GIT_COMMITTER_NAME="o", GIT_COMMITTER_EMAIL="o@o")
+        origin = os.path.join(f, "origin.git")
+        lt = os.path.join(f, "lt")
+        for a in (["clone", "-q", origin, lt], ["-C", lt, "checkout", "-q", "-B", "feat/guide", "origin/feat/guide"]):
+            subprocess.run([REAL_GIT] + a, check=True, capture_output=True)
+        open(os.path.join(lt, "releases.sql"), "w").write("-- a ledger the PR brings in\n")
+        for a in (["add", "releases.sql"], ["commit", "-q", "-m", "docs: a PR that adds a ledger"], ["push", "-q", "origin", "feat/guide"]):
+            subprocess.run([REAL_GIT, "-C", lt] + a, check=True, env=ge, capture_output=True)
+        head = subprocess.run([REAL_GIT, "-C", lt, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+        subprocess.run([REAL_GIT, "--git-dir=" + origin, "update-ref", "refs/pull/101/head", head], check=True)
+        return f, origin
+    f, origin = with_ledger_pr("a18")
+    tip = lambda: subprocess.run([REAL_GIT, "--git-dir=" + origin, "rev-parse", "main"], capture_output=True, text=True).stdout.strip()
+    before = tip()
+    r1, o1, e1, _ = run(f, "A18-cand-dry", CAND, ["--standalone", "--prs", "101"], root=False)
+    r2, o2, e2, _ = run(f, "A18-cand-exec", CAND, ["--standalone", "--prs", "101", "--execute"], root=False)
+    state101 = [q["state"] for q in json.load(open(os.path.join(f, "ghstate.json")))["prs"] if q["number"] == 101][0]
+    md = patched("mut-a18", "merge_cleanup.py", "                if landed_overlay:\n", "                if False:\n")
+    fm, _o = with_ledger_pr("a18m")
+    rm, om, em, _ = run(fm, "A18-mutant-dry", md, ["--standalone", "--prs", "101"], root=False)
+    refuse = "REFUSING under --standalone" in (o1 + e1) and "releases.sql" in (o1 + e1)
+    rec("A18", "A PR that brings a ledger file into the landing tree is refused under --standalone (dry run and --execute), naming the file and merging nothing; the mutant without the check skips the gate and previews the merge",
+        cmd_s + " --standalone --prs 101 [--execute]   (PR #101 adds releases.sql)", r2,
+        r1 == 2 and refuse and "Would merge PR #101" not in (o1 + e1) and r2 == 2 and "REFUSING under --standalone" in (o2 + e2)
+        and before == tip() and state101 == "OPEN" and "pre-merge ledger gate skipped" in (om + em) and "Would merge PR #101" in (om + em),
+        "dry rc %d (refused=%s); execute rc %d; origin tip unchanged=%s; PR 101 %s; mutant rc %d skipped gate=%s previewed merge=%s" % (
+            r1, refuse, r2, before == tip(), state101, rm, "pre-merge ledger gate skipped" in (om + em), "Would merge PR #101" in (om + em)), REV_CAND,
+        "review finding on #1674: the primary-only startup guard did not see a ledger arriving in the landing tree")
+
+# A19 ---------------------------------------------------------------------------------------------------------
+if want("A19"):  # code review F1: a PR whose base is the integration branch is never a stacked child
+    f = build("a19")
+    st = json.load(open(os.path.join(f, "ghstate.json")))
+    st["prs"].append({"number": 121, "headRefName": "main", "cross": False, "baseRefName": "stable", "title": "promote main to stable", "body": "",
+                      "draft": False, "labels": [], "checks": "pass", "state": "OPEN", "createdAt": "2026-11-30T10:00:00Z"})
+    json.dump(st, open(os.path.join(f, "ghstate.json"), "w"))
+    r, o, e, _ = run(f, "A19-cand-dry", CAND, ["--standalone", "--prs", "109"], root=False)
+    md = patched("mut-a19", "toposort_prs.py", '        if integration and (pr.get("baseRefName") or "") == integration:\n            continue\n', "")
+    fm = build("a19m")
+    json.dump(st, open(os.path.join(fm, "ghstate.json"), "w"))
+    rm, om, em, _ = run(fm, "A19-mutant-dry", md, ["--standalone", "--prs", "109"], root=False)
+    probe = r"""
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import toposort_prs as ts
+import merge_cleanup as mc
+def pr(n, head, base):
+    return dict(number=n, title="t%d" % n, body="", headRefName=head, baseRefName=base, files=[], createdAt="2026-11-27", isCrossRepository=False)
+promo = [pr(1, "development", "main"), pr(2, "feat/x", "development")]
+stack = [pr(1, "feat/parent", "development"), pr(2, "feat/child", "feat/parent")]
+out = {}
+for name, prs in (("promotion", promo), ("stack", stack)):
+    o, _, _ = ts.toposort_prs([dict(p) for p in prs], "development")
+    out[name] = {"deps": [(p["number"], p["_hard_deps"]) for p in o], "listed_2": [p["number"] for p in mc.effective_sequence([dict(p) for p in prs], {2}, "development")]}
+o, _, _ = ts.toposort_prs([dict(p) for p in promo])
+out["no_integration_given"] = [(p["number"], p["_hard_deps"]) for p in o]
+print(json.dumps(out))
+"""
+    pr_ = json.loads(subprocess.run([PY39, "-c", probe, CAND], capture_output=True, text=True).stdout.strip().splitlines()[-1])
+    with open(os.path.join(RUNS, "A19-promotion-probe.json"), "w") as fh:
+        json.dump(pr_, fh, indent=1)
+    ok = (r == 0 and "Would merge PR #109" in o and "Would merge PR #109" not in om and "depends on deferred prerequisite (#121)" in (om + em)
+          and pr_["promotion"]["deps"] == [[1, []], [2, []]] and pr_["promotion"]["listed_2"] == [2]
+          and pr_["stack"]["deps"] == [[1, []], [2, [1]]] and pr_["stack"]["listed_2"] == []
+          and pr_["no_integration_given"] == [[1, []], [2, [1]]])
+    rec("A19", "A promotion PR (head named like the integration branch, base elsewhere) is not the stacked parent of an ordinary PR into the integration branch (Forge and standalone share this sorter); a real stack still orders and defers; the mutant defers the ordinary PR",
+        "toposort_prs / effective_sequence probe; " + cmd_s + " --standalone --prs 109   (a same-repository PR #121, head main, base stable)", r, ok,
+        "dry rc %d would-merge #109=%s; mutant would-merge=%s deferred-by-#121=%s; probe promotion deps %s listed{2}->%s; stack deps %s listed{2}->%s" % (
+            r, "Would merge PR #109" in o, "Would merge PR #109" in om, "depends on deferred prerequisite (#121)" in (om + em),
+            pr_["promotion"]["deps"], pr_["promotion"]["listed_2"], pr_["stack"]["deps"], pr_["stack"]["listed_2"]), REV_CAND,
+        "review finding on #1674: the stacked-parent edge ignored whether the base is the integration branch; the CLI without --integration-branch keeps the old behaviour")
 
 bad = [a for a, ok in results if not ok]
 print("\nrows: %d, failed: %s" % (len(results), bad or "none"))

@@ -802,10 +802,11 @@ def deferred_closure(all_ordered: List[Dict[str, Any]], eligible: Set[int]) -> S
     return deferred
 
 
-def effective_sequence(open_prs: List[Dict[str, Any]], listed: Set[int]) -> List[Dict[str, Any]]:
+def effective_sequence(open_prs: List[Dict[str, Any]], listed: Set[int],
+                       integration: Optional[str] = None) -> List[Dict[str, Any]]:
     """The order Phase 4 will land the listed PRs in: every open PR is sorted so dependency and
     collision edges through unlisted PRs stay visible, then deferrals are applied (GH-1226, GH-1452)."""
-    all_ordered, _, _ = toposort_prs(open_prs)
+    all_ordered, _, _ = toposort_prs(open_prs, integration)
     deferred = deferred_closure(all_ordered, listed)
     return [p for p in all_ordered if int(p["number"]) not in deferred]
 
@@ -2243,6 +2244,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
     standalone = getattr(args, "standalone", False) is True
     sa = {"standalone": True} if standalone else {}
     landing_heads: Set[str] = set()  # branches of PRs already previewed to land in this dry run (stacked bases)
+    # GH-1662 (review): dry-run only. PRs the preview says `--execute` would not land (checks not ok), and their hard
+    # dependents, so the forecast matches `--execute`'s `NOT attempted`. Never touches `failed`: exit codes are unchanged.
+    dry_unlanded: Dict[int, str] = {}
     try:
         for pr in ordered_prs:
             if track is not None:  # GH-1064: a stop from here on is this PR's, with these errors
@@ -2275,6 +2279,12 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 why = ", ".join(f"#{d} ({failed.get(d, 'not yet processed')})" for d in blocked_by)
                 log_err(f"PR #{p_num}: NOT attempted — depends on {why}")
                 failed[p_num] = f"blocked by {', '.join('#%d' % d for d in blocked_by)}"
+                continue
+            dry_blocked = [d for d in pr.get("_hard_deps", []) if d in dry_unlanded] if dry_run else []
+            if dry_blocked:
+                log(f"[DRY RUN] PR #{p_num}: would NOT land in this run — depends on "
+                    + ", ".join(f"#{d} ({dry_unlanded[d]})" for d in dry_blocked))
+                dry_unlanded[p_num] = "blocked by " + ", ".join("#%d" % d for d in dry_blocked)
                 continue
             # E + GH-623: live refresh, retried on transient failures. A TRANSIENT failure that
             # survives the retries defers this PR and the queue continues (the incident's S4:
@@ -2442,6 +2452,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     log(f"[DRY RUN] PR #{p_num}: B1 would repair this ledger conflict "
                         f"({b1['reason'].removeprefix('[DRY RUN] ')}); "
                         "--execute repairs it, waits for the new head's checks and re-pins")
+                    if pr.get("headRefName") and not pr.get("isCrossRepository"):
+                        landing_heads.add(pr["headRefName"])  # GH-1662: a stacked child previews behind it, conditionally
                     continue
                 if not b1["resolved"]:
                     if idx is not None:
@@ -2512,6 +2524,16 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
 
             # E.6: the ledger gate on the simulated landing.
             if standalone:
+                # GH-1662 (review): the declaration was checked against the primary once, at startup. A queued PR
+                # (or an earlier landing) can bring an overlay file into the landing tree itself, and a ledger
+                # that exists there must never be skipped silently: refuse, naming the files.
+                landed_overlay = standalone_overlay_found(clone)
+                if landed_overlay:
+                    log_err(f"PR #{p_num}: REFUSING under --standalone — the landing tree contains "
+                            f"{', '.join(landed_overlay)}, so a ledger/overlay exists and the pre-merge ledger gate "
+                            "cannot be skipped; run without --standalone (default mode) — not merged")
+                    keep_workdir = True
+                    return 2
                 log(f"PR #{p_num}: standalone — pre-merge ledger gate skipped (no ledger in this repository)")
             else:
                 gate = pre_merge_ledger_gate(clone, gh_bin=_gh_bin(), integration_branch=branch)
@@ -2555,6 +2577,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     checks, detail = checks_state(p_num, primary_repo, declared, had_required and repinning)
             if checks != "ok" and dry_run:  # a preview reports it; only --execute defers
                 log(f"[DRY RUN] PR #{p_num}: required checks {checks} ({detail}) — --execute would not merge it yet")
+                if checks == "failing":  # pending is not final: --execute waits for it and may land the PR
+                    dry_unlanded[p_num] = "required checks failing"
+                    continue
             elif checks != "ok":
                 if checks == "failing":
                     log_err(f"PR #{p_num}: required checks failing ({detail}) — not merged")
@@ -3065,7 +3090,7 @@ def main():
         active_early = [p for p in early_prs if int(p.get("number", 0)) in args._pins]
         early_ordered: List[Dict[str, Any]] = []
         if active_early:
-            early_ordered, _, _ = toposort_prs(active_early)
+            early_ordered, _, _ = toposort_prs(active_early, args.integration_branch)
 
         checkpoint_eligible_prs = {int(p["number"]) for p in early_ordered}
 
@@ -3109,7 +3134,7 @@ def main():
 
             args._forecast_cmp = forecast_comparison(
                 primary_repo, args.integration_branch, args.landing_plan, args._pins,
-                [int(p["number"]) for p in effective_sequence(early_prs, set(args._pins))])
+                [int(p["number"]) for p in effective_sequence(early_prs, set(args._pins), args.integration_branch)])
             if args._forecast_cmp:
                 log(f"Landing forecast (GH-1452): your decision '{args.landing_plan}' is "
                     f"{args._forecast_cmp['state']} against the dry run's recommendation "
@@ -3263,7 +3288,7 @@ def main():
         forecast = None
         listed_found, listed_problems = _listed_open(list(args.prs), prs)
         if not listed_problems:
-            listed_order = effective_sequence(prs, set(listed_found))
+            listed_order = effective_sequence(prs, set(listed_found), args.integration_branch)
             if len(listed_order) >= 3:
                 warn_git_version_if_needed()
                 forecast = build_landing_forecast(primary_repo, args.integration_branch, listed_order,
@@ -3282,7 +3307,7 @@ def main():
     # Under --execute that is the pinned set (checkpoint_eligible_prs); a dry run uses --prs as given.
     eligible = checkpoint_eligible_prs if checkpoint_eligible_prs is not None else (set(args.prs) or None)
     if prs:
-        all_ordered, _, warnings = toposort_prs(prs)
+        all_ordered, _, warnings = toposort_prs(prs, args.integration_branch)
         if eligible is not None:
             # Transitive propagation: any retained PR depending on a deferred PR must also be deferred
             deferred_set = deferred_closure(all_ordered, eligible)

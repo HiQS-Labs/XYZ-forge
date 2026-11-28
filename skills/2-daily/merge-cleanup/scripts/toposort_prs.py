@@ -82,7 +82,8 @@ def extract_touched_files(pr: Dict[str, Any]) -> Set[str]:
     return paths
 
 
-def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[str]]:
+def toposort_prs(prs: List[Dict[str, Any]], integration: Optional[str] = None
+                 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[str]]:
     """Topologically sorts open PRs based on explicit dependencies and file collisions."""
     pr_by_num = {pr["number"]: pr for pr in prs}
     dep_graph: Dict[int, Set[int]] = {pr["number"]: set() for pr in prs}
@@ -112,9 +113,14 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
     #     integration branch, and retargets a stacked child only when its base PR lands first).
     # A fork's head branch is not a branch of this repository (two forks' `main` are not one branch, and neither
     # is the upstream `main`), so a cross-repository PR is never a stacked parent.
+    # A PR whose base IS the integration branch is not stacked on anything: a promotion PR (head `development`,
+    # base `main`) is not the parent of an ordinary PR into `development`. The caller names the integration branch;
+    # without it (the bare CLI) every matching base is treated as a stack.
     heads = {pr.get("headRefName"): pr["number"] for pr in prs
              if pr.get("headRefName") and not pr.get("isCrossRepository")}
     for pr in prs:
+        if integration and (pr.get("baseRefName") or "") == integration:
+            continue
         parent = heads.get(pr.get("baseRefName") or "")
         if parent is not None and parent != pr["number"]:
             dep_graph[pr["number"]].add(parent)
@@ -240,6 +246,8 @@ def main():
     parser = argparse.ArgumentParser(description="Topologically sort open GitHub PRs.")
     parser.add_argument("--repo", default=".", help="Target git repository path")
     parser.add_argument("--json", action="store_true", help="Output ordered PRs as JSON")
+    parser.add_argument("--integration-branch", default=None,
+                        help="The branch PRs land on; a PR whose base is this branch is never a stacked child (GH-1662)")
 
     args = parser.parse_args()
 
@@ -254,7 +262,7 @@ def main():
         print("No open PRs found.")
         return
 
-    ordered, raw, warnings = toposort_prs(prs)
+    ordered, raw, warnings = toposort_prs(prs, args.integration_branch)
 
     if args.json:
         print(json.dumps(ordered, indent=2))
