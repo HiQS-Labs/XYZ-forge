@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1638,
+  "execution_id": "gh1638-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1638-relay-seed-dir-nesting-2026-11-27",
+  "pr_number": 1678,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "5c3e0ffbd4e31248abebc4e58c3bf8054e534580c815aa86852faedd46540233",
+    "gate-receipt.json": "b652213bb3e945344d81665723022a45d6923c2fb81c6183aa63cefdb36fc1ab",
+    "provenance.jsonl": "18b17716d240455f323ca510cbf68a88581702f66f2cd0e0a70538e90dbf992e"
+  }
+}

@@ -719,6 +719,51 @@ _rtl_sig() {  # <path> — content signature of a file/dir, or "ABSENT". Used to
   fi
 }
 
+_rtl_seed_directory() (  # <worktree> <repo-relative directory>
+  local entry="$2" src="$RTL_ROOT/$2" worktree parent dest
+  case "/$entry/" in
+    */../*|*/./*|*//*)
+      printf 'rtl_worktree_begin: refusing invalid directory seed path %s\n' "$entry" >&2
+      return 1 ;;
+  esac
+  [[ "$src" == /* ]] || src="$PWD/$src"
+  cd -P -- "$1" >/dev/null || return 1
+  worktree="$PWD"
+  [[ "$worktree" == /* && "$worktree" != / ]] || return 1
+
+  # Check each parent physically before creating anything beneath it.
+  while [[ "$entry" == */* ]]; do
+    parent="./${entry%%/*}"
+    if [[ ! -e "$parent" && ! -L "$parent" ]]; then
+      mkdir "$parent" || return 1
+    fi
+    cd -P -- "$parent" >/dev/null || return 1
+    case "$PWD" in
+      "$worktree"|"$worktree"/*) ;;
+      *)
+        printf 'rtl_worktree_begin: directory seed parent resolves outside the worktree for %s\n' "$2" >&2
+        return 1 ;;
+    esac
+    entry="${entry#*/}"
+  done
+  # Keep the linked worktree's Git pointer intact, including on case-insensitive filesystems.
+  if [[ "$PWD" == "$worktree" && "$entry" == .[gG][iI][tT] ]]; then
+    printf 'rtl_worktree_begin: refusing directory seed over worktree Git metadata\n' >&2
+    return 1
+  fi
+
+  # Clear the checkout copy so cp neither nests the source nor keeps retired children.
+  # With no trailing slash, rm unlinks a leaf symlink without following it.
+  dest="$PWD/$entry"
+  if [[ -e "$dest" || -L "$dest" ]]; then
+    if ! rm -rf -- "$dest" || [[ -e "$dest" || -L "$dest" ]]; then
+      printf 'rtl_worktree_begin: cannot clear checkout directory seed %s\n' "$2" >&2
+      return 1
+    fi
+  fi
+  cp -R "$src" "$dest"
+)
+
 rtl_worktree_begin() {
   # Create the worktree, seed the CURRENT working-tree allowlist into it (the HEAD checkout may be
   # stale, e.g. an uncommitted relay file), and echo the worktree path. Returns non-zero on failure
@@ -779,7 +824,18 @@ rtl_worktree_begin() {
       rtl_trace "rtl_worktree_begin: SKIP (archive-absolute) $a"
       continue
     fi
-    if [[ -e "$RTL_ROOT/$a" ]]; then
+    if [[ -d "$RTL_ROOT/$a" && ! -L "$RTL_ROOT/$a" ]]; then
+      if ! _rtl_seed_directory "$wt" "$a"; then
+        printf 'rtl_worktree_begin: directory seed failed for %s\n' "$a" >&2
+        if ! git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null; then
+          printf 'rtl_worktree_begin: git worktree remove failed for %s; left in place\n' "$wt" >&2
+        elif [[ -f "$RTL_ROOT/utils/py/workspace_manager.py" ]]; then
+          python3 "$RTL_ROOT/utils/py/workspace_manager.py" deregister --repo "$RTL_ROOT" --path "$wt" >/dev/null 2>&1 || true
+        fi
+        return 1
+      fi
+      rtl_trace "rtl_worktree_begin: SEED $a"
+    elif [[ -e "$RTL_ROOT/$a" ]]; then
       mkdir -p "$wt/$(dirname "$a")"
       cp -R "$RTL_ROOT/$a" "$wt/$a"
       rtl_trace "rtl_worktree_begin: SEED $a"
