@@ -465,11 +465,12 @@ def pr(n, head, base, cross=False):
     return dict(number=n, title="t%d" % n, body="", headRefName=head, baseRefName=base, files=[], createdAt="2026-11-27", isCrossRepository=cross)
 forks = [pr(1, "main", "main", True), pr(2, "main", "main", True)]
 stack = [pr(1, "feat/parent", "main"), pr(2, "feat/child", "feat/parent")]
+shared = [pr(1, "feat/shared", "main", True), pr(2, "feat/child", "feat/shared")]  # a fork branch named like another PR's base
 out = {}
-for name, prs in (("fork_main_pair", forks), ("genuine_stack", stack)):
-    o, _, _ = ts.toposort_prs([dict(p) for p in prs])
-    out[name] = {"order_deps": [(p["number"], p["_hard_deps"]) for p in o], "listed_1": [p["number"] for p in mc.effective_sequence([dict(p) for p in prs], {1})],
-                 "listed_2": [p["number"] for p in mc.effective_sequence([dict(p) for p in prs], {2})]}
+for name, prs in (("fork_main_pair", forks), ("genuine_stack", stack), ("fork_shared_branch", shared)):
+    o, _, _ = ts.toposort_prs([dict(p) for p in prs], "main")
+    out[name] = {"order_deps": [(p["number"], p["_hard_deps"]) for p in o], "listed_1": [p["number"] for p in mc.effective_sequence([dict(p) for p in prs], {1}, "main")],
+                 "listed_2": [p["number"] for p in mc.effective_sequence([dict(p) for p in prs], {2}, "main")]}
 print(json.dumps(out))
 '''
     md = patched("mut-fork", "toposort_prs.py", 'if pr.get("headRefName") and not pr.get("isCrossRepository")}', 'if pr.get("headRefName")}')
@@ -507,17 +508,25 @@ print(json.dumps({"fork_info_has_field": run(True, True), "fork_production_shape
     f = build("a16", forks=True)
     r, o, e, _ = run(f, "A16-cand-fork-dry", CAND, ["--standalone", "--prs", "118"], root=False)
     fm = build("a16m", forks=True)
-    rm, om, em, _ = run(fm, "A16-mutant-fork-dry", md, ["--standalone", "--prs", "118"], root=False)
+    md2 = patched("mut-fork2", "toposort_prs.py", 'if pr.get("headRefName") and not pr.get("isCrossRepository")}', 'if pr.get("headRefName")}')
+    _p = os.path.join(md2, "toposort_prs.py")
+    _s = open(_p).read()
+    _old = '        if integration and (pr.get("baseRefName") or "") == integration:\n            continue\n'
+    assert _s.count(_old) == 1
+    open(_p, "w").write(_s.replace(_old, ""))  # neither guard: a fork main->main PR is a stacked parent of its twin
+    rm, om, em, _ = run(fm, "A16-mutant-fork-dry", md2, ["--standalone", "--prs", "118"], root=False)
     ok = (pc["fork_main_pair"]["order_deps"] == [[1, []], [2, []]] and pc["fork_main_pair"]["listed_1"] == [1]
           and pc["genuine_stack"]["order_deps"] == [[1, []], [2, [1]]] and pc["genuine_stack"]["listed_2"] == []
-          and pm["fork_main_pair"]["listed_1"] == [] and r == 0 and "Would merge PR #118" in o and "Would merge PR #118" not in om and "PR #118: depends on deferred prerequisite (#119)" in (om + em) and prot_ok)
+          and pc["fork_shared_branch"]["order_deps"] == [[1, []], [2, []]] and pc["fork_shared_branch"]["listed_2"] == [2]
+          and pm["fork_shared_branch"]["order_deps"] == [[1, []], [2, [1]]] and pm["fork_shared_branch"]["listed_2"] == []
+          and pm["fork_main_pair"]["listed_1"] == [1] and r == 0 and "Would merge PR #118" in o and "Would merge PR #118" not in om and "PR #118: depends on deferred prerequisite (#119)" in (om + em) and prot_ok)
     rec("A16", "Fork heads are not stacked parents (plan QA final R1 F1): two fork PRs from `main` have no edge and a selected one is kept; a genuine same-repository stack still orders and defers; the mutant without the guard reproduces the defect",
         "toposort_prs / effective_sequence probe (candidate vs mutant); " + cmd_s + " --standalone --prs 118   (fixture --with-forks)", r, ok,
         "retarget probe candidate fork(live field)=%s fork(production shape)=%s same-repository=%s no-identity=%s; mutant fork(production shape)=%s; candidate fork pair %s listed {1}->%s; genuine stack %s listed {2}->%s; mutant listed {1}->%s; end-to-end candidate rc %d (Would merge #118: %s), mutant rc %d (#118 previewed: %s; deferred behind fork #119: %s)" % (
             pcp["fork_info_has_field"], pcp["fork_production_shape"], pcp["same_repository_parent"], pcp["no_identity_anywhere"], pmp["fork_production_shape"],
             pc["fork_main_pair"]["order_deps"], pc["fork_main_pair"]["listed_1"], pc["genuine_stack"]["order_deps"], pc["genuine_stack"]["listed_2"],
             pm["fork_main_pair"]["listed_1"], r, "Would merge PR #118" in o, rm, "Would merge PR #118" in om, "depends on deferred prerequisite (#119)" in (om + em)), REV_CAND,
-        "probes: runs/A16-fork-probe.json, runs/A16-protect-probe.json")
+        "probes: runs/A16-fork-probe.json, runs/A16-protect-probe.json. Since the integration-branch rule (A19) a fork main->main pair is covered by either guard, so the fork guard alone is shown on the shared-branch case and the end-to-end mutant removes both")
 
 # A17 ---------------------------------------------------------------------------------------------------------
 if want("A17"):
