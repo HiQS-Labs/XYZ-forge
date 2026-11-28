@@ -1,0 +1,12 @@
+{
+  "A": {
+    "advisor": "kimi",
+    "answer_file": "answer-A.md",
+    "file": "gh1638-cap-tiebreak-r2.kimi.md"
+  },
+  "B": {
+    "advisor": "agy",
+    "answer_file": "answer-B.md",
+    "file": "gh1638-cap-tiebreak-r2.agy.md"
+  }
+}

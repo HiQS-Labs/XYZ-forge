@@ -1,0 +1,6 @@
+FIRSTHAND_COUNT=0
+ECHOED_COUNT=4
+ECHOED `mkdir -p`
+ECHOED `mkdir -p`
+ECHOED `sim-gh1638.patch`
+ECHOED `relay-automation/relay-turn-lib.sh`

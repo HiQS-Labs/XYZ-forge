@@ -1,0 +1,4 @@
+1480 captures ['1-INBOX/GH-1480-MERGE-CLEANUP-DECOMPOSE.md'] | hold_refusal: hold: capture body HELD: marker | stale_evidence_refusal: None
+1666 captures ['1-INBOX/GH-1666-ACCEPTANCE-MARKDOWN-LINE-MODEL.md'] | hold_refusal: None | stale_evidence_refusal: None
+1423 captures ['1-INBOX/GH-1423-RELAY-ATTEST-GITIGNORED.md'] | hold_refusal: None | stale_evidence_refusal: None
+1638 captures ['1-INBOX/GH-1638-RELAY-SEED-DIR-NESTING.md'] | hold_refusal: None | stale_evidence_refusal: None

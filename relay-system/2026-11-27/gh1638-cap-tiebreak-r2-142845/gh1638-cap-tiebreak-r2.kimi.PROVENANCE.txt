@@ -1,0 +1,7 @@
+FIRSTHAND_COUNT=4
+ECHOED_COUNT=5
+ECHOED `mkdir -p`
+ECHOED `rm -rf`
+ECHOED `rtl_worktree_begin`
+ECHOED `rtl_worktree_begin`
+ECHOED `sim-gh1638.patch`

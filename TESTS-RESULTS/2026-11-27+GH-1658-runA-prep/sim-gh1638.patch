@@ -1,0 +1,60 @@
+diff --git a/relay-automation/relay-turn-lib.sh b/relay-automation/relay-turn-lib.sh
+index ec24bd75b..e6c8abf61 100644
+--- a/relay-automation/relay-turn-lib.sh
++++ b/relay-automation/relay-turn-lib.sh
+@@ -719,6 +719,14 @@ _rtl_sig() {  # <path> — content signature of a file/dir, or "ABSENT". Used to
+   fi
+ }
+ 
++_rtl_seed_abort() {  # <wt> <reason> — GH-1638: Git-managed teardown of a failed seed; never a raw rm of the worktree
++  rtl_trace "rtl_worktree_begin: REFUSE $2"
++  printf 'rtl_worktree_begin: %s\n' "$2" >&2
++  if ! git -C "$RTL_ROOT" worktree remove --force "$1" >/dev/null 2>&1; then
++    printf 'rtl_worktree_begin: git worktree remove refused for %s; left in place for inspection\n' "$1" >&2
++  fi
++}
++
+ rtl_worktree_begin() {
+   # Create the worktree, seed the CURRENT working-tree allowlist into it (the HEAD checkout may be
+   # stale, e.g. an uncommitted relay file), and echo the worktree path. Returns non-zero on failure
+@@ -780,8 +788,38 @@ rtl_worktree_begin() {
+       continue
+     fi
+     if [[ -e "$RTL_ROOT/$a" ]]; then
+-      mkdir -p "$wt/$(dirname "$a")"
+-      cp -R "$RTL_ROOT/$a" "$wt/$a"
++      if [[ -d "$RTL_ROOT/$a" && ! -L "$RTL_ROOT/$a" ]]; then
++        # GH-1638: mirror an existing directory in place (`cp -R src dst` into an existing dst nests it).
++        # Containment is proven BEFORE anything is created or removed; any failure fails the begin with
++        # no worktree path echoed, and teardown is Git-managed only (WORKTREE-SAFETY.md).
++        local _wtp _anc _par _dst
++        case "/$a/" in
++          */../*|*/./*|*//*) _rtl_seed_abort "$wt" "seed $a: refusing a '.', '..' or empty path segment"; return 1 ;;
++        esac
++        _wtp="$(cd "$wt" 2>/dev/null && pwd -P)" || _wtp=""
++        _anc="$wt/$(dirname "$a")"
++        while [[ ! -e "$_anc" && ! -L "$_anc" ]]; do _anc="$(dirname "$_anc")"; done
++        _anc="$(cd "$_anc" 2>/dev/null && pwd -P)" || _anc=""
++        if [[ -z "$_wtp" || -z "$_anc" ]] || { [[ "$_anc" != "$_wtp" ]] && [[ "$_anc" != "$_wtp"/* ]]; }; then
++          _rtl_seed_abort "$wt" "seed $a: an existing ancestor does not resolve inside the worktree"; return 1
++        fi
++        mkdir -p "$wt/$(dirname "$a")" || { _rtl_seed_abort "$wt" "seed $a: cannot create its parent"; return 1; }
++        _par="$(cd "$wt/$(dirname "$a")" 2>/dev/null && pwd -P)" || _par=""
++        _dst="$_par/$(basename "$a")"
++        case "$_par" in
++          "$_wtp"|"$_wtp"/*) ;;
++          *) _rtl_seed_abort "$wt" "seed $a resolves outside the worktree"; return 1 ;;
++        esac
++        if [[ -e "$_dst" || -L "$_dst" ]]; then
++          if ! rm -rf "$_dst" || [[ -e "$_dst" || -L "$_dst" ]]; then
++            _rtl_seed_abort "$wt" "seed $a: could not clear the checkout copy"; return 1
++          fi
++        fi
++        cp -R "$RTL_ROOT/$a" "$_dst" || { _rtl_seed_abort "$wt" "seed $a: copy failed"; return 1; }
++      else
++        mkdir -p "$wt/$(dirname "$a")"
++        cp -R "$RTL_ROOT/$a" "$wt/$a"
++      fi
+       rtl_trace "rtl_worktree_begin: SEED $a"
+     else
+       rm -rf "$wt/$a"                  # allowlisted path ALREADY deleted in the host tree → mirror the

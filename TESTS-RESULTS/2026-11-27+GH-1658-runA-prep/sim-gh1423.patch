@@ -1,0 +1,15 @@
+diff --git a/utils/py/relay_drive.py b/utils/py/relay_drive.py
+index 3e6fd4d82..c18b55c25 100644
+--- a/utils/py/relay_drive.py
++++ b/utils/py/relay_drive.py
+@@ -837,8 +837,8 @@ def main():
+             return True
+         add = subprocess.run(["git", "-C", trepo, "add", "--", os.path.abspath(relay_file)], capture_output=True, text=True)
+         cm = subprocess.run(["git", "-C", trepo, "commit", "-q", "-m", msg, "--", os.path.abspath(relay_file)], capture_output=True, text=True)
+-        if add.returncode != 0 or cm.returncode != 0:
+-            eprint(f"relay-drive: commit of relay file FAILED: {(add.stderr or cm.stderr).strip()}")
++        if cm.returncode != 0:
++            eprint(f"relay-drive: commit of relay file FAILED: {(cm.stderr or add.stderr).strip()}")
+             return False
+         return True
+ 
